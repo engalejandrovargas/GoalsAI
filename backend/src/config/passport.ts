@@ -18,23 +18,44 @@ passport.use(new GoogleStrategy({
     });
 
     if (!user) {
+      // Get high-quality profile picture URL
+      let profilePictureUrl = profile.photos?.[0].value;
+      if (profilePictureUrl) {
+        // Replace the default size parameter with a larger one
+        profilePictureUrl = profilePictureUrl.replace(/s\d+-c/, 's200-c');
+        // Remove size parameter and add larger one if no size parameter exists
+        if (!profilePictureUrl.includes('=s')) {
+          profilePictureUrl = profilePictureUrl + '=s200-c';
+        }
+      }
+      
       // Create new user
       user = await prisma.user.create({
         data: {
           googleId: profile.id,
           email: profile.emails![0].value,
           name: profile.displayName,
-          profilePicture: profile.photos?.[0].value
+          profilePicture: profilePictureUrl
         }
       });
       
       logger.info(`New user created: ${user.email} (ID: ${user.id})`);
     } else {
       // Update existing user's profile picture if changed
-      if (profile.photos?.[0].value !== user.profilePicture) {
+      let newProfilePictureUrl = profile.photos?.[0].value;
+      if (newProfilePictureUrl) {
+        // Replace the default size parameter with a larger one
+        newProfilePictureUrl = newProfilePictureUrl.replace(/s\d+-c/, 's200-c');
+        // Remove size parameter and add larger one if no size parameter exists
+        if (!newProfilePictureUrl.includes('=s')) {
+          newProfilePictureUrl = newProfilePictureUrl + '=s200-c';
+        }
+      }
+      
+      if (newProfilePictureUrl !== user.profilePicture) {
         user = await prisma.user.update({
           where: { id: user.id },
-          data: { profilePicture: profile.photos?.[0].value }
+          data: { profilePicture: newProfilePictureUrl }
         });
       }
       
@@ -65,6 +86,20 @@ passport.deserializeUser(async (id: string, done) => {
         profilePicture: true,
         location: true,
         ageRange: true,
+        annualIncome: true,
+        currentSavings: true,
+        riskTolerance: true,
+        timezone: true,
+        emailNotifications: true,
+        pushNotifications: true,
+        weeklyReports: true,
+        goalReminders: true,
+        theme: true,
+        language: true,
+        currency: true,
+        defaultGoalCategory: true,
+        privacyLevel: true,
+        interests: true,
         onboardingCompleted: true,
         createdAt: true
       }

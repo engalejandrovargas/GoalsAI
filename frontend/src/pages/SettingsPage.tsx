@@ -33,7 +33,7 @@ interface UserPreferences {
 }
 
 const SettingsPage: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, checkAuth } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [isLoading, setIsLoading] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -128,6 +128,9 @@ const SettingsPage: React.FC = () => {
         defaultGoalCategory: user.defaultGoalCategory || 'personal',
         privacyLevel: user.privacyLevel || 'private',
       });
+      
+      // Reset hasChanges when user data updates
+      setHasChanges(false);
     }
   }, [user]);
 
@@ -144,31 +147,62 @@ const SettingsPage: React.FC = () => {
   const handleSaveSettings = async () => {
     setIsLoading(true);
     try {
+      // Prepare data to save
+      const dataToSave = {
+        location: profileData.location,
+        ageRange: profileData.ageRange,
+        annualIncome: profileData.annualIncome ? parseInt(profileData.annualIncome) : null,
+        currentSavings: profileData.currentSavings ? parseInt(profileData.currentSavings) : null,
+        riskTolerance: profileData.riskTolerance,
+        timezone: preferences.timezone,
+        emailNotifications: preferences.emailNotifications,
+        pushNotifications: preferences.pushNotifications,
+        weeklyReports: preferences.weeklyReports,
+        goalReminders: preferences.goalReminders,
+        theme: preferences.theme,
+        language: preferences.language,
+        currency: preferences.currency,
+        defaultGoalCategory: preferences.defaultGoalCategory,
+        privacyLevel: preferences.privacyLevel,
+      };
+
       // Save both profile data and preferences
       const response = await apiService.request<any>('/users/profile', {
         method: 'PATCH',
-        body: JSON.stringify({
-          location: profileData.location,
-          ageRange: profileData.ageRange,
-          annualIncome: profileData.annualIncome ? parseInt(profileData.annualIncome) : null,
-          currentSavings: profileData.currentSavings ? parseInt(profileData.currentSavings) : null,
-          riskTolerance: profileData.riskTolerance,
-          timezone: preferences.timezone,
-          emailNotifications: preferences.emailNotifications,
-          pushNotifications: preferences.pushNotifications,
-          weeklyReports: preferences.weeklyReports,
-          goalReminders: preferences.goalReminders,
-          theme: preferences.theme,
-          language: preferences.language,
-          currency: preferences.currency,
-          defaultGoalCategory: preferences.defaultGoalCategory,
-          privacyLevel: preferences.privacyLevel,
-        }),
+        body: JSON.stringify(dataToSave),
       });
 
       if (response.success) {
         setHasChanges(false);
         toast.success('Settings saved successfully!');
+        // Refresh the user data in auth context
+        await checkAuth();
+        
+        // Also update local state with the new user data if available
+        if (response.user) {
+          setProfileData({
+            name: response.user.name || '',
+            email: response.user.email || '',
+            location: response.user.location || '',
+            ageRange: response.user.ageRange || '',
+            annualIncome: response.user.annualIncome?.toString() || '',
+            currentSavings: response.user.currentSavings?.toString() || '',
+            riskTolerance: response.user.riskTolerance || 'medium',
+          });
+
+          setPreferences({
+            emailNotifications: response.user.emailNotifications ?? true,
+            pushNotifications: response.user.pushNotifications ?? false,
+            weeklyReports: response.user.weeklyReports ?? true,
+            goalReminders: response.user.goalReminders ?? true,
+            theme: response.user.theme || 'light',
+            language: response.user.language || 'en',
+            timezone: response.user.timezone || 'America/New_York',
+            currency: response.user.currency || 'USD',
+            defaultGoalCategory: response.user.defaultGoalCategory || 'personal',
+            privacyLevel: response.user.privacyLevel || 'private',
+          });
+        }
       }
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -261,6 +295,7 @@ const SettingsPage: React.FC = () => {
               value={profileData.annualIncome}
               onChange={(e) => handleProfileChange('annualIncome', e.target.value)}
               placeholder="50000"
+              key={`annualIncome-${user?.id}-${user?.annualIncome}`}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="text-xs text-gray-500 mt-1">Used for AI financial recommendations</p>
@@ -274,6 +309,7 @@ const SettingsPage: React.FC = () => {
               value={profileData.currentSavings}
               onChange={(e) => handleProfileChange('currentSavings', e.target.value)}
               placeholder="10000"
+              key={`currentSavings-${user?.id}-${user?.currentSavings}`}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>

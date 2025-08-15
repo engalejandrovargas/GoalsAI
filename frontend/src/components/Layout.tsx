@@ -1,15 +1,76 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Target, Home, Brain, MessageCircle, BarChart3, Settings, LogOut } from 'lucide-react';
+import { Target, Home, Brain, MessageCircle, BarChart3, Settings, LogOut, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Layout: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [imageError, setImageError] = useState(false);
+
+  // Debug: Log user data to console (comment out for production)
+  // React.useEffect(() => {
+  //   if (user) {
+  //     console.log('User data:', user);
+  //     console.log('Profile picture URL:', user.profilePicture);
+  //   }
+  // }, [user]);
+
+  // Try to fix Google Photos URL to bypass CORS
+  const getWorkingAvatarUrl = () => {
+    if (!user?.profilePicture) return null;
+    
+    const originalUrl = user.profilePicture;
+    
+    // Extract the photo ID from the URL
+    // Google photos URLs look like: https://lh3.googleusercontent.com/a/ACg8ocKy...=s200-c
+    // We want to try different formats that might work better
+    
+    // Try removing the =s200-c parameter entirely (sometimes works better)
+    const noSizeParam = originalUrl.split('=')[0];
+    
+    // Try a smaller size with different parameters
+    const smallerSize = originalUrl.replace(/=s\d+-c/, '=s64');
+    
+    // Try without the -c parameter
+    const noCropParam = originalUrl.replace(/=s\d+-c/, '=s96');
+    
+    // console.log('Trying avatar URLs:', {
+    //   original: originalUrl,
+    //   noSize: noSizeParam,
+    //   smaller: smallerSize,
+    //   noCrop: noCropParam
+    // });
+    
+    // Return the smaller size version first
+    return smallerSize;
+  };
 
   const handleLogout = async () => {
     await logout();
+  };
+
+  const handleImageError = () => {
+    // const attemptedUrl = getWorkingAvatarUrl() || user?.profilePicture;
+    // console.log('Profile image failed to load:', attemptedUrl);
+    // console.log('Original Google URL:', user?.profilePicture);
+    setImageError(true);
+  };
+
+  const handleImageLoad = () => {
+    // const loadedUrl = getWorkingAvatarUrl() || user?.profilePicture;
+    // console.log('Profile image loaded successfully:', loadedUrl);
+    setImageError(false);
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   const navigation = [
@@ -61,17 +122,34 @@ const Layout: React.FC = () => {
         {/* User Profile */}
         <div className="border-t border-gray-200 p-4">
           <div className="flex items-center">
-            <img
-              src={user?.profilePicture || 'https://via.placeholder.com/40'}
-              alt={user?.name}
-              className="w-10 h-10 rounded-full"
-            />
+            {/* Avatar with fallback */}
+            <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              {user?.profilePicture && !imageError ? (
+                <img
+                  src={getWorkingAvatarUrl() || user.profilePicture}
+                  alt={user.name || 'User'}
+                  className="w-full h-full object-cover"
+                  onError={handleImageError}
+                  onLoad={handleImageLoad}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  {user?.name ? (
+                    <span className="text-white font-semibold text-sm">
+                      {getInitials(user.name)}
+                    </span>
+                  ) : (
+                    <User className="w-5 h-5 text-white" />
+                  )}
+                </div>
+              )}
+            </div>
             <div className="ml-3 flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">
-                {user?.name}
+                {user?.name || 'User'}
               </p>
               <p className="text-xs text-gray-500 truncate">
-                {user?.email}
+                {user?.email || ''}
               </p>
             </div>
             <button

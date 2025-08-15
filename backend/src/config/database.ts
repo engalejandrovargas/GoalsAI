@@ -4,7 +4,7 @@ import logger from '../utils/logger';
 // Create Prisma client with logging configuration
 const prisma = new PrismaClient({
   log: process.env.NODE_ENV === 'development' 
-    ? ['query', 'info', 'warn', 'error']
+    ? ['info', 'warn', 'error'] // Removed 'query' to stop verbose SQL logging
     : ['warn', 'error'],
   errorFormat: 'pretty'
 });

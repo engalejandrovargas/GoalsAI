@@ -143,3 +143,5 @@ tmp/
 # Local development files
 .local/
 .cache/
+.claude/
+claude/
