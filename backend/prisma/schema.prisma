@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String   @id @default(cuid())
+  googleId              String   @unique
+  email                 String   @unique
+  name                  String
+  profilePicture        String?
+  
+  // Onboarding data
+  location              String?
+  ageRange              String?
+  interests             String?  // JSON array string for SQLite
+  initialGoals          String?  // Initial goals text from onboarding
+  budgetStyle           String?
+  timezone              String?
+  onboardingCompleted   Boolean  @default(false)
+  
+  // Optional profile data
+  annualIncome          Int?
+  currentSavings        Int?
+  riskTolerance         String?
+  
+  // User preferences
+  emailNotifications    Boolean  @default(true)
+  pushNotifications     Boolean  @default(false) 
+  weeklyReports         Boolean  @default(true)
+  goalReminders         Boolean  @default(true)
+  theme                 String   @default("light")
+  language              String   @default("en")
+  currency              String   @default("USD")
+  defaultGoalCategory   String   @default("personal")
+  privacyLevel          String   @default("private")
+  
+  goals                 Goal[]
+  goalPivots            GoalPivot[]
+  chatSessions          ChatSession[]
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@map("users")
+}
+
+model Goal {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Basic goal info
+  title                 String
+  description           String?
+  category              String   // auto-detected: travel, financial, learning, health, career
+  priority              String   @default("medium") // high, medium, low
+  status                String   @default("planning") // planning, in_progress, completed, paused, pivoted
+  
+  // Financial tracking
+  estimatedCost         Int?
+  currentSaved          Int      @default(0)
+  
+  // Timeline
+  targetDate            DateTime?
+  
+  // AI Analysis (stored as JSON strings in SQLite)
+  feasibilityScore      Int?     // 0-100
+  feasibilityAnalysis   String?  // JSON string
+  redFlags              String?  // JSON string
+  suggestedAlternatives String?  // JSON string
+  aiPlan                String?  // JSON string
+  researchData          String?  // JSON string
+  
+  // User interaction
+  chatHistory           String?  // JSON string
+  imageUrl              String?
+  
+  steps                 GoalStep[]
+  pivots                GoalPivot[]
+  chatSessions          ChatSession[]
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@map("goals")
+}
+
+model GoalStep {
+  id                    String   @id @default(cuid())
+  goalId                String
+  goal                  Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  
+  title                 String
+  description           String?
+  stepOrder             Int
+  estimatedCost         Int?
+  estimatedDuration     String?  // "2 weeks", "3 months"
+  deadline              DateTime?
+  completed             Boolean  @default(false)
+  createdBy             String   @default("ai") // "ai" or "user"
+  
+  createdAt             DateTime @default(now())
+  
+  @@map("goal_steps")
+}
+
+model GoalPivot {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id])
+  originalGoalId        String
+  originalGoal          Goal     @relation(fields: [originalGoalId], references: [id])
+  newGoalId             String?  // If they created a new goal
+  
+  pivotReason           String
+  aiRecommendation      Boolean  @default(true)
+  originalFeasibility   Int?
+  
+  createdAt             DateTime @default(now())
+  
+  @@map("goal_pivots")
+}
+
+model ChatSession {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id])
+  goalId                String?
+  goal                  Goal?    @relation(fields: [goalId], references: [id])
+  
+  messages              String   // JSON string for SQLite
+  sessionType           String   // "goal_creation", "goal_refinement", "general"
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@map("chat_sessions")
+}

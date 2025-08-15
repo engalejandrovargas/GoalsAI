@@ -1,0 +1,287 @@
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+class ApiService {
+  private baseURL: string;
+
+  constructor() {
+    this.baseURL = API_URL;
+  }
+
+  // Generic request method
+  async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${this.baseURL}${endpoint}`;
+    
+    const config: RequestInit = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      credentials: 'include', // Important for cookies/sessions
+      ...options,
+    };
+
+    try {
+      const response = await fetch(url, config);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`API request failed: ${endpoint}`, error);
+      throw error;
+    }
+  }
+
+  // Auth methods
+  async checkAuthStatus() {
+    return this.request<{
+      authenticated: boolean;
+      user: any;
+    }>('/auth/status');
+  }
+
+  async getCurrentUser() {
+    return this.request<{
+      success: boolean;
+      user: any;
+    }>('/auth/me');
+  }
+
+  async logout() {
+    return this.request<{
+      success: boolean;
+      message: string;
+    }>('/auth/logout', {
+      method: 'POST',
+    });
+  }
+
+  // User methods
+  async completeOnboarding(data: any) {
+    return this.request<any>('/users/complete-onboarding', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Goals methods
+  async getGoals() {
+    return this.request<{
+      success: boolean;
+      goals: any[];
+    }>('/goals');
+  }
+
+  async createGoal(goalData: any) {
+    return this.request<{
+      success: boolean;
+      goal: any;
+    }>('/goals', {
+      method: 'POST',
+      body: JSON.stringify(goalData),
+    });
+  }
+
+  async analyzeGoal(goalDescription: string) {
+    return this.request<{
+      success: boolean;
+      analysis: any;
+      goalDescription: string;
+    }>('/goals/analyze', {
+      method: 'POST',
+      body: JSON.stringify({ goalDescription }),
+    });
+  }
+
+  async getGoal(goalId: string) {
+    return this.request<{
+      success: boolean;
+      goal: any;
+    }>(`/goals/${goalId}`);
+  }
+
+  async updateGoal(goalId: string, updateData: any) {
+    return this.request<{
+      success: boolean;
+      goal: any;
+    }>(`/goals/${goalId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData),
+    });
+  }
+
+  async deleteGoal(goalId: string) {
+    return this.request<{
+      success: boolean;
+      message: string;
+    }>(`/goals/${goalId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async analyzeExistingGoal(goalId: string) {
+    return this.request<{
+      success: boolean;
+      goal: any;
+      analysis: any;
+    }>(`/goals/${goalId}/analyze`, {
+      method: 'POST',
+    });
+  }
+
+  // Chat methods
+  async sendChatMessage(message: string, sessionId?: string, sessionType?: 'general' | 'goal_creation' | 'goal_refinement') {
+    return this.request<{
+      success: boolean;
+      sessionId: string;
+      message: string;
+      sessionType: string;
+    }>('/chat/message', {
+      method: 'POST',
+      body: JSON.stringify({ message, sessionId, sessionType }),
+    });
+  }
+
+  async *sendChatMessageStreaming(message: string, sessionId?: string, sessionType?: 'general' | 'goal_creation' | 'goal_refinement'): AsyncGenerator<{
+    type: 'session_id' | 'chunk' | 'complete' | 'error';
+    sessionId?: string;
+    content?: string;
+    message?: string;
+  }, void, unknown> {
+    const response = await fetch(`${this.baseURL}/chat/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message, sessionId, sessionType }),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+
+    if (!reader) {
+      throw new Error('Failed to get response reader');
+    }
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data.trim()) {
+              try {
+                const parsed = JSON.parse(data);
+                yield parsed;
+              } catch (e) {
+                console.error('Failed to parse SSE data:', e);
+              }
+            }
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  }
+
+  async getChatSessions() {
+    return this.request<{
+      success: boolean;
+      sessions: any[];
+    }>('/chat/sessions');
+  }
+
+  async getChatSession(sessionId: string) {
+    return this.request<{
+      success: boolean;
+      session: any;
+    }>(`/chat/sessions/${sessionId}`);
+  }
+
+  async deleteChatSession(sessionId: string) {
+    return this.request<{
+      success: boolean;
+      message: string;
+    }>(`/chat/sessions/${sessionId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async clearChatSession(sessionId: string) {
+    return this.request<{
+      success: boolean;
+      message: string;
+      session: any;
+    }>(`/chat/sessions/${sessionId}/clear`, {
+      method: 'POST',
+    });
+  }
+
+  // Goal Steps methods
+  async getGoalSteps(goalId: string) {
+    return this.request<{
+      success: boolean;
+      steps: any[];
+    }>(`/goals/${goalId}/steps`);
+  }
+
+  async createGoalStep(goalId: string, stepData: any) {
+    return this.request<{
+      success: boolean;
+      step: any;
+    }>(`/goals/${goalId}/steps`, {
+      method: 'POST',
+      body: JSON.stringify(stepData),
+    });
+  }
+
+  async updateGoalStep(goalId: string, stepId: string, updateData: any) {
+    return this.request<{
+      success: boolean;
+      step: any;
+    }>(`/goals/${goalId}/steps/${stepId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updateData),
+    });
+  }
+
+  async deleteGoalStep(goalId: string, stepId: string) {
+    return this.request<{
+      success: boolean;
+      message: string;
+    }>(`/goals/${goalId}/steps/${stepId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async updateGoalProgress(goalId: string, currentSaved: number) {
+    return this.request<{
+      success: boolean;
+      goal: any;
+    }>(`/goals/${goalId}/progress`, {
+      method: 'PATCH',
+      body: JSON.stringify({ currentSaved }),
+    });
+  }
+}
+
+export const apiService = new ApiService();
+export default apiService;
