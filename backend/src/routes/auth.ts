@@ -1,7 +1,10 @@
 import express from 'express';
 import passport from '../config/passport';
+import { JWTService } from '../config/jwt';
+import { prisma } from '../config/database';
 import logger from '../utils/logger';
 import axios from 'axios';
+import { requireAuth, requireSessionAuth } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -22,32 +25,68 @@ router.get('/google/callback',
     
     logger.info(`OAuth callback successful for user: ${user.email}`);
     
-    // Redirect based on onboarding status
-    if (user.onboardingCompleted) {
-      res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
-    } else {
-      res.redirect(`${process.env.FRONTEND_URL}/onboarding`);
-    }
+    // Generate JWT token
+    const token = JWTService.generateToken(user);
+    const refreshToken = JWTService.generateRefreshToken(user);
+    
+    // Set secure HTTP-only cookies
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+    
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+    });
+    
+    // Redirect to frontend with token in URL (temporary for SPA)
+    const redirectUrl = user.onboardingCompleted 
+      ? `${process.env.FRONTEND_URL}/dashboard?token=${token}`
+      : `${process.env.FRONTEND_URL}/onboarding?token=${token}`;
+    
+    res.redirect(redirectUrl);
   }
 );
 
-// Get current user
-router.get('/me', (req, res) => {
-  if (req.user) {
-    res.json({
-      success: true,
-      user: req.user
-    });
-  } else {
-    res.status(401).json({ 
-      success: false,
-      error: 'Not authenticated' 
-    });
-  }
+// Get current user (JWT-based)
+router.get('/me', requireAuth, (req, res) => {
+  res.json({
+    success: true,
+    user: req.user
+  });
 });
 
-// Logout
-router.post('/logout', (req, res, next) => {
+// Get current user (session-based for OAuth flow)
+router.get('/session-me', requireSessionAuth, (req, res) => {
+  res.json({
+    success: true,
+    user: req.user
+  });
+});
+
+// Logout (JWT-based)
+router.post('/logout', requireAuth, (req, res) => {
+  const userEmail = (req.user as any)?.email;
+  
+  // Clear JWT cookies
+  res.clearCookie('token');
+  res.clearCookie('refreshToken');
+  
+  logger.info(`User logged out: ${userEmail}`);
+  
+  res.json({ 
+    success: true, 
+    message: 'Logged out successfully' 
+  });
+});
+
+// Logout (session-based)
+router.post('/session-logout', requireSessionAuth, (req, res, next) => {
   const userEmail = (req.user as any)?.email;
   
   req.logout((err) => {
@@ -68,6 +107,8 @@ router.post('/logout', (req, res, next) => {
       }
       
       res.clearCookie('connect.sid');
+      res.clearCookie('token');
+      res.clearCookie('refreshToken');
       res.json({ 
         success: true, 
         message: 'Logged out successfully' 
@@ -76,8 +117,48 @@ router.post('/logout', (req, res, next) => {
   });
 });
 
-// Check authentication status
-router.get('/status', (req, res) => {
+// Check authentication status (JWT-based)
+router.get('/status', async (req, res) => {
+  try {
+    const token = req.cookies?.token || req.headers.authorization?.substring(7);
+    
+    if (!token) {
+      return res.json({
+        authenticated: false,
+        user: null
+      });
+    }
+    
+    const payload = JWTService.verifyToken(token);
+    const user = await prisma.user.findUnique({
+      where: { id: payload.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        googleId: true,
+        onboardingCompleted: true,
+        profilePicture: true,
+        location: true,
+        timezone: true
+      }
+    });
+    
+    res.json({
+      authenticated: !!user,
+      user: user
+    });
+    
+  } catch (error) {
+    res.json({
+      authenticated: false,
+      user: null
+    });
+  }
+});
+
+// Check session authentication status
+router.get('/session-status', (req, res) => {
   res.json({
     authenticated: req.isAuthenticated(),
     user: req.isAuthenticated() ? req.user : null
@@ -149,14 +230,7 @@ router.get('/avatar/:userId', async (req, res) => {
 });
 
 // Refresh user profile picture from Google
-router.post('/refresh-avatar', async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ 
-      success: false, 
-      error: 'Not authenticated' 
-    });
-  }
-
+router.post('/refresh-avatar', requireAuth, async (req, res) => {
   try {
     const user = req.user as any;
     
@@ -172,6 +246,54 @@ router.post('/refresh-avatar', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to refresh avatar'
+    });
+  }
+});
+
+// Refresh JWT token using refresh token
+router.post('/refresh', async (req, res) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
+    
+    if (!refreshToken) {
+      return res.status(401).json({
+        success: false,
+        error: 'No refresh token provided'
+      });
+    }
+    
+    const payload = JWTService.verifyToken(refreshToken);
+    const user = await prisma.user.findUnique({
+      where: { id: payload.id }
+    });
+    
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+    
+    const newToken = JWTService.generateToken(user);
+    
+    res.cookie('token', newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+    
+    res.json({
+      success: true,
+      token: newToken,
+      message: 'Token refreshed successfully'
+    });
+    
+  } catch (error) {
+    logger.error('Token refresh error:', error);
+    res.status(401).json({
+      success: false,
+      error: 'Invalid refresh token'
     });
   }
 });

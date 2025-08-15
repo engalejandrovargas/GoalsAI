@@ -76,6 +76,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       dispatch({ type: 'AUTH_START' });
       
+      // Check if there's a token in the URL (from OAuth callback)
+      const urlParams = new URLSearchParams(window.location.search);
+      const tokenFromUrl = urlParams.get('token');
+      
+      if (tokenFromUrl) {
+        // Store token in localStorage for API calls
+        localStorage.setItem('auth_token', tokenFromUrl);
+        
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+      
       const response = await apiService.getCurrentUser();
       
       if (response.success && response.user) {
@@ -90,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Login function
   const login = (redirectTo?: string) => {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5002';
     const redirectParam = redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : '';
     
     // Redirect to Google OAuth
@@ -104,12 +116,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       
       await apiService.logout();
       
+      // Clear token from localStorage
+      localStorage.removeItem('auth_token');
+      
       dispatch({ type: 'LOGOUT' });
       toast.success('Logged out successfully');
       
       // Redirect to login page
       window.location.href = '/';
     } catch (error) {
+      // Even if API call fails, clear local state
+      localStorage.removeItem('auth_token');
+      dispatch({ type: 'LOGOUT' });
       toast.error('Logout failed');
       console.error('Logout error:', error);
     } finally {

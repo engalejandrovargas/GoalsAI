@@ -1,17 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Target, Plus, MessageCircle, BarChart3, Settings, LogOut, Brain } from 'lucide-react';
+import { Target, Plus, MessageCircle, BarChart3, Settings, LogOut, Brain, Edit3, Trash2, MoreVertical, Archive, Copy } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import GoalCreationModal from '../components/GoalCreationModal';
+import GoalProgressModal from '../components/GoalProgressModal';
+import GoalCard from '../components/GoalCard';
 import { apiService } from '../services/api';
+import toast from 'react-hot-toast';
+
+interface Goal {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  status: string;
+  priority: string;
+  targetDate?: string;
+  estimatedCost?: number;
+  currentSaved?: number;
+  feasibilityScore?: number;
+  feasibilityAnalysis?: any;
+  createdAt: string;
+  updatedAt?: string;
+}
 
 const DashboardPage: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
-  const [goals, setGoals] = useState<any[]>([]);
+  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [isLoadingGoals, setIsLoadingGoals] = useState(true);
+
+  const categories = [
+    { value: 'personal', label: 'Personal Development', color: 'bg-purple-100 text-purple-700' },
+    { value: 'career', label: 'Career & Business', color: 'bg-blue-100 text-blue-700' },
+    { value: 'health', label: 'Health & Fitness', color: 'bg-green-100 text-green-700' },
+    { value: 'finance', label: 'Financial', color: 'bg-yellow-100 text-yellow-700' },
+    { value: 'education', label: 'Education & Learning', color: 'bg-indigo-100 text-indigo-700' },
+    { value: 'relationships', label: 'Relationships', color: 'bg-pink-100 text-pink-700' },
+    { value: 'creative', label: 'Creative & Hobbies', color: 'bg-orange-100 text-orange-700' },
+    { value: 'travel', label: 'Travel & Adventure', color: 'bg-teal-100 text-teal-700' },
+  ];
+
+  const statuses = [
+    { value: 'planning', label: 'Planning', color: 'bg-gray-100 text-gray-700' },
+    { value: 'in_progress', label: 'In Progress', color: 'bg-blue-100 text-blue-700' },
+    { value: 'completed', label: 'Completed', color: 'bg-green-100 text-green-700' },
+    { value: 'paused', label: 'Paused', color: 'bg-orange-100 text-orange-700' },
+    { value: 'pivoted', label: 'Pivoted', color: 'bg-purple-100 text-purple-700' },
+  ];
+
+  const priorities = [
+    { value: 'low', label: 'Low', color: 'bg-green-100 text-green-700' },
+    { value: 'medium', label: 'Medium', color: 'bg-yellow-100 text-yellow-700' },
+    { value: 'high', label: 'High', color: 'bg-red-100 text-red-700' },
+  ];
 
   useEffect(() => {
     loadGoals();
@@ -36,6 +82,115 @@ const DashboardPage: React.FC = () => {
 
   const handleGoalCreated = () => {
     loadGoals(); // Refresh goals list
+  };
+
+  const handleGoalUpdated = () => {
+    loadGoals();
+  };
+
+  const handleShowProgress = (goal: Goal) => {
+    setSelectedGoal(goal);
+    setShowProgressModal(true);
+  };
+
+  const handleEditGoal = async (goalId: string, updateData: Partial<Goal>) => {
+    try {
+      const response = await apiService.updateGoal(goalId, updateData);
+      if (response.success) {
+        setGoals(prev => 
+          prev.map(goal => 
+            goal.id === goalId ? { ...goal, ...response.goal } : goal
+          )
+        );
+        toast.success('Goal updated successfully!');
+      }
+    } catch (error) {
+      console.error('Error updating goal:', error);
+      toast.error('Failed to update goal');
+    }
+  };
+
+  const handleDeleteGoal = async (goalId: string) => {
+    if (!confirm('Are you sure you want to delete this goal? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await apiService.deleteGoal(goalId);
+      if (response.success) {
+        setGoals(prev => prev.filter(goal => goal.id !== goalId));
+        toast.success('Goal deleted successfully!');
+      }
+    } catch (error) {
+      console.error('Error deleting goal:', error);
+      toast.error('Failed to delete goal');
+    }
+  };
+
+  const handleDuplicateGoal = async (goalId: string) => {
+    try {
+      const response = await apiService.duplicateGoal(goalId);
+      if (response.success) {
+        loadGoals();
+        toast.success('Goal duplicated successfully!');
+      }
+    } catch (error) {
+      console.error('Error duplicating goal:', error);
+      toast.error('Failed to duplicate goal');
+    }
+  };
+
+  const handleArchiveGoal = async (goalId: string) => {
+    try {
+      const response = await apiService.archiveGoal(goalId);
+      if (response.success) {
+        setGoals(prev => 
+          prev.map(goal => 
+            goal.id === goalId ? { ...goal, ...response.goal } : goal
+          )
+        );
+        toast.success('Goal archived successfully!');
+      }
+    } catch (error) {
+      console.error('Error archiving goal:', error);
+      toast.error('Failed to archive goal');
+    }
+  };
+
+  const handleAnalyzeGoal = async (goalId: string) => {
+    try {
+      const response = await apiService.analyzeExistingGoal(goalId);
+      if (response.success) {
+        setGoals(prev => 
+          prev.map(goal => 
+            goal.id === goalId 
+              ? { ...goal, ...response.goal, feasibilityAnalysis: response.analysis }
+              : goal
+          )
+        );
+        toast.success('Goal analyzed successfully!');
+      }
+    } catch (error) {
+      console.error('Error analyzing goal:', error);
+      toast.error('Failed to analyze goal');
+    }
+  };
+
+  const getCategoryInfo = (category: string) => {
+    return categories.find(c => c.value === category) || categories[0];
+  };
+
+  const getStatusInfo = (status: string) => {
+    return statuses.find(s => s.value === status) || statuses[0];
+  };
+
+  const getPriorityInfo = (priority: string) => {
+    return priorities.find(p => p.value === priority) || priorities[1];
+  };
+
+  const getProgressPercentage = (goal: Goal) => {
+    if (!goal.estimatedCost || goal.estimatedCost === 0) return 0;
+    return Math.min(100, ((goal.currentSaved || 0) / goal.estimatedCost) * 100);
   };
 
   return (
@@ -95,7 +250,7 @@ const DashboardPage: React.FC = () => {
           </button>
 
           <button 
-            onClick={() => navigate('/goals')}
+            onClick={() => navigate('/progress')}
             className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left group"
           >
             <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-orange-200 transition-colors">
@@ -147,47 +302,41 @@ const DashboardPage: React.FC = () => {
               </button>
             </div>
           ) : (
-            /* Goals List */
-            <div className="space-y-4">
-              {goals.slice(0, 3).map((goal) => (
-                <div key={goal.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900 mb-1">{goal.title}</h4>
-                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">{goal.description}</p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500">
-                        <span className="capitalize">{goal.category}</span>
-                        {goal.targetDate && (
-                          <span>Due: {new Date(goal.targetDate).toLocaleDateString()}</span>
-                        )}
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          goal.priority === 'high' ? 'bg-red-100 text-red-600' :
-                          goal.priority === 'medium' ? 'bg-yellow-100 text-yellow-600' :
-                          'bg-green-100 text-green-600'
-                        }`}>
-                          {goal.priority} priority
-                        </span>
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <span className={`inline-block w-3 h-3 rounded-full ${
-                        goal.status === 'completed' ? 'bg-green-500' :
-                        goal.status === 'active' ? 'bg-blue-500' :
-                        'bg-gray-400'
-                      }`}></span>
-                    </div>
-                  </div>
+            /* Goals Grid with CRUD */
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                {goals.slice(0, 6).map((goal) => (
+                  <GoalCard
+                    key={goal.id}
+                    goal={goal}
+                    isSelected={false}
+                    onSelect={() => {}} // No selection in dashboard
+                    onEdit={(updateData) => handleEditGoal(goal.id, updateData)}
+                    onDelete={() => handleDeleteGoal(goal.id)}
+                    onDuplicate={() => handleDuplicateGoal(goal.id)}
+                    onArchive={() => handleArchiveGoal(goal.id)}
+                    onAnalyze={() => handleAnalyzeGoal(goal.id)}
+                    onShowProgress={() => handleShowProgress(goal)}
+                    getCategoryInfo={getCategoryInfo}
+                    getStatusInfo={getStatusInfo}
+                    getPriorityInfo={getPriorityInfo}
+                    getProgressPercentage={getProgressPercentage}
+                  />
+                ))}
+              </div>
+
+              {goals.length > 6 && (
+                <div className="text-center">
+                  <button 
+                    onClick={() => navigate('/goals')}
+                    className="inline-flex items-center px-6 py-3 text-blue-600 hover:text-blue-700 font-medium text-sm border border-dashed border-gray-300 rounded-lg hover:border-blue-300 transition-colors"
+                  >
+                    <Target className="w-4 h-4 mr-2" />
+                    View All {goals.length} Goals
+                  </button>
                 </div>
-              ))}
-              {goals.length > 3 && (
-                <button 
-                  onClick={() => navigate('/goals')}
-                  className="w-full text-center py-3 text-blue-600 hover:text-blue-700 font-medium text-sm border border-dashed border-gray-300 rounded-lg hover:border-blue-300 transition-colors"
-                >
-                  View {goals.length - 3} more goals
-                </button>
               )}
-            </div>
+            </>
           )}
         </motion.div>
 
@@ -197,6 +346,16 @@ const DashboardPage: React.FC = () => {
           onClose={() => setIsGoalModalOpen(false)}
           onGoalCreated={handleGoalCreated}
         />
+
+        {/* Goal Progress Modal */}
+        {selectedGoal && (
+          <GoalProgressModal
+            isOpen={showProgressModal}
+            onClose={() => setShowProgressModal(false)}
+            goal={selectedGoal}
+            onGoalUpdated={handleGoalUpdated}
+          />
+        )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5003';
 
 class ApiService {
   private baseURL: string;
@@ -14,9 +14,13 @@ class ApiService {
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     
+    // Get token from localStorage
+    const token = localStorage.getItem('auth_token');
+    
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
         ...options.headers,
       },
       credentials: 'include', // Important for cookies/sessions
@@ -70,12 +74,57 @@ class ApiService {
     });
   }
 
+  async getUserProfile() {
+    return this.request<{
+      success: boolean;
+      user: any;
+    }>('/users/profile');
+  }
+
+  async updateUserProfile(profileData: any) {
+    return this.request<{
+      success: boolean;
+      user: any;
+      message: string;
+    }>('/users/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(profileData),
+    });
+  }
+
   // Goals methods
-  async getGoals() {
+  async getGoals(filters?: {
+    category?: string;
+    status?: string;
+    priority?: string;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: string;
+    limit?: number;
+    offset?: number;
+  }) {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    
+    const queryString = queryParams.toString();
+    const url = queryString ? `/goals?${queryString}` : '/goals';
+    
     return this.request<{
       success: boolean;
       goals: any[];
-    }>('/goals');
+      pagination?: {
+        totalCount: number;
+        hasMore: boolean;
+        limit: number;
+        offset: number;
+      };
+    }>(url);
   }
 
   async createGoal(goalData: any) {
@@ -279,6 +328,61 @@ class ApiService {
     }>(`/goals/${goalId}/progress`, {
       method: 'PATCH',
       body: JSON.stringify({ currentSaved }),
+    });
+  }
+
+  // Additional Goals methods
+  async getGoalCategories() {
+    return this.request<{
+      success: boolean;
+      categories: any[];
+    }>('/goals/categories');
+  }
+
+  async bulkUpdateGoals(updates: Array<{ id: string; data: any }>) {
+    return this.request<{
+      success: boolean;
+      updatedGoals: any[];
+    }>('/goals/bulk-update', {
+      method: 'PATCH',
+      body: JSON.stringify({ updates }),
+    });
+  }
+
+  async bulkDeleteGoals(goalIds: string[]) {
+    return this.request<{
+      success: boolean;
+      message: string;
+    }>('/goals/bulk-delete', {
+      method: 'DELETE',
+      body: JSON.stringify({ goalIds }),
+    });
+  }
+
+  async duplicateGoal(goalId: string) {
+    return this.request<{
+      success: boolean;
+      goal: any;
+    }>(`/goals/${goalId}/duplicate`, {
+      method: 'POST',
+    });
+  }
+
+  async archiveGoal(goalId: string) {
+    return this.request<{
+      success: boolean;
+      goal: any;
+    }>(`/goals/${goalId}/archive`, {
+      method: 'PATCH',
+    });
+  }
+
+  async unarchiveGoal(goalId: string) {
+    return this.request<{
+      success: boolean;
+      goal: any;
+    }>(`/goals/${goalId}/unarchive`, {
+      method: 'PATCH',
     });
   }
 }

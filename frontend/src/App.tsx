@@ -7,6 +7,7 @@ import DashboardPage from './pages/DashboardPage';
 import OnboardingPage from './pages/OnboardingPage';
 import GoalAnalyzerPage from './pages/GoalAnalyzerPage';
 import GoalsPage from './pages/GoalsPage';
+import ProgressPage from './pages/ProgressPage';
 import ChatPage from './pages/ChatPage';
 import SettingsPage from './pages/SettingsPage';
 import Layout from './components/Layout';
@@ -145,6 +146,17 @@ function App() {
               }
             >
               <Route index element={<GoalsPage />} />
+            </Route>
+
+            <Route
+              path="/progress"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<ProgressPage />} />
             </Route>
 
             <Route

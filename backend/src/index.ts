@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import session from 'express-session';
+import cookieParser from 'cookie-parser';
 import { prisma } from './config/database';
 import logger from './utils/logger';
 import passport from './config/passport';
@@ -12,6 +13,7 @@ import goalRoutes from './routes/goals';
 import goalStepsRoutes from './routes/goalSteps';
 import goalPlanningRoutes from './routes/goalPlanning';
 import chatRoutes from './routes/chat';
+import progressRoutes from './routes/progress';
 
 // Load environment variables
 dotenv.config();
@@ -32,6 +34,7 @@ app.use(cors({
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
 
 // Session configuration
 app.use(session({
@@ -65,11 +68,12 @@ app.use('/goals', goalRoutes);
 app.use('/goals', goalStepsRoutes);
 app.use('/planning', goalPlanningRoutes);
 app.use('/chat', chatRoutes);
+app.use('/progress', progressRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({ 
-    message: 'DreamPlan AI Backend is running!',
+    message: 'Goals AI Backend is running!',
     version: '1.0.0',
     authenticated: req.isAuthenticated()
   });
@@ -106,8 +110,10 @@ process.on('SIGINT', async () => {
 app.listen(PORT, () => {
   logger.info(`🚀 DreamPlan AI Backend running on port ${PORT}`);
   logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  logger.info(`🗄️ Database: SQLite (${process.env.DATABASE_URL})`);
-  logger.info(`🌐 CORS enabled for: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
+  logger.info(`🗄️ Database: SQLite (dev.db)`);
+  logger.info(`🌐 CORS enabled for: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
+  logger.info(`🔐 JWT Authentication enabled`);
+  logger.info(`🔑 Google OAuth configured`);
 });
 
 export default app;

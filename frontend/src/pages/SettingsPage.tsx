@@ -13,7 +13,8 @@ import {
   Calendar,
   DollarSign,
   Target,
-  LogOut
+  LogOut,
+  AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
@@ -147,6 +148,13 @@ const SettingsPage: React.FC = () => {
   const handleSaveSettings = async () => {
     setIsLoading(true);
     try {
+      // Check if user is authenticated first
+      if (!user) {
+        toast.error('Please sign in to save your settings');
+        setIsLoading(false);
+        return;
+      }
+
       // Prepare data to save
       const dataToSave = {
         location: profileData.location,
@@ -166,11 +174,10 @@ const SettingsPage: React.FC = () => {
         privacyLevel: preferences.privacyLevel,
       };
 
+      console.log('Saving settings data:', dataToSave);
+
       // Save both profile data and preferences
-      const response = await apiService.request<any>('/users/profile', {
-        method: 'PATCH',
-        body: JSON.stringify(dataToSave),
-      });
+      const response = await apiService.updateUserProfile(dataToSave);
 
       if (response.success) {
         setHasChanges(false);
@@ -204,9 +211,17 @@ const SettingsPage: React.FC = () => {
           });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving settings:', error);
-      toast.error('Failed to save settings');
+      
+      // Handle specific authentication errors
+      if (error.message?.includes('Authentication') || error.message?.includes('401')) {
+        toast.error('Your session has expired. Please sign in again to save settings.');
+        // Optionally redirect to login
+        // logout();
+      } else {
+        toast.error(`Failed to save settings: ${error.message || 'Unknown error'}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -541,6 +556,27 @@ const SettingsPage: React.FC = () => {
           </h1>
           <p className="text-gray-600">Manage your account and preferences</p>
         </div>
+
+        {/* Authentication Warning */}
+        {!user && (
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center">
+              <AlertCircle className="w-5 h-5 text-yellow-600 mr-2" />
+              <div>
+                <h4 className="font-medium text-yellow-800">Authentication Required</h4>
+                <p className="text-yellow-700 text-sm mt-1">
+                  Please sign in to view and modify your settings. Your changes will not be saved without authentication.
+                </p>
+                <button 
+                  onClick={() => window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/auth/google`}
+                  className="mt-2 px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700"
+                >
+                  Sign In with Google
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           {/* Tab Navigation */}

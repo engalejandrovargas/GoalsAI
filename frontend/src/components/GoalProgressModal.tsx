@@ -2,18 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
-  CheckCircle, 
-  Circle, 
-  Plus, 
   DollarSign, 
-  Calendar,
-  Clock,
-  Trash2,
-  Edit3,
   TrendingUp,
   Target
 } from 'lucide-react';
 import { apiService } from '../services/api';
+import ActionPlanGenerator from './ActionPlanGenerator';
 import toast from 'react-hot-toast';
 
 interface GoalStep {
@@ -42,110 +36,14 @@ const GoalProgressModal: React.FC<GoalProgressModalProps> = ({
   goal,
   onGoalUpdated,
 }) => {
-  const [steps, setSteps] = useState<GoalStep[]>([]);
-  const [isLoadingSteps, setIsLoadingSteps] = useState(true);
-  const [showAddStep, setShowAddStep] = useState(false);
   const [currentSaved, setCurrentSaved] = useState(goal?.currentSaved || 0);
-  const [editingStepId, setEditingStepId] = useState<string | null>(null);
-
-  const [newStep, setNewStep] = useState({
-    title: '',
-    description: '',
-    estimatedCost: '',
-    estimatedDuration: '',
-    deadline: '',
-  });
+  const [activeTab, setActiveTab] = useState<'progress' | 'action-plan'>('progress');
 
   useEffect(() => {
     if (isOpen && goal) {
-      loadSteps();
       setCurrentSaved(goal.currentSaved || 0);
     }
   }, [isOpen, goal]);
-
-  const loadSteps = async () => {
-    if (!goal?.id) return;
-    
-    setIsLoadingSteps(true);
-    try {
-      const response = await apiService.getGoalSteps(goal.id);
-      if (response.success) {
-        setSteps(response.steps);
-      }
-    } catch (error) {
-      console.error('Error loading steps:', error);
-      toast.error('Failed to load steps');
-    } finally {
-      setIsLoadingSteps(false);
-    }
-  };
-
-  const handleAddStep = async () => {
-    if (!newStep.title.trim()) {
-      toast.error('Step title is required');
-      return;
-    }
-
-    try {
-      const stepData = {
-        title: newStep.title,
-        description: newStep.description || undefined,
-        estimatedCost: newStep.estimatedCost ? parseInt(newStep.estimatedCost) : undefined,
-        estimatedDuration: newStep.estimatedDuration || undefined,
-        deadline: newStep.deadline || undefined,
-      };
-
-      const response = await apiService.createGoalStep(goal.id, stepData);
-      if (response.success) {
-        setSteps(prev => [...prev, response.step]);
-        setNewStep({
-          title: '',
-          description: '',
-          estimatedCost: '',
-          estimatedDuration: '',
-          deadline: '',
-        });
-        setShowAddStep(false);
-        toast.success('Step added successfully');
-      }
-    } catch (error) {
-      console.error('Error adding step:', error);
-      toast.error('Failed to add step');
-    }
-  };
-
-  const handleToggleStep = async (stepId: string, completed: boolean) => {
-    try {
-      const response = await apiService.updateGoalStep(goal.id, stepId, { completed });
-      if (response.success) {
-        setSteps(prev =>
-          prev.map(step =>
-            step.id === stepId ? { ...step, completed } : step
-          )
-        );
-        onGoalUpdated?.();
-        toast.success(completed ? 'Step completed!' : 'Step marked as incomplete');
-      }
-    } catch (error) {
-      console.error('Error updating step:', error);
-      toast.error('Failed to update step');
-    }
-  };
-
-  const handleDeleteStep = async (stepId: string) => {
-    if (!confirm('Are you sure you want to delete this step?')) return;
-
-    try {
-      const response = await apiService.deleteGoalStep(goal.id, stepId);
-      if (response.success) {
-        setSteps(prev => prev.filter(step => step.id !== stepId));
-        toast.success('Step deleted');
-      }
-    } catch (error) {
-      console.error('Error deleting step:', error);
-      toast.error('Failed to delete step');
-    }
-  };
 
   const handleSavingsUpdate = async () => {
     try {
@@ -163,12 +61,6 @@ const GoalProgressModal: React.FC<GoalProgressModalProps> = ({
   const getProgressPercentage = () => {
     if (!goal.estimatedCost) return 0;
     return Math.min(100, (currentSaved / goal.estimatedCost) * 100);
-  };
-
-  const getStepProgressPercentage = () => {
-    if (steps.length === 0) return 0;
-    const completedSteps = steps.filter(step => step.completed).length;
-    return (completedSteps / steps.length) * 100;
   };
 
   if (!isOpen) return null;
@@ -199,244 +91,150 @@ const GoalProgressModal: React.FC<GoalProgressModalProps> = ({
             </button>
           </div>
 
-          <div className="p-6 space-y-8">
-            {/* Progress Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Financial Progress */}
-              {goal.estimatedCost && (
-                <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 border">
-                  <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
-                    <DollarSign className="w-5 h-5 mr-2 text-green-600" />
-                    Financial Progress
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span>Saved</span>
-                      <span className="font-medium">
-                        ${currentSaved.toLocaleString()} / ${goal.estimatedCost.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${getProgressPercentage()}%` }}
-                      />
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="number"
-                        value={currentSaved}
-                        onChange={(e) => setCurrentSaved(Number(e.target.value))}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        min="0"
-                      />
-                      <button
-                        onClick={handleSavingsUpdate}
-                        className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        Update
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step Progress */}
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border">
-                <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
-                  <TrendingUp className="w-5 h-5 mr-2 text-purple-600" />
-                  Step Progress
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span>Completed</span>
-                    <span className="font-medium">
-                      {steps.filter(s => s.completed).length} / {steps.length} steps
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${getStepProgressPercentage()}%` }}
-                    />
-                  </div>
-                  <div className="text-xs text-gray-600">
-                    {Math.round(getStepProgressPercentage())}% complete
-                  </div>
-                </div>
-              </div>
+          {/* Tab Navigation */}
+          <div className="px-6 border-b border-gray-200">
+            <div className="flex space-x-8">
+              <button
+                onClick={() => setActiveTab('progress')}
+                className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'progress'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Financial Progress
+              </button>
+              <button
+                onClick={() => setActiveTab('action-plan')}
+                className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'action-plan'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Action Plan
+              </button>
             </div>
+          </div>
 
-            {/* Steps Section */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Action Steps</h3>
-                <button
-                  onClick={() => setShowAddStep(true)}
-                  className="px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add Step
-                </button>
-              </div>
-
-              {isLoadingSteps ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {steps.map((step) => (
-                    <motion.div
-                      key={step.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`p-4 rounded-lg border transition-colors ${
-                        step.completed ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start space-x-3 flex-1">
-                          <button
-                            onClick={() => handleToggleStep(step.id, !step.completed)}
-                            className={`mt-0.5 ${step.completed ? 'text-green-600' : 'text-gray-400'} hover:scale-110 transition-transform`}
-                          >
-                            {step.completed ? <CheckCircle className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
-                          </button>
-                          <div className="flex-1">
-                            <h4 className={`font-medium ${step.completed ? 'text-gray-600 line-through' : 'text-gray-900'}`}>
-                              {step.title}
-                            </h4>
-                            {step.description && (
-                              <p className={`text-sm mt-1 ${step.completed ? 'text-gray-500' : 'text-gray-600'}`}>
-                                {step.description}
-                              </p>
-                            )}
-                            <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                              {step.estimatedCost && (
-                                <span className="flex items-center">
-                                  <DollarSign className="w-3 h-3 mr-1" />
-                                  ${step.estimatedCost.toLocaleString()}
-                                </span>
-                              )}
-                              {step.estimatedDuration && (
-                                <span className="flex items-center">
-                                  <Clock className="w-3 h-3 mr-1" />
-                                  {step.estimatedDuration}
-                                </span>
-                              )}
-                              {step.deadline && (
-                                <span className="flex items-center">
-                                  <Calendar className="w-3 h-3 mr-1" />
-                                  {new Date(step.deadline).toLocaleDateString()}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => handleDeleteStep(step.id)}
-                            className="p-1 text-gray-400 hover:text-red-500 rounded transition-colors"
-                            title="Delete step"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
+          <div className="p-6">
+            {activeTab === 'progress' ? (
+              /* Financial Progress Tab */
+              <div className="space-y-6">
+                {/* Financial Progress */}
+                {goal.estimatedCost && (
+                  <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6 border">
+                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+                      <DollarSign className="w-5 h-5 mr-2 text-green-600" />
+                      Financial Progress
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex justify-between text-sm">
+                        <span>Saved</span>
+                        <span className="font-medium">
+                          ${currentSaved.toLocaleString()} / ${goal.estimatedCost.toLocaleString()}
+                        </span>
                       </div>
-                    </motion.div>
-                  ))}
-
-                  {steps.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      <Target className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <p>No steps added yet. Break down your goal into actionable steps!</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Add Step Form */}
-              <AnimatePresence>
-                {showAddStep && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200"
-                  >
-                    <h4 className="font-medium text-gray-900 mb-3">Add New Step</h4>
-                    <div className="space-y-3">
-                      <input
-                        type="text"
-                        placeholder="Step title..."
-                        value={newStep.title}
-                        onChange={(e) => setNewStep(prev => ({ ...prev, title: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <textarea
-                        placeholder="Step description (optional)..."
-                        value={newStep.description}
-                        onChange={(e) => setNewStep(prev => ({ ...prev, description: e.target.value }))}
-                        rows={2}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                      />
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <motion.div
+                          className="bg-gradient-to-r from-green-500 to-blue-500 h-3 rounded-full transition-all duration-500"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${getProgressPercentage()}%` }}
+                        />
+                      </div>
+                      <div className="flex items-center space-x-3">
                         <input
                           type="number"
-                          placeholder="Cost ($)"
-                          value={newStep.estimatedCost}
-                          onChange={(e) => setNewStep(prev => ({ ...prev, estimatedCost: e.target.value }))}
-                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={currentSaved}
+                          onChange={(e) => setCurrentSaved(Number(e.target.value))}
+                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                           min="0"
+                          placeholder="Current amount saved"
                         />
-                        <input
-                          type="text"
-                          placeholder="Duration (e.g., 2 weeks)"
-                          value={newStep.estimatedDuration}
-                          onChange={(e) => setNewStep(prev => ({ ...prev, estimatedDuration: e.target.value }))}
-                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        <input
-                          type="date"
-                          value={newStep.deadline}
-                          onChange={(e) => setNewStep(prev => ({ ...prev, deadline: e.target.value }))}
-                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
+                        <button
+                          onClick={handleSavingsUpdate}
+                          className="px-6 py-3 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                        >
+                          Update Progress
+                        </button>
                       </div>
-                      <div className="flex justify-end space-x-3">
-                        <button
-                          onClick={() => {
-                            setShowAddStep(false);
-                            setNewStep({
-                              title: '',
-                              description: '',
-                              estimatedCost: '',
-                              estimatedDuration: '',
-                              deadline: '',
-                            });
-                          }}
-                          className="px-4 py-2 text-gray-600 text-sm hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleAddStep}
-                          disabled={!newStep.title.trim()}
-                          className={`px-4 py-2 text-sm rounded-lg transition-colors ${
-                            newStep.title.trim()
-                              ? 'bg-blue-600 text-white hover:bg-blue-700'
-                              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          }`}
-                        >
-                          Add Step
-                        </button>
+                      <div className="text-sm text-gray-600">
+                        <p>You're {Math.round(getProgressPercentage())}% of the way to your goal!</p>
+                        {goal.targetDate && (
+                          <p className="mt-1">
+                            Target date: {new Date(goal.targetDate).toLocaleDateString()}
+                          </p>
+                        )}
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
-            </div>
+
+                {/* Monthly Savings Breakdown */}
+                {goal.estimatedCost && goal.targetDate && (
+                  <div className="bg-white rounded-lg p-6 border border-gray-200">
+                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+                      <TrendingUp className="w-5 h-5 mr-2 text-purple-600" />
+                      Savings Plan
+                    </h3>
+                    
+                    {(() => {
+                      const now = new Date();
+                      const target = new Date(goal.targetDate);
+                      const monthsLeft = Math.max(1, Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 30)));
+                      const remaining = goal.estimatedCost - currentSaved;
+                      const monthlyAmount = Math.max(0, remaining / monthsLeft);
+                      
+                      return (
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="bg-blue-50 rounded-lg p-4">
+                              <p className="text-sm text-blue-600 font-medium">Monthly Target</p>
+                              <p className="text-2xl font-bold text-blue-900">${monthlyAmount.toFixed(0)}</p>
+                              <p className="text-xs text-blue-600">per month</p>
+                            </div>
+                            <div className="bg-green-50 rounded-lg p-4">
+                              <p className="text-sm text-green-600 font-medium">Remaining</p>
+                              <p className="text-2xl font-bold text-green-900">${remaining.toLocaleString()}</p>
+                              <p className="text-xs text-green-600">to save</p>
+                            </div>
+                            <div className="bg-orange-50 rounded-lg p-4">
+                              <p className="text-sm text-orange-600 font-medium">Time Left</p>
+                              <p className="text-2xl font-bold text-orange-900">{monthsLeft}</p>
+                              <p className="text-xs text-orange-600">months</p>
+                            </div>
+                          </div>
+                          
+                          {monthlyAmount > 0 && (
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                              <div className="flex items-start">
+                                <div className="flex-shrink-0">
+                                  <Target className="w-5 h-5 text-yellow-600" />
+                                </div>
+                                <div className="ml-3">
+                                  <h4 className="text-sm font-medium text-yellow-800">Savings Tip</h4>
+                                  <p className="text-sm text-yellow-700 mt-1">
+                                    Set up an automatic transfer of ${monthlyAmount.toFixed(0)} per month to reach your goal by {target.toLocaleDateString()}.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Action Plan Tab */
+              <ActionPlanGenerator 
+                goal={goal} 
+                onStepsUpdated={() => {
+                  onGoalUpdated?.();
+                }}
+              />
+            )}
           </div>
         </motion.div>
       </div>

@@ -2,6 +2,7 @@ import express from 'express';
 import { z } from 'zod';
 import { prisma } from '../config/database';
 import { requireAuth } from '../middleware/auth';
+import { UserService } from '../services/UserService';
 import logger from '../utils/logger';
 
 const router = express.Router();
@@ -26,19 +27,14 @@ router.post('/complete-onboarding', requireAuth, async (req, res) => {
     // Validate input
     const validatedData = onboardingSchema.parse(req.body);
 
-    // Update user with onboarding data
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        location: validatedData.location,
-        ageRange: validatedData.ageRange,
-        interests: JSON.stringify(validatedData.interests), // Store as JSON string
-        initialGoals: validatedData.goals,
-        onboardingCompleted: true,
-      },
+    // Complete onboarding using UserService
+    const updatedUser = await UserService.completeOnboarding(userId, {
+      location: validatedData.location,
+      ageRange: validatedData.ageRange,
+      interests: validatedData.interests,
+      initialGoals: validatedData.goals,
+      onboardingCompleted: true,
     });
-
-    logger.info(`User ${userId} completed onboarding`);
 
     res.json({
       success: true,
@@ -63,7 +59,9 @@ router.post('/complete-onboarding', requireAuth, async (req, res) => {
         currency: updatedUser.currency,
         defaultGoalCategory: updatedUser.defaultGoalCategory,
         privacyLevel: updatedUser.privacyLevel,
-        interests: updatedUser.interests ? JSON.parse(updatedUser.interests) : [],
+        interests: typeof updatedUser.interests === 'string' 
+          ? JSON.parse(updatedUser.interests) 
+          : updatedUser.interests || [],
         onboardingCompleted: updatedUser.onboardingCompleted,
         createdAt: updatedUser.createdAt,
       },
@@ -239,6 +237,99 @@ router.patch('/profile', requireAuth, async (req, res) => {
     });
   } catch (error) {
     logger.error('Error updating user profile:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /users/stats - Get user statistics
+router.get('/stats', requireAuth, async (req, res) => {
+  try {
+    const userId = (req.user as any)?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const stats = await UserService.getUserStats(userId);
+
+    res.json({
+      success: true,
+      stats
+    });
+  } catch (error) {
+    logger.error('Error fetching user stats:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT /users/preferences - Update user preferences
+router.put('/preferences', requireAuth, async (req, res) => {
+  try {
+    const userId = (req.user as any)?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const validPreferences = {
+      emailNotifications: req.body.emailNotifications,
+      pushNotifications: req.body.pushNotifications,
+      weeklyReports: req.body.weeklyReports,
+      goalReminders: req.body.goalReminders,
+      theme: req.body.theme,
+      language: req.body.language,
+      currency: req.body.currency,
+      defaultGoalCategory: req.body.defaultGoalCategory,
+      privacyLevel: req.body.privacyLevel,
+    };
+
+    // Remove undefined values
+    Object.keys(validPreferences).forEach(key => {
+      if ((validPreferences as any)[key] === undefined) {
+        delete (validPreferences as any)[key];
+      }
+    });
+
+    const updatedUser = await UserService.updateUserPreferences(userId, validPreferences);
+
+    res.json({
+      success: true,
+      message: 'Preferences updated successfully',
+      preferences: {
+        emailNotifications: updatedUser.emailNotifications,
+        pushNotifications: updatedUser.pushNotifications,
+        weeklyReports: updatedUser.weeklyReports,
+        goalReminders: updatedUser.goalReminders,
+        theme: updatedUser.theme,
+        language: updatedUser.language,
+        currency: updatedUser.currency,
+        defaultGoalCategory: updatedUser.defaultGoalCategory,
+        privacyLevel: updatedUser.privacyLevel,
+      }
+    });
+  } catch (error) {
+    logger.error('Error updating user preferences:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /users/profile - Delete user account
+router.delete('/profile', requireAuth, async (req, res) => {
+  try {
+    const userId = (req.user as any)?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    await UserService.deleteUser(userId);
+
+    res.json({
+      success: true,
+      message: 'Account deleted successfully'
+    });
+  } catch (error) {
+    logger.error('Error deleting user account:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
