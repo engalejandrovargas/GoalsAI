@@ -385,6 +385,45 @@ class ApiService {
       method: 'PATCH',
     });
   }
+
+  // Progress methods
+  async getProgressMetrics() {
+    return this.request<{
+      success: boolean;
+      metrics: any;
+    }>('/progress/metrics');
+  }
+
+  async getProgressInsights(goalId?: string) {
+    const url = goalId ? `/progress/insights?goalId=${goalId}` : '/progress/insights';
+    return this.request<{
+      success: boolean;
+      insights: any;
+    }>(url);
+  }
+
+  async getProgressAnalytics() {
+    return this.request<{
+      success: boolean;
+      analytics: any;
+    }>('/progress/analytics');
+  }
+
+  async updateProgress(goalId: string, progressData: {
+    currentSaved?: number;
+    stepId?: string;
+    stepCompleted?: boolean;
+    notes?: string;
+  }) {
+    return this.request<{
+      success: boolean;
+      goal: any;
+      message: string;
+    }>(`/progress/update/${goalId}`, {
+      method: 'PUT',
+      body: JSON.stringify(progressData),
+    });
+  }
 }
 
 export const apiService = new ApiService();

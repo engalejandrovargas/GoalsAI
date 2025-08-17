@@ -44,8 +44,8 @@ const SettingsPage: React.FC = () => {
     email: user?.email || '',
     location: user?.location || '',
     ageRange: user?.ageRange || '',
-    annualIncome: user?.annualIncome || '',
-    currentSavings: user?.currentSavings || '',
+    annualIncome: user?.annualIncome ? user.annualIncome.toString() : '',
+    currentSavings: user?.currentSavings ? user.currentSavings.toString() : '',
     riskTolerance: user?.riskTolerance || 'medium',
   });
 
@@ -112,8 +112,8 @@ const SettingsPage: React.FC = () => {
         email: user.email || '',
         location: user.location || '',
         ageRange: user.ageRange || '',
-        annualIncome: user.annualIncome?.toString() || '',
-        currentSavings: user.currentSavings?.toString() || '',
+        annualIncome: user.annualIncome ? user.annualIncome.toString() : '',
+        currentSavings: user.currentSavings ? user.currentSavings.toString() : '',
         riskTolerance: user.riskTolerance || 'medium',
       });
 
@@ -174,26 +174,22 @@ const SettingsPage: React.FC = () => {
         privacyLevel: preferences.privacyLevel,
       };
 
-      console.log('Saving settings data:', dataToSave);
-
       // Save both profile data and preferences
       const response = await apiService.updateUserProfile(dataToSave);
 
       if (response.success) {
         setHasChanges(false);
         toast.success('Settings saved successfully!');
-        // Refresh the user data in auth context
-        await checkAuth();
         
-        // Also update local state with the new user data if available
+        // Update local state first with the new user data if available
         if (response.user) {
           setProfileData({
             name: response.user.name || '',
             email: response.user.email || '',
             location: response.user.location || '',
             ageRange: response.user.ageRange || '',
-            annualIncome: response.user.annualIncome?.toString() || '',
-            currentSavings: response.user.currentSavings?.toString() || '',
+            annualIncome: response.user.annualIncome ? response.user.annualIncome.toString() : '',
+            currentSavings: response.user.currentSavings ? response.user.currentSavings.toString() : '',
             riskTolerance: response.user.riskTolerance || 'medium',
           });
 
@@ -210,6 +206,11 @@ const SettingsPage: React.FC = () => {
             privacyLevel: response.user.privacyLevel || 'private',
           });
         }
+        
+        // Refresh the user data in auth context
+        await checkAuth();
+      } else {
+        toast.error('Failed to save settings - server returned an error');
       }
     } catch (error: any) {
       console.error('Error saving settings:', error);

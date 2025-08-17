@@ -113,41 +113,22 @@ const ProgressPage: React.FC = () => {
     try {
       setIsLoading(true);
       
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5003';
-      
       const [metricsResponse, insightsResponse, analyticsResponse] = await Promise.all([
-        fetch(`${API_URL}/api/progress/metrics`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-            'Content-Type': 'application/json',
-          },
-        }),
-        fetch(`${API_URL}/api/progress/insights`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-            'Content-Type': 'application/json',
-          },
-        }),
-        fetch(`${API_URL}/api/progress/analytics`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-            'Content-Type': 'application/json',
-          },
-        })
+        apiService.getProgressMetrics(),
+        apiService.getProgressInsights(),
+        apiService.getProgressAnalytics()
       ]);
 
-      if (metricsResponse.ok) {
-        const metricsData = await metricsResponse.json();
-        setMetrics(metricsData);
+      if (metricsResponse.success) {
+        setMetrics(metricsResponse.metrics);
       }
 
-      if (insightsResponse.ok) {
-        const insightsData = await insightsResponse.json();
-        setInsights(insightsData);
+      if (insightsResponse.success) {
+        setInsights(insightsResponse.insights);
       }
 
-      if (analyticsResponse.ok) {
-        const analyticsData = await analyticsResponse.json();
+      if (analyticsResponse.success) {
+        const analyticsData = analyticsResponse.analytics;
         setAnalytics(analyticsData);
       }
 
