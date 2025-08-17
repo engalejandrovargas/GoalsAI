@@ -38,10 +38,13 @@ export const requireAuth = async (req: AuthenticatedRequest, res: Response, next
         profilePicture: true,
         location: true,
         ageRange: true,
+        currentSituation: true,
+        availableTime: true,
+        riskTolerance: true,
+        preferredApproach: true,
+        firstGoal: true,
         annualIncome: true,
         currentSavings: true,
-        riskTolerance: true,
-        timezone: true,
         emailNotifications: true,
         pushNotifications: true,
         weeklyReports: true,
@@ -51,7 +54,6 @@ export const requireAuth = async (req: AuthenticatedRequest, res: Response, next
         currency: true,
         defaultGoalCategory: true,
         privacyLevel: true,
-        interests: true,
         createdAt: true,
         updatedAt: true
       }

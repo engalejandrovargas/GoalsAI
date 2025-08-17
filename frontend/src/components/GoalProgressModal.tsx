@@ -28,6 +28,7 @@ interface GoalProgressModalProps {
   onClose: () => void;
   goal: any;
   onGoalUpdated?: () => void;
+  initialTab?: 'progress' | 'action-plan';
 }
 
 const GoalProgressModal: React.FC<GoalProgressModalProps> = ({
@@ -35,15 +36,17 @@ const GoalProgressModal: React.FC<GoalProgressModalProps> = ({
   onClose,
   goal,
   onGoalUpdated,
+  initialTab = 'progress',
 }) => {
   const [currentSaved, setCurrentSaved] = useState(goal?.currentSaved || 0);
-  const [activeTab, setActiveTab] = useState<'progress' | 'action-plan'>('progress');
+  const [activeTab, setActiveTab] = useState<'progress' | 'action-plan'>(initialTab);
 
   useEffect(() => {
     if (isOpen && goal) {
       setCurrentSaved(goal.currentSaved || 0);
+      setActiveTab(initialTab);
     }
-  }, [isOpen, goal]);
+  }, [isOpen, goal, initialTab]);
 
   const handleSavingsUpdate = async () => {
     try {

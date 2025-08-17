@@ -86,10 +86,13 @@ passport.deserializeUser(async (id: string, done) => {
         profilePicture: true,
         location: true,
         ageRange: true,
+        currentSituation: true,
+        availableTime: true,
+        riskTolerance: true,
+        preferredApproach: true,
+        firstGoal: true,
         annualIncome: true,
         currentSavings: true,
-        riskTolerance: true,
-        timezone: true,
         emailNotifications: true,
         pushNotifications: true,
         weeklyReports: true,
@@ -99,7 +102,6 @@ passport.deserializeUser(async (id: string, done) => {
         currency: true,
         defaultGoalCategory: true,
         privacyLevel: true,
-        interests: true,
         onboardingCompleted: true,
         createdAt: true
       }

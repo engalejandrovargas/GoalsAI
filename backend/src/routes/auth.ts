@@ -54,11 +54,30 @@ router.get('/google/callback',
 );
 
 // Get current user (JWT-based)
-router.get('/me', requireAuth, (req, res) => {
-  res.json({
-    success: true,
-    user: req.user
-  });
+router.get('/me', requireAuth, async (req, res) => {
+  try {
+    const userId = (req.user as any)?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      success: true,
+      user: user
+    });
+  } catch (error) {
+    logger.error('Error fetching current user:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Get current user (session-based for OAuth flow)
@@ -131,17 +150,7 @@ router.get('/status', async (req, res) => {
     
     const payload = JWTService.verifyToken(token);
     const user = await prisma.user.findUnique({
-      where: { id: payload.id },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        googleId: true,
-        onboardingCompleted: true,
-        profilePicture: true,
-        location: true,
-        timezone: true
-      }
+      where: { id: payload.id }
     });
     
     res.json({

@@ -34,14 +34,33 @@ router.post('/analyze', requireAuth, async (req, res) => {
     // Validate input
     const { goalDescription } = analyzeGoalSchema.parse(req.body);
 
-    // Get user context for AI analysis
+    // Get enhanced user context for AI analysis
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
         location: true,
         ageRange: true,
-        interests: true,
-        initialGoals: true,
+        currentSituation: true,
+        availableTime: true,
+        riskTolerance: true,
+        preferredApproach: true,
+        firstGoal: true,
+        occupation: true,
+        annualIncome: true,
+        currentSavings: true,
+        workSchedule: true,
+        personalityType: true,
+        learningStyle: true,
+        decisionMakingStyle: true,
+        communicationStyle: true,
+        motivationalFactors: true,
+        lifePriorities: true,
+        previousExperiences: true,
+        skillsAndStrengths: true,
+        aiInstructions: true,
+        aiTone: true,
+        aiDetailLevel: true,
+        aiApproachStyle: true,
       },
     });
 
@@ -49,12 +68,37 @@ router.post('/analyze', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Prepare user context
+    // Prepare enhanced user context
     const userContext = {
       location: user.location || 'Unknown',
       ageRange: user.ageRange || '25-34',
-      interests: user.interests ? JSON.parse(user.interests) : [],
-      goals: user.initialGoals || '',
+      interests: [],
+      goals: user.firstGoal || '',
+      currentSituation: user.currentSituation,
+      availableTime: user.availableTime,
+      riskTolerance: user.riskTolerance,
+      preferredApproach: user.preferredApproach,
+      firstGoal: user.firstGoal,
+      
+      // Extended context
+      occupation: user.occupation,
+      annualIncome: user.annualIncome,
+      currentSavings: user.currentSavings,
+      workSchedule: user.workSchedule,
+      personalityType: user.personalityType,
+      learningStyle: user.learningStyle,
+      decisionMakingStyle: user.decisionMakingStyle,
+      communicationStyle: user.communicationStyle,
+      motivationalFactors: user.motivationalFactors ? JSON.parse(user.motivationalFactors) : null,
+      lifePriorities: user.lifePriorities ? JSON.parse(user.lifePriorities) : null,
+      previousExperiences: user.previousExperiences ? JSON.parse(user.previousExperiences) : null,
+      skillsAndStrengths: user.skillsAndStrengths ? JSON.parse(user.skillsAndStrengths) : null,
+      
+      // AI behavior preferences
+      aiInstructions: user.aiInstructions,
+      aiTone: user.aiTone,
+      aiDetailLevel: user.aiDetailLevel,
+      aiApproachStyle: user.aiApproachStyle,
     };
 
     logger.info(`Analyzing goal feasibility for user ${userId}: "${goalDescription.substring(0, 50)}..."`);
@@ -177,8 +221,11 @@ router.post('/:id/analyze', requireAuth, async (req, res) => {
       select: {
         location: true,
         ageRange: true,
-        interests: true,
-        initialGoals: true,
+        currentSituation: true,
+        availableTime: true,
+        riskTolerance: true,
+        preferredApproach: true,
+        firstGoal: true,
       },
     });
 
@@ -190,8 +237,13 @@ router.post('/:id/analyze', requireAuth, async (req, res) => {
     const userContext = {
       location: user.location || 'Unknown',
       ageRange: user.ageRange || '25-34',
-      interests: user.interests ? JSON.parse(user.interests) : [],
-      goals: user.initialGoals || '',
+      interests: [],
+      goals: user.firstGoal || '',
+      currentSituation: user.currentSituation,
+      availableTime: user.availableTime,
+      riskTolerance: user.riskTolerance,
+      preferredApproach: user.preferredApproach,
+      firstGoal: user.firstGoal,
     };
 
     const goalDescription = `${goal.title}: ${goal.description}`;

@@ -14,13 +14,13 @@ export interface UpdateUserData {
   name?: string;
   location?: string;
   ageRange?: string;
-  interests?: any[];
-  initialGoals?: string;
-  budgetStyle?: string;
-  timezone?: string;
+  currentSituation?: string;
+  availableTime?: string;
+  riskTolerance?: string;
+  preferredApproach?: string;
+  firstGoal?: string;
   annualIncome?: number;
   currentSavings?: number;
-  riskTolerance?: string;
   emailNotifications?: boolean;
   pushNotifications?: boolean;
   weeklyReports?: boolean;
@@ -30,6 +30,22 @@ export interface UpdateUserData {
   currency?: string;
   defaultGoalCategory?: string;
   privacyLevel?: string;
+  // Extended profile fields
+  occupation?: string;
+  workSchedule?: string;
+  personalityType?: string;
+  learningStyle?: string;
+  decisionMakingStyle?: string;
+  communicationStyle?: string;
+  motivationalFactors?: string;
+  lifePriorities?: string;
+  previousExperiences?: string;
+  skillsAndStrengths?: string;
+  // AI settings
+  aiInstructions?: string;
+  aiTone?: string;
+  aiDetailLevel?: string;
+  aiApproachStyle?: string;
 }
 
 export interface OnboardingData extends UpdateUserData {
@@ -94,10 +110,7 @@ export class UserService {
     try {
       const user = await prisma.user.update({
         where: { id: userId },
-        data: {
-          ...updateData,
-          interests: updateData.interests ? JSON.stringify(updateData.interests) : undefined,
-        }
+        data: updateData
       });
 
       logger.info(`User updated: ${user.email} (${user.id})`);
@@ -114,7 +127,6 @@ export class UserService {
         where: { id: userId },
         data: {
           ...onboardingData,
-          interests: onboardingData.interests ? JSON.stringify(onboardingData.interests) : undefined,
           onboardingCompleted: true,
         }
       });

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../config/database';
 import { requireAuth } from '../middleware/auth';
 import { UserService } from '../services/UserService';
+import { GoalService } from '../services/GoalService';
 import logger from '../utils/logger';
 
 const router = express.Router();
@@ -11,8 +12,11 @@ const router = express.Router();
 const onboardingSchema = z.object({
   location: z.string().min(1, 'Location is required'),
   ageRange: z.string().min(1, 'Age range is required'),
-  interests: z.array(z.string()).min(1, 'At least one interest is required'),
-  goals: z.string().min(1, 'Goals are required'),
+  currentSituation: z.string().min(1, 'Current situation is required'),
+  availableTime: z.string().min(1, 'Available time is required'),
+  riskTolerance: z.string().min(1, 'Risk tolerance is required'),
+  preferredApproach: z.string().min(1, 'Preferred approach is required'),
+  firstGoal: z.string().min(1, 'First goal is required'),
 });
 
 // POST /users/complete-onboarding - Complete user onboarding
@@ -31,14 +35,43 @@ router.post('/complete-onboarding', requireAuth, async (req, res) => {
     const updatedUser = await UserService.completeOnboarding(userId, {
       location: validatedData.location,
       ageRange: validatedData.ageRange,
-      interests: validatedData.interests,
-      initialGoals: validatedData.goals,
+      currentSituation: validatedData.currentSituation,
+      availableTime: validatedData.availableTime,
+      riskTolerance: validatedData.riskTolerance,
+      preferredApproach: validatedData.preferredApproach,
+      firstGoal: validatedData.firstGoal,
       onboardingCompleted: true,
     });
+
+    // Create the first goal as an actual Goal object
+    let createdGoal = null;
+    if (validatedData.firstGoal && validatedData.firstGoal.trim() !== '') {
+      try {
+        createdGoal = await GoalService.createGoal(userId, {
+          title: validatedData.firstGoal.length > 50 
+            ? validatedData.firstGoal.substring(0, 47) + '...' 
+            : validatedData.firstGoal,
+          description: validatedData.firstGoal,
+          category: 'personal', // Default category for first goal
+          status: 'planning',
+        });
+        logger.info(`Created first goal for user ${userId}: ${createdGoal.id}`);
+      } catch (error) {
+        logger.error(`Failed to create first goal for user ${userId}:`, error);
+        // Don't fail the onboarding if goal creation fails
+      }
+    }
 
     res.json({
       success: true,
       message: 'Onboarding completed successfully',
+      createdGoal: createdGoal ? {
+        id: createdGoal.id,
+        title: createdGoal.title,
+        description: createdGoal.description,
+        category: createdGoal.category,
+        status: createdGoal.status,
+      } : null,
       user: {
         id: updatedUser.id,
         email: updatedUser.email,
@@ -48,8 +81,11 @@ router.post('/complete-onboarding', requireAuth, async (req, res) => {
         ageRange: updatedUser.ageRange,
         annualIncome: updatedUser.annualIncome,
         currentSavings: updatedUser.currentSavings,
+        currentSituation: updatedUser.currentSituation,
+        availableTime: updatedUser.availableTime,
         riskTolerance: updatedUser.riskTolerance,
-        timezone: updatedUser.timezone,
+        preferredApproach: updatedUser.preferredApproach,
+        firstGoal: updatedUser.firstGoal,
         emailNotifications: updatedUser.emailNotifications,
         pushNotifications: updatedUser.pushNotifications,
         weeklyReports: updatedUser.weeklyReports,
@@ -59,9 +95,22 @@ router.post('/complete-onboarding', requireAuth, async (req, res) => {
         currency: updatedUser.currency,
         defaultGoalCategory: updatedUser.defaultGoalCategory,
         privacyLevel: updatedUser.privacyLevel,
-        interests: typeof updatedUser.interests === 'string' 
-          ? JSON.parse(updatedUser.interests) 
-          : updatedUser.interests || [],
+        // Extended profile fields
+        occupation: updatedUser.occupation,
+        workSchedule: updatedUser.workSchedule,
+        personalityType: updatedUser.personalityType,
+        learningStyle: updatedUser.learningStyle,
+        decisionMakingStyle: updatedUser.decisionMakingStyle,
+        communicationStyle: updatedUser.communicationStyle,
+        motivationalFactors: updatedUser.motivationalFactors,
+        lifePriorities: updatedUser.lifePriorities,
+        previousExperiences: updatedUser.previousExperiences,
+        skillsAndStrengths: updatedUser.skillsAndStrengths,
+        // AI settings
+        aiInstructions: updatedUser.aiInstructions,
+        aiTone: updatedUser.aiTone,
+        aiDetailLevel: updatedUser.aiDetailLevel,
+        aiApproachStyle: updatedUser.aiApproachStyle,
         onboardingCompleted: updatedUser.onboardingCompleted,
         createdAt: updatedUser.createdAt,
       },
@@ -108,7 +157,6 @@ router.get('/profile', requireAuth, async (req, res) => {
         annualIncome: user.annualIncome,
         currentSavings: user.currentSavings,
         riskTolerance: user.riskTolerance,
-        timezone: user.timezone,
         emailNotifications: user.emailNotifications,
         pushNotifications: user.pushNotifications,
         weeklyReports: user.weeklyReports,
@@ -118,7 +166,6 @@ router.get('/profile', requireAuth, async (req, res) => {
         currency: user.currency,
         defaultGoalCategory: user.defaultGoalCategory,
         privacyLevel: user.privacyLevel,
-        interests: user.interests ? JSON.parse(user.interests) : [],
         onboardingCompleted: user.onboardingCompleted,
         createdAt: user.createdAt,
       },
@@ -163,8 +210,11 @@ router.put('/profile', requireAuth, async (req, res) => {
         ageRange: updatedUser.ageRange,
         annualIncome: updatedUser.annualIncome,
         currentSavings: updatedUser.currentSavings,
+        currentSituation: updatedUser.currentSituation,
+        availableTime: updatedUser.availableTime,
         riskTolerance: updatedUser.riskTolerance,
-        timezone: updatedUser.timezone,
+        preferredApproach: updatedUser.preferredApproach,
+        firstGoal: updatedUser.firstGoal,
         emailNotifications: updatedUser.emailNotifications,
         pushNotifications: updatedUser.pushNotifications,
         weeklyReports: updatedUser.weeklyReports,
@@ -174,7 +224,22 @@ router.put('/profile', requireAuth, async (req, res) => {
         currency: updatedUser.currency,
         defaultGoalCategory: updatedUser.defaultGoalCategory,
         privacyLevel: updatedUser.privacyLevel,
-        interests: updatedUser.interests ? JSON.parse(updatedUser.interests) : [],
+        // Extended profile fields
+        occupation: updatedUser.occupation,
+        workSchedule: updatedUser.workSchedule,
+        personalityType: updatedUser.personalityType,
+        learningStyle: updatedUser.learningStyle,
+        decisionMakingStyle: updatedUser.decisionMakingStyle,
+        communicationStyle: updatedUser.communicationStyle,
+        motivationalFactors: updatedUser.motivationalFactors,
+        lifePriorities: updatedUser.lifePriorities,
+        previousExperiences: updatedUser.previousExperiences,
+        skillsAndStrengths: updatedUser.skillsAndStrengths,
+        // AI settings
+        aiInstructions: updatedUser.aiInstructions,
+        aiTone: updatedUser.aiTone,
+        aiDetailLevel: updatedUser.aiDetailLevel,
+        aiApproachStyle: updatedUser.aiApproachStyle,
         onboardingCompleted: updatedUser.onboardingCompleted,
         createdAt: updatedUser.createdAt,
       },
@@ -219,8 +284,11 @@ router.patch('/profile', requireAuth, async (req, res) => {
         ageRange: updatedUser.ageRange,
         annualIncome: updatedUser.annualIncome,
         currentSavings: updatedUser.currentSavings,
+        currentSituation: updatedUser.currentSituation,
+        availableTime: updatedUser.availableTime,
         riskTolerance: updatedUser.riskTolerance,
-        timezone: updatedUser.timezone,
+        preferredApproach: updatedUser.preferredApproach,
+        firstGoal: updatedUser.firstGoal,
         emailNotifications: updatedUser.emailNotifications,
         pushNotifications: updatedUser.pushNotifications,
         weeklyReports: updatedUser.weeklyReports,
@@ -230,7 +298,22 @@ router.patch('/profile', requireAuth, async (req, res) => {
         currency: updatedUser.currency,
         defaultGoalCategory: updatedUser.defaultGoalCategory,
         privacyLevel: updatedUser.privacyLevel,
-        interests: updatedUser.interests ? JSON.parse(updatedUser.interests) : [],
+        // Extended profile fields
+        occupation: updatedUser.occupation,
+        workSchedule: updatedUser.workSchedule,
+        personalityType: updatedUser.personalityType,
+        learningStyle: updatedUser.learningStyle,
+        decisionMakingStyle: updatedUser.decisionMakingStyle,
+        communicationStyle: updatedUser.communicationStyle,
+        motivationalFactors: updatedUser.motivationalFactors,
+        lifePriorities: updatedUser.lifePriorities,
+        previousExperiences: updatedUser.previousExperiences,
+        skillsAndStrengths: updatedUser.skillsAndStrengths,
+        // AI settings
+        aiInstructions: updatedUser.aiInstructions,
+        aiTone: updatedUser.aiTone,
+        aiDetailLevel: updatedUser.aiDetailLevel,
+        aiApproachStyle: updatedUser.aiApproachStyle,
         onboardingCompleted: updatedUser.onboardingCompleted,
         createdAt: updatedUser.createdAt,
       },
@@ -330,6 +413,169 @@ router.delete('/profile', requireAuth, async (req, res) => {
     });
   } catch (error) {
     logger.error('Error deleting user account:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Validation schema for extended profile
+const extendedProfileSchema = z.object({
+  occupation: z.string().optional(),
+  annualIncome: z.number().positive().optional(),
+  currentSavings: z.number().min(0).optional(),
+  workSchedule: z.string().optional(),
+  personalityType: z.string().optional(),
+  learningStyle: z.string().optional(),
+  decisionMakingStyle: z.string().optional(),
+  communicationStyle: z.string().optional(),
+  motivationalFactors: z.array(z.string()).optional(),
+  lifePriorities: z.array(z.string()).optional(),
+  previousExperiences: z.array(z.string()).optional(),
+  skillsAndStrengths: z.array(z.string()).optional(),
+});
+
+// PUT /users/extended-profile - Update extended profile information
+router.put('/extended-profile', requireAuth, async (req, res) => {
+  try {
+    const userId = (req.user as any)?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const validatedData = extendedProfileSchema.parse(req.body);
+    
+    // Convert arrays to JSON strings for SQLite storage
+    const updateData: any = { ...validatedData };
+    if (updateData.motivationalFactors) {
+      updateData.motivationalFactors = JSON.stringify(updateData.motivationalFactors);
+    }
+    if (updateData.lifePriorities) {
+      updateData.lifePriorities = JSON.stringify(updateData.lifePriorities);
+    }
+    if (updateData.previousExperiences) {
+      updateData.previousExperiences = JSON.stringify(updateData.previousExperiences);
+    }
+    if (updateData.skillsAndStrengths) {
+      updateData.skillsAndStrengths = JSON.stringify(updateData.skillsAndStrengths);
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+    });
+
+    res.json({
+      success: true,
+      message: 'Extended profile updated successfully',
+      profile: {
+        occupation: updatedUser.occupation,
+        annualIncome: updatedUser.annualIncome,
+        currentSavings: updatedUser.currentSavings,
+        workSchedule: updatedUser.workSchedule,
+        personalityType: updatedUser.personalityType,
+        learningStyle: updatedUser.learningStyle,
+        decisionMakingStyle: updatedUser.decisionMakingStyle,
+        communicationStyle: updatedUser.communicationStyle,
+        motivationalFactors: updatedUser.motivationalFactors ? JSON.parse(updatedUser.motivationalFactors) : [],
+        lifePriorities: updatedUser.lifePriorities ? JSON.parse(updatedUser.lifePriorities) : [],
+        previousExperiences: updatedUser.previousExperiences ? JSON.parse(updatedUser.previousExperiences) : [],
+        skillsAndStrengths: updatedUser.skillsAndStrengths ? JSON.parse(updatedUser.skillsAndStrengths) : [],
+      },
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: error.issues,
+      });
+    }
+
+    logger.error('Error updating extended profile:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Validation schema for AI settings
+const aiSettingsSchema = z.object({
+  aiInstructions: z.string().max(1000).optional(),
+  aiTone: z.enum(['helpful', 'casual', 'formal', 'motivational']).optional(),
+  aiDetailLevel: z.enum(['brief', 'balanced', 'detailed']).optional(),
+  aiApproachStyle: z.enum(['structured', 'adaptive', 'creative']).optional(),
+});
+
+// PUT /users/ai-settings - Update AI behavior settings
+router.put('/ai-settings', requireAuth, async (req, res) => {
+  try {
+    const userId = (req.user as any)?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const validatedData = aiSettingsSchema.parse(req.body);
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: validatedData,
+    });
+
+    res.json({
+      success: true,
+      message: 'AI settings updated successfully',
+      aiSettings: {
+        aiInstructions: updatedUser.aiInstructions,
+        aiTone: updatedUser.aiTone,
+        aiDetailLevel: updatedUser.aiDetailLevel,
+        aiApproachStyle: updatedUser.aiApproachStyle,
+      },
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: error.issues,
+      });
+    }
+
+    logger.error('Error updating AI settings:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /users/ai-settings - Get AI behavior settings
+router.get('/ai-settings', requireAuth, async (req, res) => {
+  try {
+    const userId = (req.user as any)?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        aiInstructions: true,
+        aiTone: true,
+        aiDetailLevel: true,
+        aiApproachStyle: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      success: true,
+      aiSettings: {
+        aiInstructions: user.aiInstructions,
+        aiTone: user.aiTone,
+        aiDetailLevel: user.aiDetailLevel,
+        aiApproachStyle: user.aiApproachStyle,
+      },
+    });
+  } catch (error) {
+    logger.error('Error fetching AI settings:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

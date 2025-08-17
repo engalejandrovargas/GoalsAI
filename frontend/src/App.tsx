@@ -2,11 +2,11 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import OnboardingPage from './pages/OnboardingPage';
 import GoalAnalyzerPage from './pages/GoalAnalyzerPage';
-import GoalsPage from './pages/GoalsPage';
 import ProgressPage from './pages/ProgressPage';
 import ChatPage from './pages/ChatPage';
 import SettingsPage from './pages/SettingsPage';
@@ -109,7 +109,8 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <div className="App">
+        <ThemeProvider>
+          <div className="App">
           <Routes>
             {/* Root Route */}
             <Route path="/" element={<HomeRoute />} />
@@ -137,16 +138,6 @@ function App() {
               <Route index element={<GoalAnalyzerPage />} />
             </Route>
 
-            <Route
-              path="/goals"
-              element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<GoalsPage />} />
-            </Route>
 
             <Route
               path="/progress"
@@ -191,6 +182,12 @@ function App() {
               }
             />
 
+            {/* Dev Route for Onboarding Preview */}
+            <Route path="/dev-onboarding" element={<OnboardingPage />} />
+
+            {/* Redirect old goals route to dashboard */}
+            <Route path="/goals" element={<Navigate to="/dashboard" replace />} />
+
             {/* Catch all - redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
@@ -216,7 +213,8 @@ function App() {
               },
             }}
           />
-        </div>
+          </div>
+        </ThemeProvider>
       </AuthProvider>
     </Router>
   );

@@ -97,17 +97,20 @@ export class ProgressService {
 
       // Financial Progress
       const totalTargetAmount = goals.reduce((sum, g) => sum + (g.estimatedCost || 0), 0);
-      const totalSavedAmount = goals.reduce((sum, g) => sum + g.currentSaved, 0);
+      const totalSavedAmount = goals.reduce((sum, g) => sum + (g.currentSaved || 0), 0);
       const savingsRate = totalTargetAmount > 0 ? (totalSavedAmount / totalTargetAmount) * 100 : 0;
 
       // Calculate monthly average savings (basic estimation)
-      const oldestGoal = goals.reduce((oldest, goal) => 
-        goal.createdAt < oldest.createdAt ? goal : oldest, 
-        goals[0]
-      );
-      const monthsSinceStart = oldestGoal ? 
-        Math.max(1, Math.floor((Date.now() - oldestGoal.createdAt.getTime()) / (1000 * 60 * 60 * 24 * 30))) : 1;
-      const monthlyAverageSavings = totalSavedAmount / monthsSinceStart;
+      let monthlyAverageSavings = 0;
+      if (goals.length > 0) {
+        const oldestGoal = goals.reduce((oldest, goal) => 
+          goal.createdAt < oldest.createdAt ? goal : oldest, 
+          goals[0]
+        );
+        const monthsSinceStart = oldestGoal ? 
+          Math.max(1, Math.floor((Date.now() - oldestGoal.createdAt.getTime()) / (1000 * 60 * 60 * 24 * 30))) : 1;
+        monthlyAverageSavings = totalSavedAmount / monthsSinceStart;
+      }
 
       // Time Progress
       const now = new Date();
@@ -168,8 +171,8 @@ export class ProgressService {
         financialProgress: {
           totalTargetAmount,
           totalSavedAmount,
-          savingsRate: Math.round(savingsRate),
-          monthlyAverageSavings: Math.round(monthlyAverageSavings)
+          savingsRate: Math.round(isNaN(savingsRate) ? 0 : savingsRate),
+          monthlyAverageSavings: Math.round(isNaN(monthlyAverageSavings) ? 0 : monthlyAverageSavings)
         },
         timeProgress: {
           onTrackGoals,

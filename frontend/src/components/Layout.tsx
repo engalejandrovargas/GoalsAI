@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Target, Home, Brain, MessageCircle, BarChart3, Settings, LogOut, User } from 'lucide-react';
+import { Target, Home, Sparkles, MessageCircle, BarChart3, Settings, LogOut, User, Palette } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Layout: React.FC = () => {
   const { user, logout } = useAuth();
+  const { colors } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [imageError, setImageError] = useState(false);
 
   // Debug: Log user data to console (comment out for production)
   // React.useEffect(() => {
+  //   console.log('Layout - User data:', user);
   //   if (user) {
-  //     console.log('User data:', user);
-  //     console.log('Profile picture URL:', user.profilePicture);
+  //     console.log('Layout - Profile picture URL:', user.profilePicture);
   //   }
   // }, [user]);
 
@@ -74,44 +76,57 @@ const Layout: React.FC = () => {
   };
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: Home },
-    { name: 'AI Analyzer', href: '/analyzer', icon: Brain },
-    { name: 'My Goals', href: '/goals', icon: Target },
-    { name: 'AI Chat', href: '/chat', icon: MessageCircle },
-    { name: 'Progress', href: '/progress', icon: BarChart3 },
-    { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'Dashboard', href: '/dashboard', icon: Home, description: 'Overview & goals' },
+    { name: 'AI Analyzer', href: '/analyzer', icon: Sparkles, description: 'Goal feasibility' },
+    { name: 'AI Chat', href: '/chat', icon: MessageCircle, description: 'Get guidance' },
+    { name: 'Progress', href: '/progress', icon: BarChart3, description: 'Track achievements' },
+    { name: 'Settings', href: '/settings', icon: Settings, description: 'Preferences' },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className="w-64 bg-white shadow-sm border-r border-gray-200 flex flex-col">
+    <div className="min-h-screen flex">
+      {/* Beautiful Sidebar */}
+      <div className={`w-72 ${colors.sidebarBackground} shadow-xl flex flex-col h-screen fixed left-0 top-0`}>
         {/* Logo */}
-        <div className="flex items-center px-6 py-4 border-b border-gray-200">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center mr-3">
-            <Target className="w-5 h-5 text-white" />
+        <div className={`flex items-center px-6 py-6 border-b ${colors.sidebarBorder}`}>
+          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mr-3 shadow-lg">
+            <Target className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-xl font-semibold text-gray-900">DreamPlan AI</h1>
+          <div>
+            <h1 className={`text-xl font-bold ${colors.sidebarText}`}>DreamPlan AI</h1>
+            <p className={`text-xs ${colors.sidebarTextSecondary}`}>Turn dreams into plans</p>
+          </div>
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-6">
           <ul className="space-y-2">
-            {navigation.map((item) => {
+            {navigation.map((item, index) => {
               const isActive = location.pathname === item.href;
               const Icon = item.icon;
               return (
                 <li key={item.name}>
                   <button
                     onClick={() => navigate(item.href)}
-                    className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                    className={`w-full group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
                       isActive
-                        ? 'bg-blue-50 text-blue-700 border-blue-200'
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                        ? colors.sidebarActive
+                        : `${colors.sidebarText} ${colors.sidebarHover}`
                     }`}
                   >
-                    <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-blue-500' : 'text-gray-400'}`} />
-                    {item.name}
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 transition-colors ${
+                      isActive 
+                        ? 'bg-white/20' 
+                        : 'bg-black/10 group-hover:bg-black/20'
+                    }`}>
+                      <Icon className={`w-4 h-4 ${isActive ? colors.sidebarActiveText : `${colors.sidebarTextSecondary} group-hover:${colors.sidebarText}`}`} />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="font-medium">{item.name}</div>
+                      <div className={`text-xs ${isActive ? colors.sidebarActiveText + ' opacity-70' : `${colors.sidebarTextSecondary} group-hover:${colors.sidebarTextSecondary}`}`}>
+                        {item.description}
+                      </div>
+                    </div>
                   </button>
                 </li>
               );
@@ -120,10 +135,10 @@ const Layout: React.FC = () => {
         </nav>
 
         {/* User Profile */}
-        <div className="border-t border-gray-200 p-4">
-          <div className="flex items-center">
+        <div className={`border-t ${colors.sidebarBorder} p-4 mt-auto`} style={{ minHeight: '80px', zIndex: 10 }}>
+          <div className={`flex items-center p-3 rounded-xl border ${colors.sidebarBorder} ${colors.sidebarProfileBackground} shadow-lg`}>
             {/* Avatar with fallback */}
-            <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+            <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
               {user?.profilePicture && !imageError ? (
                 <img
                   src={getWorkingAvatarUrl() || user.profilePicture}
@@ -135,26 +150,26 @@ const Layout: React.FC = () => {
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   {user?.name ? (
-                    <span className="text-white font-semibold text-sm">
+                    <span className="text-white font-bold text-sm">
                       {getInitials(user.name)}
                     </span>
                   ) : (
-                    <User className="w-5 h-5 text-white" />
+                    <User className="w-6 h-6 text-white" />
                   )}
                 </div>
               )}
             </div>
             <div className="ml-3 flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {user?.name || 'User'}
+              <p className={`text-sm font-semibold ${colors.sidebarText} truncate`}>
+                {user?.name || 'Loading...'}
               </p>
-              <p className="text-xs text-gray-500 truncate">
-                {user?.email || ''}
+              <p className={`text-xs ${colors.sidebarTextSecondary} truncate`}>
+                {user?.email || 'Please wait...'}
               </p>
             </div>
             <button
               onClick={handleLogout}
-              className="ml-3 p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100"
+              className={`ml-3 p-2 ${colors.sidebarTextSecondary} hover:${colors.sidebarText} transition-colors rounded-lg hover:${colors.sidebarProfileBackground}`}
               title="Logout"
             >
               <LogOut className="w-4 h-4" />
@@ -164,7 +179,7 @@ const Layout: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className={`flex-1 flex flex-col ml-72 ${colors.background}`}>
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>

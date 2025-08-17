@@ -18,6 +18,7 @@ import {
   Plus
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
 
@@ -99,6 +100,7 @@ interface Goal {
 
 const ProgressPage: React.FC = () => {
   const { user } = useAuth();
+  const { colors } = useTheme();
   const [metrics, setMetrics] = useState<ProgressMetrics | null>(null);
   const [insights, setInsights] = useState<GoalInsight[]>([]);
   const [analytics, setAnalytics] = useState<UserAnalytics | null>(null);
@@ -157,8 +159,8 @@ const ProgressPage: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Progress Dashboard</h1>
-        <p className="text-gray-600">
+        <h1 className={`text-3xl font-bold ${colors.textPrimary} mb-2`}>Progress Dashboard</h1>
+        <p className={colors.textSecondary}>
           Track your journey to achieving your dreams with detailed analytics and insights
         </p>
       </motion.div>
@@ -176,10 +178,10 @@ const ProgressPage: React.FC = () => {
             <div>
               <p className="text-blue-100 text-sm font-medium">Financial Progress</p>
               <p className="text-3xl font-bold">
-                {metrics?.financialProgress ? Math.round((metrics.financialProgress.totalSavedAmount / metrics.financialProgress.totalTargetAmount) * 100) : 0}%
+                {metrics?.financialProgress?.savingsRate || 0}%
               </p>
               <p className="text-blue-100 text-sm">
-                ${metrics?.financialProgress.totalSavedAmount.toLocaleString() || 0} / ${metrics?.financialProgress.totalTargetAmount.toLocaleString() || 0}
+                ${(metrics?.financialProgress?.totalSavedAmount || 0).toLocaleString()} / ${(metrics?.financialProgress?.totalTargetAmount || 0).toLocaleString()}
               </p>
             </div>
             <DollarSign className="w-8 h-8 text-blue-200" />
@@ -187,11 +189,11 @@ const ProgressPage: React.FC = () => {
         </div>
 
         {/* Active Goals */}
-        <div className="bg-white p-6 rounded-xl border border-gray-200">
+        <div className={`${colors.cardBackground} p-6 rounded-xl border ${colors.cardBorder}`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium">Goals Progress</p>
-              <p className="text-3xl font-bold text-gray-900">{metrics?.goalProgress.activeGoals || 0}</p>
+              <p className={`${colors.textSecondary} text-sm font-medium`}>Goals Progress</p>
+              <p className={`text-3xl font-bold ${colors.textPrimary}`}>{metrics?.goalProgress.activeGoals || 0}</p>
               <p className="text-sm text-gray-500">
                 {metrics?.goalProgress.completedGoals || 0} completed
               </p>
@@ -201,11 +203,11 @@ const ProgressPage: React.FC = () => {
         </div>
 
         {/* Current Streak */}
-        <div className="bg-white p-6 rounded-xl border border-gray-200">
+        <div className={`${colors.cardBackground} p-6 rounded-xl border ${colors.cardBorder}`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium">Current Streak</p>
-              <p className="text-3xl font-bold text-gray-900">{analytics?.streaks.currentStreak || 0}</p>
+              <p className={`${colors.textSecondary} text-sm font-medium`}>Current Streak</p>
+              <p className={`text-3xl font-bold ${colors.textPrimary}`}>{analytics?.streaks.currentStreak || 0}</p>
               <p className="text-sm text-green-600 flex items-center">
                 <ArrowUp className="w-4 h-4 mr-1" />
                 Best: {analytics?.streaks.longestStreak || 0} days
@@ -216,11 +218,11 @@ const ProgressPage: React.FC = () => {
         </div>
 
         {/* Completion Rate */}
-        <div className="bg-white p-6 rounded-xl border border-gray-200">
+        <div className={`${colors.cardBackground} p-6 rounded-xl border ${colors.cardBorder}`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium">Success Rate</p>
-              <p className="text-3xl font-bold text-gray-900">
+              <p className={`${colors.textSecondary} text-sm font-medium`}>Success Rate</p>
+              <p className={`text-3xl font-bold ${colors.textPrimary}`}>
                 {metrics?.goalProgress ? Math.round(metrics.goalProgress.completionRate) : 0}%
               </p>
               <p className="text-sm text-gray-500">Goal completion</p>
@@ -237,10 +239,10 @@ const ProgressPage: React.FC = () => {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white p-6 rounded-xl border border-gray-200"
+          className={`${colors.cardBackground} p-6 rounded-xl border ${colors.cardBorder}`}
         >
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Timeline Progress</h3>
+            <h3 className={`text-lg font-semibold ${colors.textPrimary}`}>Timeline Progress</h3>
             <div className="flex items-center space-x-2">
               {(['week', 'month', 'year'] as const).map(period => (
                 <button
@@ -261,7 +263,7 @@ const ProgressPage: React.FC = () => {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-700">On Track</p>
+                <p className={`text-sm font-medium ${colors.textSecondary}`}>On Track</p>
                 <p className="text-2xl font-bold text-green-600">{metrics?.timeProgress.onTrackGoals || 0}</p>
               </div>
               <CheckCircle2 className="w-8 h-8 text-green-500" />
@@ -269,7 +271,7 @@ const ProgressPage: React.FC = () => {
             
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-700">Behind Schedule</p>
+                <p className={`text-sm font-medium ${colors.textSecondary}`}>Behind Schedule</p>
                 <p className="text-2xl font-bold text-red-600">{metrics?.timeProgress.behindScheduleGoals || 0}</p>
               </div>
               <AlertCircle className="w-8 h-8 text-red-500" />
@@ -277,7 +279,7 @@ const ProgressPage: React.FC = () => {
             
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-700">Ahead of Schedule</p>
+                <p className={`text-sm font-medium ${colors.textSecondary}`}>Ahead of Schedule</p>
                 <p className="text-2xl font-bold text-blue-600">{metrics?.timeProgress.aheadOfScheduleGoals || 0}</p>
               </div>
               <TrendingUp className="w-8 h-8 text-blue-500" />
@@ -290,33 +292,33 @@ const ProgressPage: React.FC = () => {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white p-6 rounded-xl border border-gray-200"
+          className={`${colors.cardBackground} p-6 rounded-xl border ${colors.cardBorder}`}
         >
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Productivity Insights</h3>
+          <h3 className={`text-lg font-semibold ${colors.textPrimary} mb-6`}>Productivity Insights</h3>
           
           <div className="space-y-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
+            <div className={`${colors.cardBackground} border ${colors.cardBorder} p-4 rounded-lg`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-blue-800 font-medium">Goals This Month</p>
-                  <p className="text-2xl font-bold text-blue-900">
+                  <p className={`text-sm font-medium ${colors.textSecondary}`}>Goals This Month</p>
+                  <p className={`text-2xl font-bold ${colors.textPrimary}`}>
                     {analytics?.productivity.goalsCompletedThisMonth || 0}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-blue-600">vs last month</p>
-                  <p className="text-sm font-semibold text-blue-800">
+                  <p className={`text-xs ${colors.textTertiary}`}>vs last month</p>
+                  <p className={`text-sm font-semibold ${colors.textSecondary}`}>
                     {analytics?.productivity.goalsCompletedLastMonth || 0}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-green-50 p-4 rounded-lg">
+            <div className={`${colors.cardBackground} border ${colors.cardBorder} p-4 rounded-lg`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-green-800 font-medium">Most Productive</p>
-                  <p className="text-lg font-bold text-green-900">
+                  <p className={`text-sm font-medium ${colors.textSecondary}`}>Most Productive</p>
+                  <p className={`text-lg font-bold ${colors.textPrimary}`}>
                     {analytics?.productivity.mostProductiveCategory || 'Personal'}
                   </p>
                 </div>
@@ -324,11 +326,11 @@ const ProgressPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-purple-50 p-4 rounded-lg">
+            <div className={`${colors.cardBackground} border ${colors.cardBorder} p-4 rounded-lg`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-purple-800 font-medium">Avg. Completion Time</p>
-                  <p className="text-lg font-bold text-purple-900">
+                  <p className={`text-sm font-medium ${colors.textSecondary}`}>Avg. Completion Time</p>
+                  <p className={`text-lg font-bold ${colors.textPrimary}`}>
                     {analytics?.productivity.averageGoalCompletionTime || 0} days
                   </p>
                 </div>
@@ -344,10 +346,10 @@ const ProgressPage: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="bg-white rounded-xl border border-gray-200 p-6"
+        className={`${colors.cardBackground} rounded-xl border ${colors.cardBorder} p-6`}
       >
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Goal Performance Analysis</h3>
+          <h3 className={`text-lg font-semibold ${colors.textPrimary}`}>Goal Performance Analysis</h3>
           <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
             View All Goals →
           </button>
@@ -357,7 +359,7 @@ const ProgressPage: React.FC = () => {
           {insights.map(insight => (
             <div
               key={insight.goalId}
-              className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+              className={`border ${colors.cardBorder} rounded-lg p-4 ${colors.cardBackground} hover:opacity-90 transition-all`}
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-3">
@@ -368,33 +370,33 @@ const ProgressPage: React.FC = () => {
                     'bg-red-500'
                   }`} />
                   <div>
-                    <h4 className="font-medium text-gray-900">{insight.title}</h4>
-                    <p className="text-sm text-gray-500 capitalize">{insight.status.replace('_', ' ')}</p>
+                    <h4 className={`font-medium ${colors.textPrimary}`}>{insight.title}</h4>
+                    <p className={`text-sm ${colors.textSecondary} capitalize`}>{insight.status.replace('_', ' ')}</p>
                   </div>
                 </div>
                 
                 <div className="text-right">
-                  <p className="text-lg font-bold text-gray-900">{Math.round(insight.overallProgress)}%</p>
-                  <p className="text-xs text-gray-500">overall progress</p>
+                  <p className={`text-lg font-bold ${colors.textPrimary}`}>{Math.round(insight.overallProgress)}%</p>
+                  <p className={`text-xs ${colors.textTertiary}`}>overall progress</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-4 mb-3">
                 <div className="text-center">
-                  <p className="text-xs text-gray-500">Steps</p>
+                  <p className={`text-xs ${colors.textTertiary}`}>Steps</p>
                   <p className="font-semibold text-blue-600">{Math.round(insight.stepCompletion)}%</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-gray-500">Savings</p>
+                  <p className={`text-xs ${colors.textTertiary}`}>Savings</p>
                   <p className="font-semibold text-green-600">{Math.round(insight.savingsProgress)}%</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-gray-500">Timeline</p>
+                  <p className={`text-xs ${colors.textTertiary}`}>Timeline</p>
                   <p className="font-semibold text-purple-600">{Math.round(insight.timeProgress)}%</p>
                 </div>
               </div>
 
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
+              <div className={`w-full ${colors.backgroundTertiary} rounded-full h-2 mb-3`}>
                 <div
                   className={`h-2 rounded-full ${
                     insight.status === 'completed' ? 'bg-green-500' :
@@ -407,9 +409,9 @@ const ProgressPage: React.FC = () => {
               </div>
 
               {insight.recommendations.length > 0 && (
-                <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm font-medium text-blue-900 mb-1">AI Recommendations:</p>
-                  <ul className="text-xs text-blue-800 space-y-1">
+                <div className={`mt-3 p-3 ${colors.backgroundTertiary} border ${colors.cardBorder} rounded-lg`}>
+                  <p className={`text-sm font-medium ${colors.textPrimary} mb-1`}>AI Recommendations:</p>
+                  <ul className={`text-xs ${colors.textSecondary} space-y-1`}>
                     {insight.recommendations.slice(0, 2).map((rec, index) => (
                       <li key={index} className="flex items-start">
                         <span className="mr-2">•</span>
@@ -423,7 +425,7 @@ const ProgressPage: React.FC = () => {
           ))}
           
           {insights.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className={`text-center py-8 ${colors.textSecondary}`}>
               <Target className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <p>No goal insights available yet. Start tracking your goals to see analysis here.</p>
             </div>
@@ -436,12 +438,12 @@ const ProgressPage: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="mt-8 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-200"
+        className={`mt-8 ${colors.cardBackground} rounded-xl p-6 border ${colors.cardBorder}`}
       >
         <div className="flex items-start space-x-4">
           <Zap className="w-6 h-6 text-blue-600 mt-1" />
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">AI-Powered Recommendations</h3>
+            <h3 className={`text-lg font-semibold ${colors.textPrimary} mb-4`}>AI-Powered Recommendations</h3>
             
             {insights.length > 0 ? (
               <div className="space-y-3">
@@ -449,11 +451,11 @@ const ProgressPage: React.FC = () => {
                   .filter(insight => insight.nextActions.length > 0)
                   .slice(0, 3)
                   .map(insight => (
-                    <div key={insight.goalId} className="bg-white rounded-lg p-4 border border-blue-100">
-                      <h4 className="font-medium text-gray-900 mb-2">{insight.title}</h4>
+                    <div key={insight.goalId} className={`${colors.cardBackground} rounded-lg p-4 border ${colors.cardBorder}`}>
+                      <h4 className={`font-medium ${colors.textPrimary} mb-2`}>{insight.title}</h4>
                       <div className="space-y-1">
                         {insight.nextActions.slice(0, 2).map((action, index) => (
-                          <p key={index} className="text-sm text-gray-700 flex items-start">
+                          <p key={index} className={`text-sm ${colors.textSecondary} flex items-start`}>
                             <span className="text-blue-500 mr-2">•</span>
                             {action}
                           </p>
@@ -464,21 +466,21 @@ const ProgressPage: React.FC = () => {
                 
                 {/* General recommendations based on analytics */}
                 {analytics && (
-                  <div className="bg-white rounded-lg p-4 border border-purple-100">
-                    <h4 className="font-medium text-gray-900 mb-2">Performance Insights</h4>
+                  <div className={`${colors.cardBackground} rounded-lg p-4 border ${colors.cardBorder}`}>
+                    <h4 className={`font-medium ${colors.textPrimary} mb-2`}>Performance Insights</h4>
                     <div className="space-y-1">
                       {analytics.productivity.goalsCompletedThisMonth > analytics.productivity.goalsCompletedLastMonth && (
-                        <p className="text-sm text-green-700 flex items-start">
+                        <p className={`text-sm ${colors.textSecondary} flex items-start`}>
                           <span className="text-green-500 mr-2">•</span>
                           Great progress! You've completed more goals this month than last month. Keep up the momentum.
                         </p>
                       )}
-                      <p className="text-sm text-blue-700 flex items-start">
+                      <p className={`text-sm ${colors.textSecondary} flex items-start`}>
                         <span className="text-blue-500 mr-2">•</span>
                         Focus on {analytics.productivity.mostProductiveCategory} goals - this is your strongest category.
                       </p>
                       {analytics.streaks.currentStreak > 0 && (
-                        <p className="text-sm text-purple-700 flex items-start">
+                        <p className={`text-sm ${colors.textSecondary} flex items-start`}>
                           <span className="text-purple-500 mr-2">•</span>
                           Maintain your {analytics.streaks.currentStreak}-day streak by logging progress daily.
                         </p>
@@ -489,7 +491,7 @@ const ProgressPage: React.FC = () => {
               </div>
             ) : (
               <div className="text-center py-6">
-                <p className="text-gray-600 mb-4">Create some goals to get personalized AI recommendations</p>
+                <p className={`${colors.textSecondary} mb-4`}>Create some goals to get personalized AI recommendations</p>
                 <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
                   Create Your First Goal
                 </button>

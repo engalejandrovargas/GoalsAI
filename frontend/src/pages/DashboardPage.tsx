@@ -1,7 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Target, Plus, MessageCircle, BarChart3, Settings, LogOut, Brain, Edit3, Trash2, MoreVertical, Archive, Copy } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Target, 
+  Plus, 
+  MessageCircle, 
+  BarChart3, 
+  Sparkles, 
+  Edit3, 
+  Trash2, 
+  MoreVertical, 
+  Archive, 
+  Copy,
+  Search,
+  Filter,
+  SortAsc,
+  SortDesc,
+  RefreshCw,
+  CheckSquare,
+  Calendar,
+  DollarSign,
+  TrendingUp,
+  Clock,
+  AlertCircle,
+  Star,
+  Award,
+  ChevronDown,
+  X,
+  Timer,
+  Zap,
+  TrendingDown,
+  Activity,
+  CheckCircle2,
+  PlayCircle
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import GoalCreationModal from '../components/GoalCreationModal';
 import GoalProgressModal from '../components/GoalProgressModal';
@@ -25,24 +58,63 @@ interface Goal {
   updatedAt?: string;
 }
 
+interface Filters {
+  category: string;
+  status: string;
+  priority: string;
+  search: string;
+  sortBy: string;
+  sortOrder: 'asc' | 'desc';
+}
+
+interface Stats {
+  totalGoals: number;
+  inProgress: number;
+  completed: number;
+  totalSavings: number;
+  averageFeasibility: number;
+}
+
 const DashboardPage: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const { colors } = useTheme();
   const navigate = useNavigate();
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [filteredGoals, setFilteredGoals] = useState<Goal[]>([]);
   const [isLoadingGoals, setIsLoadingGoals] = useState(true);
+  const [progressModalTab, setProgressModalTab] = useState<'progress' | 'action-plan'>('progress');
+  const [selectedGoals, setSelectedGoals] = useState<Set<string>>(new Set());
+  const [showFilters, setShowFilters] = useState(false);
+  const [view, setView] = useState<'dashboard' | 'all-goals'>('dashboard');
+  const [stats, setStats] = useState<Stats>({
+    totalGoals: 0,
+    inProgress: 0,
+    completed: 0,
+    totalSavings: 0,
+    averageFeasibility: 0
+  });
+
+  const [filters, setFilters] = useState<Filters>({
+    category: '',
+    status: '',
+    priority: '',
+    search: '',
+    sortBy: 'updatedAt',
+    sortOrder: 'desc'
+  });
 
   const categories = [
-    { value: 'personal', label: 'Personal Development', color: 'bg-purple-100 text-purple-700' },
-    { value: 'career', label: 'Career & Business', color: 'bg-blue-100 text-blue-700' },
-    { value: 'health', label: 'Health & Fitness', color: 'bg-green-100 text-green-700' },
-    { value: 'finance', label: 'Financial', color: 'bg-yellow-100 text-yellow-700' },
-    { value: 'education', label: 'Education & Learning', color: 'bg-indigo-100 text-indigo-700' },
-    { value: 'relationships', label: 'Relationships', color: 'bg-pink-100 text-pink-700' },
-    { value: 'creative', label: 'Creative & Hobbies', color: 'bg-orange-100 text-orange-700' },
-    { value: 'travel', label: 'Travel & Adventure', color: 'bg-teal-100 text-teal-700' },
+    { value: 'personal', label: 'Personal Development', color: 'bg-purple-100 text-purple-700', icon: '✨' },
+    { value: 'career', label: 'Career & Business', color: 'bg-blue-100 text-blue-700', icon: '💼' },
+    { value: 'health', label: 'Health & Fitness', color: 'bg-green-100 text-green-700', icon: '💪' },
+    { value: 'finance', label: 'Financial', color: 'bg-yellow-100 text-yellow-700', icon: '💰' },
+    { value: 'education', label: 'Education & Learning', color: 'bg-indigo-100 text-indigo-700', icon: '📚' },
+    { value: 'relationships', label: 'Relationships', color: 'bg-pink-100 text-pink-700', icon: '❤️' },
+    { value: 'creative', label: 'Creative & Hobbies', color: 'bg-orange-100 text-orange-700', icon: '🎨' },
+    { value: 'travel', label: 'Travel & Adventure', color: 'bg-teal-100 text-teal-700', icon: '✈️' },
   ];
 
   const statuses = [
@@ -63,6 +135,11 @@ const DashboardPage: React.FC = () => {
     loadGoals();
   }, []);
 
+  useEffect(() => {
+    applyFilters();
+    calculateStats();
+  }, [goals, filters]);
+
   const loadGoals = async () => {
     try {
       const response = await apiService.getGoals();
@@ -71,17 +148,75 @@ const DashboardPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Error loading goals:', error);
+      toast.error('Failed to load goals');
     } finally {
       setIsLoadingGoals(false);
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
+  const applyFilters = () => {
+    let filtered = [...goals];
+
+    // Apply search filter
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      filtered = filtered.filter(goal => 
+        goal.title.toLowerCase().includes(searchTerm) ||
+        goal.description.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // Apply category filter
+    if (filters.category) {
+      filtered = filtered.filter(goal => goal.category === filters.category);
+    }
+
+    // Apply status filter
+    if (filters.status) {
+      filtered = filtered.filter(goal => goal.status === filters.status);
+    }
+
+    // Apply priority filter
+    if (filters.priority) {
+      filtered = filtered.filter(goal => goal.priority === filters.priority);
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      const aVal = a[filters.sortBy as keyof Goal] || '';
+      const bVal = b[filters.sortBy as keyof Goal] || '';
+      
+      if (filters.sortOrder === 'asc') {
+        return aVal > bVal ? 1 : -1;
+      } else {
+        return aVal < bVal ? 1 : -1;
+      }
+    });
+
+    setFilteredGoals(filtered);
+  };
+
+  const calculateStats = () => {
+    const totalGoals = goals.length;
+    const inProgress = goals.filter(g => g.status === 'in_progress').length;
+    const completed = goals.filter(g => g.status === 'completed').length;
+    const totalSavings = goals.reduce((sum, g) => sum + (g.currentSaved || 0), 0);
+    const goalsWithFeasibility = goals.filter(g => g.feasibilityScore);
+    const averageFeasibility = goalsWithFeasibility.length > 0 
+      ? goalsWithFeasibility.reduce((sum, g) => sum + (g.feasibilityScore || 0), 0) / goalsWithFeasibility.length 
+      : 0;
+
+    setStats({
+      totalGoals,
+      inProgress,
+      completed,
+      totalSavings,
+      averageFeasibility
+    });
   };
 
   const handleGoalCreated = () => {
-    loadGoals(); // Refresh goals list
+    loadGoals();
   };
 
   const handleGoalUpdated = () => {
@@ -90,6 +225,13 @@ const DashboardPage: React.FC = () => {
 
   const handleShowProgress = (goal: Goal) => {
     setSelectedGoal(goal);
+    setProgressModalTab('progress');
+    setShowProgressModal(true);
+  };
+
+  const handleShowActionPlan = (goal: Goal) => {
+    setSelectedGoal(goal);
+    setProgressModalTab('action-plan');
     setShowProgressModal(true);
   };
 
@@ -176,6 +318,39 @@ const DashboardPage: React.FC = () => {
     }
   };
 
+  const handleBulkAction = async (action: string) => {
+    if (selectedGoals.size === 0) return;
+
+    const goalIds = Array.from(selectedGoals);
+    
+    try {
+      switch (action) {
+        case 'delete':
+          if (!confirm(`Are you sure you want to delete ${goalIds.length} goals? This action cannot be undone.`)) {
+            return;
+          }
+          await Promise.all(goalIds.map(id => apiService.deleteGoal(id)));
+          setGoals(prev => prev.filter(goal => !selectedGoals.has(goal.id)));
+          toast.success(`${goalIds.length} goals deleted successfully!`);
+          break;
+        case 'archive':
+          await Promise.all(goalIds.map(id => apiService.archiveGoal(id)));
+          loadGoals();
+          toast.success(`${goalIds.length} goals archived successfully!`);
+          break;
+        case 'analyze':
+          await Promise.all(goalIds.map(id => apiService.analyzeExistingGoal(id)));
+          loadGoals();
+          toast.success(`${goalIds.length} goals analyzed successfully!`);
+          break;
+      }
+      setSelectedGoals(new Set());
+    } catch (error) {
+      console.error('Bulk action error:', error);
+      toast.error('Some actions failed to complete');
+    }
+  };
+
   const getCategoryInfo = (category: string) => {
     return categories.find(c => c.value === category) || categories[0];
   };
@@ -193,169 +368,593 @@ const DashboardPage: React.FC = () => {
     return Math.min(100, ((goal.currentSaved || 0) / goal.estimatedCost) * 100);
   };
 
-  return (
-    <div className="p-6">
-        {/* Welcome Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {user?.name?.split(' ')[0]}! 👋
-          </h2>
-          <p className="text-gray-600">
-            Ready to turn your dreams into actionable plans?
-          </p>
-        </motion.div>
+  const toggleGoalSelection = (goalId: string) => {
+    const newSelected = new Set(selectedGoals);
+    if (newSelected.has(goalId)) {
+      newSelected.delete(goalId);
+    } else {
+      newSelected.add(goalId);
+    }
+    setSelectedGoals(newSelected);
+  };
 
-        {/* Quick Actions */}
+  const clearFilters = () => {
+    setFilters({
+      category: '',
+      status: '',
+      priority: '',
+      search: '',
+      sortBy: 'updatedAt',
+      sortOrder: 'desc'
+    });
+  };
+
+  if (isLoadingGoals) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className={colors.textSecondary}>Loading your goals...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className={`text-3xl font-bold ${colors.textPrimary} mb-2`}>
+              Welcome back, {user?.name?.split(' ')[0]}! 👋
+            </h1>
+            <p className={colors.textSecondary}>
+              Track your progress and turn dreams into achievable plans
+            </p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setView(view === 'dashboard' ? 'all-goals' : 'dashboard')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                view === 'dashboard'
+                  ? 'bg-blue-100 text-blue-700'
+                  : `${colors.buttonSecondary} ${colors.buttonSecondaryText}`
+              }`}
+            >
+              {view === 'dashboard' ? 'View All Goals' : 'Dashboard View'}
+            </button>
+            <button
+              onClick={() => setIsGoalModalOpen(true)}
+              className="btn-primary"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Goal
+            </button>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">Total Goals</p>
+                <p className="text-3xl font-bold">{stats.totalGoals}</p>
+              </div>
+              <Target className="w-8 h-8 text-blue-200" />
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 text-white"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-sm font-medium">In Progress</p>
+                <p className="text-3xl font-bold">{stats.inProgress}</p>
+              </div>
+              <Clock className="w-8 h-8 text-orange-200" />
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Completed</p>
+                <p className="text-3xl font-bold">{stats.completed}</p>
+              </div>
+              <Award className="w-8 h-8 text-green-200" />
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm font-medium">Total Saved</p>
+                <p className="text-3xl font-bold">${stats.totalSavings.toLocaleString()}</p>
+              </div>
+              <DollarSign className="w-8 h-8 text-purple-200" />
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl p-6 text-white"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-indigo-100 text-sm font-medium">Avg Feasibility</p>
+                <p className="text-3xl font-bold">{stats.averageFeasibility.toFixed(1)}%</p>
+              </div>
+              <Sparkles className="w-8 h-8 text-indigo-200" />
+            </div>
+          </motion.div>
+        </div>
+      </motion.div>
+
+      {/* Dashboard Insights - Only show in dashboard view */}
+      {view === 'dashboard' && goals.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"
         >
-          <button 
-            onClick={() => setIsGoalModalOpen(true)}
-            className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left group"
-          >
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
-              <Plus className="w-5 h-5 text-blue-600" />
+          {/* Recent Activity */}
+          <div className={`${colors.cardBackground} rounded-xl shadow-sm border ${colors.cardBorder} p-6`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={`text-lg font-semibold ${colors.textPrimary} flex items-center`}>
+                <Activity className="w-5 h-5 text-blue-600 mr-2" />
+                Recent Activity
+              </h3>
             </div>
-            <h3 className="font-semibold text-gray-900 mb-1">New Goal</h3>
-            <p className="text-sm text-gray-600">Start planning your next achievement</p>
-          </button>
-
-          <button 
-            onClick={() => navigate('/analyzer')}
-            className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left group"
-          >
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-purple-200 transition-colors">
-              <Brain className="w-5 h-5 text-purple-600" />
+            <div className="space-y-3">
+              {goals.slice(0, 4).map((goal) => (
+                <div key={goal.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg">
+                  <div className={`w-3 h-3 rounded-full ${getStatusInfo(goal.status).color.replace('text-', 'bg-').replace('100', '500')}`}></div>
+                  <div className="flex-1">
+                    <p className={`text-sm font-medium ${colors.textPrimary} truncate`}>{goal.title}</p>
+                    <p className={`text-xs ${colors.textSecondary}`}>{getStatusInfo(goal.status).label} • {getCategoryInfo(goal.category).label}</p>
+                  </div>
+                  <span className="text-xs text-gray-400">
+                    {new Date(goal.updatedAt || goal.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+              ))}
             </div>
-            <h3 className="font-semibold text-gray-900 mb-1">AI Analyzer</h3>
-            <p className="text-sm text-gray-600">Analyze goal feasibility with AI</p>
-          </button>
-
-          <button 
-            onClick={() => navigate('/chat')}
-            className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left group"
-          >
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-200 transition-colors">
-              <MessageCircle className="w-5 h-5 text-green-600" />
-            </div>
-            <h3 className="font-semibold text-gray-900 mb-1">AI Chat</h3>
-            <p className="text-sm text-gray-600">Get personalized guidance</p>
-          </button>
-
-          <button 
-            onClick={() => navigate('/progress')}
-            className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left group"
-          >
-            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-orange-200 transition-colors">
-              <BarChart3 className="w-5 h-5 text-orange-600" />
-            </div>
-            <h3 className="font-semibold text-gray-900 mb-1">Progress</h3>
-            <p className="text-sm text-gray-600">Track your achievements</p>
-          </button>
-        </motion.div>
-
-        {/* Goals Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold text-gray-900">Your Goals</h3>
-            <button 
-              onClick={() => navigate('/goals')}
-              className="text-blue-600 hover:text-blue-700 font-medium text-sm"
-            >
-              View All
-            </button>
           </div>
 
-          {isLoadingGoals ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="text-gray-500 mt-2">Loading goals...</p>
+          {/* Goals by Category */}
+          <div className={`${colors.cardBackground} rounded-xl shadow-sm border ${colors.cardBorder} p-6`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={`text-lg font-semibold ${colors.textPrimary} flex items-center`}>
+                <TrendingUp className="w-5 h-5 text-green-600 mr-2" />
+                Goals by Category
+              </h3>
             </div>
-          ) : goals.length === 0 ? (
-            /* Empty State */
-            <div className="text-center py-12">
-              <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h4 className="text-lg font-medium text-gray-900 mb-2">
-                No goals yet
-              </h4>
-              <p className="text-gray-600 mb-6">
-                Start by creating your first goal and let AI help you make it achievable.
-              </p>
-              <button 
-                onClick={() => setIsGoalModalOpen(true)}
-                className="btn-primary"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Your First Goal
-              </button>
+            <div className="space-y-3">
+              {categories.slice(0, 5).map((category) => {
+                const count = goals.filter(g => g.category === category.value).length;
+                const percentage = goals.length > 0 ? (count / goals.length) * 100 : 0;
+                
+                if (count === 0) return null;
+                
+                return (
+                  <div key={category.value} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm">{category.icon}</span>
+                      <span className={`text-sm font-medium ${colors.textPrimary}`}>{category.label}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full ${category.color.replace('text-', 'bg-').replace('100', '500')}`}
+                          style={{ width: `${percentage}%` }}
+                        ></div>
+                      </div>
+                      <span className={`text-sm ${colors.textSecondary} w-8 text-right`}>{count}</span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ) : (
-            /* Goals Grid with CRUD */
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                {goals.slice(0, 6).map((goal) => (
-                  <GoalCard
-                    key={goal.id}
-                    goal={goal}
-                    isSelected={false}
-                    onSelect={() => {}} // No selection in dashboard
-                    onEdit={(updateData) => handleEditGoal(goal.id, updateData)}
-                    onDelete={() => handleDeleteGoal(goal.id)}
-                    onDuplicate={() => handleDuplicateGoal(goal.id)}
-                    onArchive={() => handleArchiveGoal(goal.id)}
-                    onAnalyze={() => handleAnalyzeGoal(goal.id)}
-                    onShowProgress={() => handleShowProgress(goal)}
-                    getCategoryInfo={getCategoryInfo}
-                    getStatusInfo={getStatusInfo}
-                    getPriorityInfo={getPriorityInfo}
-                    getProgressPercentage={getProgressPercentage}
-                  />
-                ))}
-              </div>
+          </div>
 
-              {goals.length > 6 && (
-                <div className="text-center">
-                  <button 
-                    onClick={() => navigate('/goals')}
-                    className="inline-flex items-center px-6 py-3 text-blue-600 hover:text-blue-700 font-medium text-sm border border-dashed border-gray-300 rounded-lg hover:border-blue-300 transition-colors"
+          {/* Priority Goals */}
+          <div className={`${colors.cardBackground} rounded-xl shadow-sm border ${colors.cardBorder} p-6`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={`text-lg font-semibold ${colors.textPrimary} flex items-center`}>
+                <Zap className="w-5 h-5 text-orange-600 mr-2" />
+                Priority Goals
+              </h3>
+            </div>
+            <div className="space-y-3">
+              {goals
+                .filter(g => g.priority === 'high' && g.status !== 'completed')
+                .slice(0, 3)
+                .map((goal) => (
+                  <div key={goal.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900 truncate">{goal.title}</p>
+                      <p className="text-xs text-red-600 flex items-center mt-1">
+                        <AlertCircle className="w-3 h-3 mr-1" />
+                        High Priority • {getStatusInfo(goal.status).label}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleShowProgress(goal)}
+                      className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+                    >
+                      View
+                    </button>
+                  </div>
+                ))}
+              {goals.filter(g => g.priority === 'high' && g.status !== 'completed').length === 0 && (
+                <div className="text-center py-4 text-gray-500">
+                  <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-green-500" />
+                  <p className="text-sm">No high priority goals pending!</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Upcoming Deadlines */}
+          <div className={`${colors.cardBackground} rounded-xl shadow-sm border ${colors.cardBorder} p-6`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={`text-lg font-semibold ${colors.textPrimary} flex items-center`}>
+                <Timer className="w-5 h-5 text-purple-600 mr-2" />
+                Upcoming Deadlines
+              </h3>
+            </div>
+            <div className="space-y-3">
+              {goals
+                .filter(g => g.targetDate && g.status !== 'completed')
+                .sort((a, b) => new Date(a.targetDate!).getTime() - new Date(b.targetDate!).getTime())
+                .slice(0, 3)
+                .map((goal) => {
+                  const daysLeft = Math.ceil((new Date(goal.targetDate!).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                  const isOverdue = daysLeft < 0;
+                  const isUrgent = daysLeft <= 7 && daysLeft >= 0;
+                  
+                  return (
+                    <div key={goal.id} className={`flex items-center justify-between p-3 rounded-lg border ${
+                      isOverdue ? 'bg-red-50 border-red-100' : 
+                      isUrgent ? 'bg-yellow-50 border-yellow-100' : 
+                      'bg-blue-50 border-blue-100'
+                    }`}>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900 truncate">{goal.title}</p>
+                        <p className={`text-xs flex items-center mt-1 ${
+                          isOverdue ? 'text-red-600' : 
+                          isUrgent ? 'text-yellow-600' : 
+                          'text-blue-600'
+                        }`}>
+                          <Calendar className="w-3 h-3 mr-1" />
+                          {isOverdue ? 
+                            `Overdue by ${Math.abs(daysLeft)} days` :
+                            daysLeft === 0 ? 'Due today' :
+                            `${daysLeft} days left`
+                          }
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleShowProgress(goal)}
+                        className={`text-xs px-2 py-1 rounded-md hover:opacity-80 transition-colors ${
+                          isOverdue ? 'bg-red-100 text-red-700' : 
+                          isUrgent ? 'bg-yellow-100 text-yellow-700' : 
+                          'bg-blue-100 text-blue-700'
+                        }`}
+                      >
+                        View
+                      </button>
+                    </div>
+                  );
+                })}
+              {goals.filter(g => g.targetDate && g.status !== 'completed').length === 0 && (
+                <div className="text-center py-4 text-gray-500">
+                  <Calendar className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                  <p className="text-sm">No upcoming deadlines</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Goals Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className={`${colors.cardBackground} rounded-xl shadow-sm border ${colors.cardBorder}`}
+      >
+        {/* Goals Header with Search and Filters */}
+        <div className={`p-6 border-b ${colors.border}`}>
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex items-center space-x-4">
+              <h3 className={`text-xl font-semibold ${colors.textPrimary}`}>
+                {view === 'dashboard' ? 'Recent Goals' : 'All Goals'}
+              </h3>
+              {selectedGoals.size > 0 && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-500">
+                    {selectedGoals.size} selected
+                  </span>
+                  <button
+                    onClick={() => handleBulkAction('delete')}
+                    className="text-red-600 hover:text-red-700 text-sm font-medium"
                   >
-                    <Target className="w-4 h-4 mr-2" />
-                    View All {goals.length} Goals
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => handleBulkAction('archive')}
+                    className="text-gray-600 hover:text-gray-700 text-sm font-medium"
+                  >
+                    Archive
+                  </button>
+                  <button
+                    onClick={() => handleBulkAction('analyze')}
+                    className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  >
+                    Analyze
                   </button>
                 </div>
               )}
-            </>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              {/* Search */}
+              <div className="relative">
+                <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search goals..."
+                  value={filters.search}
+                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+                />
+              </div>
+
+              {/* Filter Toggle */}
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  showFilters
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <Filter className="w-4 h-4" />
+                <span>Filters</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Refresh */}
+              <button
+                onClick={loadGoals}
+                className="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <RefreshCw className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Filters Panel */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-6 pt-6 border-t border-gray-200"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <label className={`block text-sm font-medium ${colors.textSecondary} mb-2`}>Category</label>
+                    <select
+                      value={filters.category}
+                      onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">All Categories</option>
+                      {categories.map(category => (
+                        <option key={category.value} value={category.value}>
+                          {category.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-medium ${colors.textSecondary} mb-2`}>Status</label>
+                    <select
+                      value={filters.status}
+                      onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">All Statuses</option>
+                      {statuses.map(status => (
+                        <option key={status.value} value={status.value}>
+                          {status.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-medium ${colors.textSecondary} mb-2`}>Priority</label>
+                    <select
+                      value={filters.priority}
+                      onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">All Priorities</option>
+                      {priorities.map(priority => (
+                        <option key={priority.value} value={priority.value}>
+                          {priority.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-medium ${colors.textSecondary} mb-2`}>Sort By</label>
+                    <div className="flex space-x-2">
+                      <select
+                        value={filters.sortBy}
+                        onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="updatedAt">Last Updated</option>
+                        <option value="createdAt">Created Date</option>
+                        <option value="title">Title</option>
+                        <option value="priority">Priority</option>
+                        <option value="feasibilityScore">Feasibility</option>
+                      </select>
+                      <button
+                        onClick={() => setFilters({ 
+                          ...filters, 
+                          sortOrder: filters.sortOrder === 'asc' ? 'desc' : 'asc' 
+                        })}
+                        className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                      >
+                        {filters.sortOrder === 'asc' ? 
+                          <SortAsc className={`w-4 h-4 ${colors.textSecondary}`} /> : 
+                          <SortDesc className={`w-4 h-4 ${colors.textSecondary}`} />
+                        }
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end mt-4">
+                  <button
+                    onClick={clearFilters}
+                    className="text-gray-600 hover:text-gray-700 text-sm font-medium"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Goals Content */}
+        <div className="p-6">
+          {filteredGoals.length === 0 ? (
+            /* Empty State */
+            <div className="text-center py-12">
+              <Target className={`w-12 h-12 ${colors.textTertiary} mx-auto mb-4`} />
+              <h4 className={`text-lg font-medium ${colors.textPrimary} mb-2`}>
+                {goals.length === 0 ? 'No goals yet' : 'No goals match your filters'}
+              </h4>
+              <p className={`${colors.textSecondary} mb-6`}>
+                {goals.length === 0 
+                  ? 'Start by creating your first goal and let AI help you make it achievable.'
+                  : 'Try adjusting your search or filters to find what you\'re looking for.'
+                }
+              </p>
+              {goals.length === 0 ? (
+                <button 
+                  onClick={() => setIsGoalModalOpen(true)}
+                  className="btn-primary"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Your First Goal
+                </button>
+              ) : (
+                <button 
+                  onClick={clearFilters}
+                  className="text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
+          ) : (
+            /* Goals Grid */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {(view === 'dashboard' ? filteredGoals.slice(0, 6) : filteredGoals).map((goal) => (
+                <GoalCard
+                  key={goal.id}
+                  goal={goal}
+                  isSelected={selectedGoals.has(goal.id)}
+                  onSelect={() => toggleGoalSelection(goal.id)}
+                  onEdit={(updateData) => handleEditGoal(goal.id, updateData)}
+                  onDelete={() => handleDeleteGoal(goal.id)}
+                  onDuplicate={() => handleDuplicateGoal(goal.id)}
+                  onArchive={() => handleArchiveGoal(goal.id)}
+                  onAnalyze={() => handleAnalyzeGoal(goal.id)}
+                  onShowProgress={() => handleShowProgress(goal)}
+                  onShowActionPlan={() => handleShowActionPlan(goal)}
+                  getCategoryInfo={getCategoryInfo}
+                  getStatusInfo={getStatusInfo}
+                  getPriorityInfo={getPriorityInfo}
+                  getProgressPercentage={getProgressPercentage}
+                />
+              ))}
+            </div>
           )}
-        </motion.div>
 
-        {/* Goal Creation Modal */}
-        <GoalCreationModal
-          isOpen={isGoalModalOpen}
-          onClose={() => setIsGoalModalOpen(false)}
-          onGoalCreated={handleGoalCreated}
+          {view === 'dashboard' && filteredGoals.length > 6 && (
+            <div className="text-center mt-8">
+              <button 
+                onClick={() => setView('all-goals')}
+                className="inline-flex items-center px-6 py-3 text-blue-600 hover:text-blue-700 font-medium text-sm border border-dashed border-gray-300 rounded-lg hover:border-blue-300 transition-colors"
+              >
+                <Target className="w-4 h-4 mr-2" />
+                View All {filteredGoals.length} Goals
+              </button>
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Goal Creation Modal */}
+      <GoalCreationModal
+        isOpen={isGoalModalOpen}
+        onClose={() => setIsGoalModalOpen(false)}
+        onGoalCreated={handleGoalCreated}
+      />
+
+      {/* Goal Progress Modal */}
+      {selectedGoal && (
+        <GoalProgressModal
+          isOpen={showProgressModal}
+          onClose={() => setShowProgressModal(false)}
+          goal={selectedGoal}
+          onGoalUpdated={handleGoalUpdated}
+          initialTab={progressModalTab}
         />
-
-        {/* Goal Progress Modal */}
-        {selectedGoal && (
-          <GoalProgressModal
-            isOpen={showProgressModal}
-            onClose={() => setShowProgressModal(false)}
-            goal={selectedGoal}
-            onGoalUpdated={handleGoalUpdated}
-          />
-        )}
+      )}
     </div>
   );
 };

@@ -34,8 +34,42 @@ interface FeasibilityAnalysis {
 interface UserContext {
   location: string;
   ageRange: string;
-  interests: string[];
-  goals: string;
+  interests?: string[];
+  goals?: string;
+  currentSituation?: string | null;
+  availableTime?: string | null;
+  riskTolerance?: string | null;
+  preferredApproach?: string | null;
+  firstGoal?: string | null;
+  
+  // Extended context for enhanced AI behavior
+  occupation?: string | null;
+  annualIncome?: number | null;
+  currentSavings?: number | null;
+  workSchedule?: string | null;
+  personalityType?: string | null;
+  learningStyle?: string | null;
+  decisionMakingStyle?: string | null;
+  communicationStyle?: string | null;
+  motivationalFactors?: string[] | null;
+  lifePriorities?: string[] | null;
+  previousExperiences?: string[] | null;
+  skillsAndStrengths?: string[] | null;
+  
+  // AI behavior preferences
+  aiInstructions?: string | null;
+  aiTone?: string;
+  aiDetailLevel?: string;
+  aiApproachStyle?: string;
+}
+
+interface GoalComplexitySettings {
+  timeHorizon: 'short' | 'medium' | 'long' | 'very_long'; // <3mo, 3-12mo, 1-3yr, >3yr
+  financialComplexity: 'minimal' | 'moderate' | 'significant' | 'major'; // <$500, $500-5k, $5k-25k, >$25k
+  skillRequirement: 'basic' | 'intermediate' | 'advanced' | 'expert';
+  riskLevel: 'very_low' | 'low' | 'moderate' | 'high' | 'very_high';
+  supportNeeded: 'self_directed' | 'minimal_guidance' | 'regular_support' | 'intensive_coaching';
+  domainSpecific: boolean; // Whether goal requires domain-specific expertise
 }
 
 export class AIService {
@@ -137,14 +171,34 @@ export class AIService {
   }
 
   private buildFeasibilityPrompt(goalDescription: string, userContext: UserContext): string {
+    const extendedContext = this.buildExtendedContextString(userContext);
+    const complexitySettings = this.analyzeGoalComplexity(goalDescription, userContext);
+    const personalizedInstructions = this.buildPersonalizedInstructions(userContext, complexitySettings);
+
     return `
-You are an expert life coach and goal achievement analyst. Analyze the feasibility of the following goal and provide a comprehensive assessment.
+You are an expert life coach and goal achievement analyst with deep expertise across multiple domains. Analyze the feasibility of the following goal and provide a comprehensive, personalized assessment.
 
 USER CONTEXT:
 - Location: ${userContext.location}
 - Age Range: ${userContext.ageRange}
-- Interests: ${userContext.interests.join(', ')}
-- Goal: ${goalDescription}
+- Interests: ${userContext.interests?.join(', ') || 'Not specified'}
+- Current Situation: ${userContext.currentSituation || 'Not specified'}
+- Available Time: ${userContext.availableTime || 'Not specified'}
+- Risk Tolerance: ${userContext.riskTolerance || 'Not specified'}
+${extendedContext}
+
+GOAL: ${goalDescription}
+
+COMPLEXITY ANALYSIS:
+- Time Horizon: ${complexitySettings.timeHorizon}
+- Financial Complexity: ${complexitySettings.financialComplexity}
+- Skill Requirement: ${complexitySettings.skillRequirement}
+- Risk Level: ${complexitySettings.riskLevel}
+- Support Needed: ${complexitySettings.supportNeeded}
+- Domain Specific: ${complexitySettings.domainSpecific}
+
+PERSONALIZED INSTRUCTIONS:
+${personalizedInstructions}
 
 Please provide a detailed feasibility analysis in the following JSON format (respond ONLY with valid JSON, no additional text):
 
@@ -191,8 +245,220 @@ Please provide a detailed feasibility analysis in the following JSON format (res
   ]
 }
 
-Consider the user's location for local opportunities, their age range for relevant life stage factors, and their interests for potential synergies. Be realistic but encouraging. Provide at least 3-5 action steps and 3-5 resources.
+Consider the user's complete profile, their unique circumstances, financial situation, learning style, and personality type. Tailor your analysis to their complexity requirements and provide actionable, personalized recommendations. Be realistic but encouraging, adapting your communication style to their preferences.
 `;
+  }
+
+  private buildExtendedContextString(userContext: UserContext): string {
+    let context = '';
+    
+    if (userContext.occupation) {
+      context += `- Occupation: ${userContext.occupation}\n`;
+    }
+    if (userContext.annualIncome) {
+      context += `- Annual Income: $${userContext.annualIncome.toLocaleString()}\n`;
+    }
+    if (userContext.currentSavings) {
+      context += `- Current Savings: $${userContext.currentSavings.toLocaleString()}\n`;
+    }
+    if (userContext.workSchedule) {
+      context += `- Work Schedule: ${userContext.workSchedule}\n`;
+    }
+    if (userContext.personalityType) {
+      context += `- Personality Type: ${userContext.personalityType}\n`;
+    }
+    if (userContext.learningStyle) {
+      context += `- Learning Style: ${userContext.learningStyle}\n`;
+    }
+    if (userContext.decisionMakingStyle) {
+      context += `- Decision Making Style: ${userContext.decisionMakingStyle}\n`;
+    }
+    if (userContext.communicationStyle) {
+      context += `- Communication Style: ${userContext.communicationStyle}\n`;
+    }
+    if (userContext.motivationalFactors?.length) {
+      context += `- Motivational Factors: ${userContext.motivationalFactors.join(', ')}\n`;
+    }
+    if (userContext.lifePriorities?.length) {
+      context += `- Life Priorities: ${userContext.lifePriorities.join(', ')}\n`;
+    }
+    if (userContext.previousExperiences?.length) {
+      context += `- Previous Experiences: ${userContext.previousExperiences.join(', ')}\n`;
+    }
+    if (userContext.skillsAndStrengths?.length) {
+      context += `- Skills & Strengths: ${userContext.skillsAndStrengths.join(', ')}\n`;
+    }
+    
+    return context;
+  }
+
+  private analyzeGoalComplexity(goalDescription: string, userContext: UserContext): GoalComplexitySettings {
+    const goal = goalDescription.toLowerCase();
+    
+    // Analyze time horizon based on keywords and user context
+    let timeHorizon: GoalComplexitySettings['timeHorizon'] = 'medium';
+    if (goal.includes('week') || goal.includes('month') || goal.includes('quick')) {
+      timeHorizon = 'short';
+    } else if (goal.includes('year') || goal.includes('long term') || goal.includes('career') || goal.includes('degree')) {
+      timeHorizon = 'long';
+    } else if (goal.includes('decade') || goal.includes('retirement') || goal.includes('legacy')) {
+      timeHorizon = 'very_long';
+    }
+
+    // Analyze financial complexity
+    let financialComplexity: GoalComplexitySettings['financialComplexity'] = 'moderate';
+    if (goal.includes('free') || goal.includes('low cost') || goal.includes('budget')) {
+      financialComplexity = 'minimal';
+    } else if (goal.includes('house') || goal.includes('business') || goal.includes('invest') || goal.includes('$')) {
+      financialComplexity = 'significant';
+    } else if (goal.includes('company') || goal.includes('empire') || goal.includes('million')) {
+      financialComplexity = 'major';
+    }
+
+    // Analyze skill requirements
+    let skillRequirement: GoalComplexitySettings['skillRequirement'] = 'intermediate';
+    if (goal.includes('learn') || goal.includes('beginner') || goal.includes('start')) {
+      skillRequirement = 'basic';
+    } else if (goal.includes('master') || goal.includes('expert') || goal.includes('professional') || goal.includes('advanced')) {
+      skillRequirement = 'advanced';
+    } else if (goal.includes('world class') || goal.includes('elite') || goal.includes('pioneer')) {
+      skillRequirement = 'expert';
+    }
+
+    // Analyze risk level based on goal type and user risk tolerance
+    let riskLevel: GoalComplexitySettings['riskLevel'] = 'moderate';
+    if (userContext.riskTolerance === 'low' || goal.includes('safe') || goal.includes('secure')) {
+      riskLevel = 'low';
+    } else if (userContext.riskTolerance === 'high' || goal.includes('startup') || goal.includes('venture') || goal.includes('gamble')) {
+      riskLevel = 'high';
+    }
+
+    // Determine support needed based on complexity and user preferences
+    let supportNeeded: GoalComplexitySettings['supportNeeded'] = 'minimal_guidance';
+    if (userContext.preferredApproach === 'independent' || skillRequirement === 'basic') {
+      supportNeeded = 'self_directed';
+    } else if (skillRequirement === 'expert' || financialComplexity === 'major') {
+      supportNeeded = 'intensive_coaching';
+    } else if (timeHorizon === 'long' || timeHorizon === 'very_long') {
+      supportNeeded = 'regular_support';
+    }
+
+    // Check if domain-specific expertise is needed
+    const domainSpecific = goal.includes('medical') || goal.includes('legal') || goal.includes('technical') || 
+                          goal.includes('scientific') || goal.includes('engineering') || goal.includes('finance');
+
+    return {
+      timeHorizon,
+      financialComplexity,
+      skillRequirement,
+      riskLevel,
+      supportNeeded,
+      domainSpecific
+    };
+  }
+
+  private buildPersonalizedInstructions(userContext: UserContext, complexity: GoalComplexitySettings): string {
+    let instructions = [];
+
+    // Add AI tone and style preferences
+    if (userContext.aiTone) {
+      switch (userContext.aiTone) {
+        case 'motivational':
+          instructions.push('Use an inspiring, energetic tone that emphasizes possibilities and builds confidence.');
+          break;
+        case 'formal':
+          instructions.push('Maintain a professional, structured approach with clear frameworks and methodologies.');
+          break;
+        case 'casual':
+          instructions.push('Use a friendly, conversational tone that feels approachable and relatable.');
+          break;
+        default:
+          instructions.push('Balance professionalism with warmth, being both informative and encouraging.');
+      }
+    }
+
+    // Add detail level preferences
+    if (userContext.aiDetailLevel) {
+      switch (userContext.aiDetailLevel) {
+        case 'brief':
+          instructions.push('Keep responses concise and focus on the most essential information.');
+          break;
+        case 'detailed':
+          instructions.push('Provide comprehensive analysis with thorough explanations and multiple options.');
+          break;
+        default:
+          instructions.push('Provide balanced detail - enough to be useful without overwhelming.');
+      }
+    }
+
+    // Add approach style preferences
+    if (userContext.aiApproachStyle) {
+      switch (userContext.aiApproachStyle) {
+        case 'structured':
+          instructions.push('Present information in clear, logical frameworks with step-by-step processes.');
+          break;
+        case 'creative':
+          instructions.push('Think outside the box and suggest innovative, unconventional approaches.');
+          break;
+        default:
+          instructions.push('Adapt your approach based on the specific goal and user needs.');
+      }
+    }
+
+    // Add learning style considerations
+    if (userContext.learningStyle) {
+      switch (userContext.learningStyle) {
+        case 'visual':
+          instructions.push('Suggest visual learning resources and emphasize charts, diagrams, and visual planning tools.');
+          break;
+        case 'auditory':
+          instructions.push('Recommend podcasts, audiobooks, and discussion-based learning opportunities.');
+          break;
+        case 'kinesthetic':
+          instructions.push('Focus on hands-on activities, practical exercises, and experiential learning.');
+          break;
+        case 'reading':
+          instructions.push('Prioritize books, articles, and written resources for learning and development.');
+          break;
+      }
+    }
+
+    // Add personality-based recommendations
+    if (userContext.personalityType) {
+      if (userContext.personalityType.includes('introvert')) {
+        instructions.push('Consider solitary activities and self-paced learning options.');
+      } else if (userContext.personalityType.includes('extrovert')) {
+        instructions.push('Emphasize group activities, networking, and collaborative approaches.');
+      }
+    }
+
+    // Add complexity-based instructions
+    if (complexity.supportNeeded === 'intensive_coaching') {
+      instructions.push('Strongly recommend professional guidance and mentorship throughout the journey.');
+    } else if (complexity.supportNeeded === 'self_directed') {
+      instructions.push('Focus on self-study resources and independent learning paths.');
+    }
+
+    if (complexity.domainSpecific) {
+      instructions.push('Identify domain experts and specialized resources for technical aspects.');
+    }
+
+    // Add financial considerations
+    if (userContext.annualIncome && userContext.currentSavings) {
+      const financialRatio = userContext.currentSavings / userContext.annualIncome;
+      if (financialRatio < 0.1) {
+        instructions.push('Be particularly mindful of budget constraints and suggest low-cost alternatives.');
+      } else if (financialRatio > 0.5) {
+        instructions.push('User has good financial flexibility - can suggest premium options when valuable.');
+      }
+    }
+
+    // Add custom AI instructions if provided
+    if (userContext.aiInstructions) {
+      instructions.push(`CUSTOM INSTRUCTIONS: ${userContext.aiInstructions}`);
+    }
+
+    return instructions.join('\n');
   }
 
   private validateAnalysis(analysis: any): FeasibilityAnalysis {
@@ -298,7 +564,7 @@ Based on the following goal and feasibility analysis, create a detailed implemen
 GOAL: ${goalDescription}
 FEASIBILITY SCORE: ${feasibilityAnalysis.feasibilityScore}
 ESTIMATED TIMEFRAME: ${feasibilityAnalysis.estimatedTimeframe}
-USER CONTEXT: ${userContext.location}, ${userContext.ageRange}, interested in ${userContext.interests.join(', ')}
+USER CONTEXT: ${userContext.location}, ${userContext.ageRange}, interested in ${userContext.interests?.join(', ') || 'Not specified'}
 
 Create a comprehensive plan in JSON format with:
 - Weekly milestones for the first month
@@ -402,14 +668,21 @@ Respond ONLY with valid JSON.
       .map(msg => `${msg.role}: ${msg.content}`)
       .join('\n');
 
+    const extendedContext = this.buildExtendedContextString(userContext);
+    const personalizedInstructions = this.buildChatPersonalizedInstructions(userContext);
+
     return `
-You are an expert AI goal coach helping users achieve their dreams. You provide personalized, encouraging, and actionable advice.
+You are an expert AI goal coach with deep expertise across multiple life domains. You help users achieve their dreams through personalized, encouraging, and actionable advice tailored to their unique circumstances.
 
 USER CONTEXT:
 - Location: ${userContext.location}
 - Age Range: ${userContext.ageRange}
-- Interests: ${userContext.interests.join(', ')}
+- Interests: ${userContext.interests?.join(', ') || 'Not specified'}
+- Current Situation: ${userContext.currentSituation || 'Not specified'}
+- Available Time: ${userContext.availableTime || 'Not specified'}
+- Risk Tolerance: ${userContext.riskTolerance || 'Not specified'}
 - Initial Goals: ${userContext.goals}
+${extendedContext}
 
 SESSION TYPE: ${sessionType}
 
@@ -418,18 +691,71 @@ ${historyText}
 
 USER MESSAGE: ${message}
 
+PERSONALIZED COACHING STYLE:
+${personalizedInstructions}
+
 INSTRUCTIONS:
 - Be encouraging, supportive, and practical
-- Ask clarifying questions when needed
-- Provide specific, actionable advice
-- Use the user's context to personalize your response
-- Keep responses conversational but informative
-- If helping with goal creation, guide them step by step
-- If analyzing feasibility, be realistic but optimistic
-- Include relevant resources, tips, or strategies when helpful
+- Ask clarifying questions when needed to understand their specific situation
+- Provide specific, actionable advice tailored to their profile
+- Use their context, personality, and preferences to personalize responses
+- Consider their financial situation, learning style, and life priorities
+- Adapt your communication style to their preferences (tone, detail level, approach)
+- If helping with goal creation, guide them step by step based on their complexity needs
+- If analyzing feasibility, be realistic but optimistic, considering their risk tolerance
+- Include relevant resources that match their learning style and budget
+- Reference their skills, experiences, and motivational factors when applicable
 
-Respond as a helpful AI coach (keep it under 300 words):
+Respond as their personalized AI coach (keep it under 400 words for detailed responses, 200 for brief):
 `;
+  }
+
+  private buildChatPersonalizedInstructions(userContext: UserContext): string {
+    let instructions = [];
+
+    // Communication style adaptation
+    if (userContext.aiTone === 'motivational') {
+      instructions.push('Use an inspiring, energetic tone that builds confidence and enthusiasm.');
+    } else if (userContext.aiTone === 'formal') {
+      instructions.push('Maintain a professional, structured communication style.');
+    } else if (userContext.aiTone === 'casual') {
+      instructions.push('Use a friendly, conversational tone that feels natural and approachable.');
+    }
+
+    // Detail level preferences
+    if (userContext.aiDetailLevel === 'brief') {
+      instructions.push('Keep responses concise and focus on key actionable points.');
+    } else if (userContext.aiDetailLevel === 'detailed') {
+      instructions.push('Provide comprehensive guidance with thorough explanations and examples.');
+    }
+
+    // Approach style
+    if (userContext.aiApproachStyle === 'structured') {
+      instructions.push('Present advice in clear, logical frameworks with numbered steps.');
+    } else if (userContext.aiApproachStyle === 'creative') {
+      instructions.push('Suggest innovative, unconventional approaches and thinking outside the box.');
+    }
+
+    // Learning style considerations
+    if (userContext.learningStyle === 'visual') {
+      instructions.push('Suggest visual tools, diagrams, and recommend creating visual plans or mood boards.');
+    } else if (userContext.learningStyle === 'auditory') {
+      instructions.push('Recommend podcasts, audiobooks, and verbal discussion strategies.');
+    } else if (userContext.learningStyle === 'kinesthetic') {
+      instructions.push('Focus on hands-on activities and practical, experiential approaches.');
+    }
+
+    // Motivational factors integration
+    if (userContext.motivationalFactors?.length) {
+      instructions.push(`Connect advice to their key motivators: ${userContext.motivationalFactors.join(', ')}.`);
+    }
+
+    // Custom instructions
+    if (userContext.aiInstructions) {
+      instructions.push(`Follow these custom preferences: ${userContext.aiInstructions}`);
+    }
+
+    return instructions.length > 0 ? instructions.join('\n') : 'Provide balanced, helpful guidance adapted to their needs.';
   }
 }
 

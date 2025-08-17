@@ -17,16 +17,32 @@ model User {
   // Onboarding data
   location              String?
   ageRange              String?
-  interests             String?  // JSON array string for SQLite
-  initialGoals          String?  // Initial goals text from onboarding
-  budgetStyle           String?
-  timezone              String?
+  currentSituation      String?
+  availableTime         String?
+  riskTolerance         String?
+  preferredApproach     String?
+  firstGoal             String?
   onboardingCompleted   Boolean  @default(false)
   
-  // Optional profile data
+  // Optional profile data (for settings/profile page)
+  occupation            String?
   annualIncome          Int?
   currentSavings        Int?
-  riskTolerance         String?
+  workSchedule          String?
+  personalityType       String?
+  learningStyle         String?
+  decisionMakingStyle   String?
+  communicationStyle    String?
+  motivationalFactors   String?  // JSON array string
+  lifePriorities        String?  // JSON array string
+  previousExperiences   String?  // JSON array string
+  skillsAndStrengths    String?  // JSON array string
+  
+  // AI Behavior Settings
+  aiInstructions        String?  // Custom instructions for AI behavior
+  aiTone               String   @default("helpful") // helpful, casual, formal, motivational
+  aiDetailLevel        String   @default("balanced") // brief, balanced, detailed
+  aiApproachStyle      String   @default("adaptive") // structured, adaptive, creative
   
   // User preferences
   emailNotifications    Boolean  @default(true)

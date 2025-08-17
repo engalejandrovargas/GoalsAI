@@ -121,7 +121,7 @@ export class FeasibilityService {
     const prompt = `Analyze skill requirements for this goal:
     Goal: ${goal.title}
     Description: ${goal.description}
-    User Interests: ${user.interests}
+    User Situation: ${user.currentSituation || 'Not specified'}
     User Age: ${user.ageRange}
     
     Rate how feasible it is to acquire needed skills (0-100).`;
@@ -165,7 +165,7 @@ export class FeasibilityService {
     Description: ${goal.description}
     User Location: ${user.location}
     User Age: ${user.ageRange}
-    User Interests: ${user.interests}
+    User Situation: ${user.currentSituation || 'Not specified'}
     
     Consider life stage, location advantages/disadvantages. Rate feasibility 0-100.`;
 

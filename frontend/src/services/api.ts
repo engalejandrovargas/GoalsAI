@@ -424,6 +424,60 @@ class ApiService {
       body: JSON.stringify(progressData),
     });
   }
+
+  // Extended Profile methods
+  async updateExtendedProfile(profileData: {
+    occupation?: string;
+    annualIncome?: number;
+    currentSavings?: number;
+    workSchedule?: string;
+    personalityType?: string;
+    learningStyle?: string;
+    decisionMakingStyle?: string;
+    communicationStyle?: string;
+    motivationalFactors?: string[];
+    lifePriorities?: string[];
+    previousExperiences?: string[];
+    skillsAndStrengths?: string[];
+  }) {
+    return this.request<{
+      success: boolean;
+      profile: any;
+      message: string;
+    }>('/users/extended-profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    });
+  }
+
+  // AI Settings methods
+  async getAISettings() {
+    return this.request<{
+      success: boolean;
+      aiSettings: {
+        aiInstructions?: string;
+        aiTone: string;
+        aiDetailLevel: string;
+        aiApproachStyle: string;
+      };
+    }>('/users/ai-settings');
+  }
+
+  async updateAISettings(aiSettings: {
+    aiInstructions?: string;
+    aiTone?: 'helpful' | 'casual' | 'formal' | 'motivational';
+    aiDetailLevel?: 'brief' | 'balanced' | 'detailed';
+    aiApproachStyle?: 'structured' | 'adaptive' | 'creative';
+  }) {
+    return this.request<{
+      success: boolean;
+      aiSettings: any;
+      message: string;
+    }>('/users/ai-settings', {
+      method: 'PUT',
+      body: JSON.stringify(aiSettings),
+    });
+  }
 }
 
 export const apiService = new ApiService();

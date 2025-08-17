@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { apiService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import GoalCreationModal from '../components/GoalCreationModal';
 import toast from 'react-hot-toast';
 
@@ -45,6 +46,7 @@ interface ChatSession {
 
 const ChatPage: React.FC = () => {
   const { user } = useAuth();
+  const { colors } = useTheme();
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -302,24 +304,24 @@ const ChatPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full bg-gray-50">
+    <div className={`flex h-full ${colors.background}`}>
       {/* Sidebar - Chat Sessions */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200">
+      <div className={`w-80 ${colors.cardBackground} border-r ${colors.cardBorder} flex flex-col`}>
+        <div className={`p-4 border-b ${colors.cardBorder}`}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+            <h2 className={`text-lg font-semibold ${colors.textPrimary} flex items-center`}>
               <MessageCircle className="w-5 h-5 mr-2 text-blue-600" />
               AI Chat
             </h2>
             <button
               onClick={startNewSession}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className={`p-2 ${colors.textSecondary} hover:${colors.textPrimary} hover:${colors.backgroundSecondary} rounded-lg transition-colors`}
               title="New Chat"
             >
               <Plus className="w-4 h-4" />
             </button>
           </div>
-          <p className="text-sm text-gray-600">
+          <p className={`text-sm ${colors.textSecondary}`}>
             Chat with AI to refine your goals and get personalized guidance.
           </p>
         </div>
@@ -344,8 +346,8 @@ const ChatPage: React.FC = () => {
                   animate={{ opacity: 1, x: 0 }}
                   className={`p-3 rounded-lg cursor-pointer transition-colors group ${
                     currentSessionId === session.id
-                      ? 'bg-blue-50 border border-blue-200'
-                      : 'hover:bg-gray-50'
+                      ? `${colors.backgroundSecondary} border ${colors.cardBorder}`
+                      : `hover:${colors.backgroundSecondary}`
                   }`}
                   onClick={() => loadSession(session.id)}
                 >
@@ -353,16 +355,16 @@ const ChatPage: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center mb-1">
                         <Clock className="w-3 h-3 text-gray-400 mr-1" />
-                        <span className="text-xs text-gray-500">
+                        <span className={`text-xs ${colors.textTertiary}`}>
                           {formatDate(session.updatedAt)}
                         </span>
                       </div>
                       {session.lastMessage && (
-                        <p className="text-sm text-gray-700 truncate">
+                        <p className={`text-sm ${colors.textSecondary} truncate`}>
                           {session.lastMessage.content}
                         </p>
                       )}
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className={`text-xs ${colors.textTertiary} mt-1`}>
                         {session.messageCount} messages
                       </p>
                     </div>
@@ -387,20 +389,20 @@ const ChatPage: React.FC = () => {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Chat Header */}
-        <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+        <div className={`${colors.cardBackground} border-b ${colors.cardBorder} p-4 flex items-center justify-between`}>
           <div>
-            <h1 className="text-xl font-semibold text-gray-900 flex items-center">
+            <h1 className={`text-xl font-semibold ${colors.textPrimary} flex items-center`}>
               <Sparkles className="w-5 h-5 mr-2 text-purple-600" />
               Goal Coaching Chat
             </h1>
-            <p className="text-sm text-gray-600">
+            <p className={`text-sm ${colors.textSecondary}`}>
               Get personalized advice from your AI goal coach
             </p>
           </div>
           {currentSessionId && (
             <button
               onClick={clearSession}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className={`p-2 ${colors.textSecondary} hover:${colors.textPrimary} hover:${colors.backgroundSecondary} rounded-lg transition-colors`}
               title="Clear conversation"
             >
               <RefreshCw className="w-4 h-4" />
@@ -415,10 +417,10 @@ const ChatPage: React.FC = () => {
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Bot className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className={`text-lg font-medium ${colors.textPrimary} mb-2`}>
                 Welcome to AI Goal Coaching! 👋
               </h3>
-              <p className="text-gray-600 max-w-md mx-auto">
+              <p className={`${colors.textSecondary} max-w-md mx-auto`}>
                 I'm here to help you clarify your goals, create actionable plans, and overcome obstacles. 
                 What would you like to work on today?
               </p>
@@ -451,7 +453,7 @@ const ChatPage: React.FC = () => {
                     <div className={`rounded-2xl px-4 py-2 relative group ${
                       message.role === 'user'
                         ? 'bg-blue-600 text-white'
-                        : 'bg-white border border-gray-200 text-gray-900'
+                        : `${colors.cardBackground} border ${colors.cardBorder} ${colors.textPrimary}`
                     }`}>
                       {message.role === 'assistant' ? (
                         <div className="prose prose-sm max-w-none">
@@ -461,21 +463,21 @@ const ChatPage: React.FC = () => {
                               p: ({children}) => <p className="mb-2 last:mb-0">{children}</p>,
                               ul: ({children}) => <ul className="mb-2 pl-4 space-y-1">{children}</ul>,
                               ol: ({children}) => <ol className="mb-2 pl-4 space-y-1">{children}</ol>,
-                              li: ({children}) => <li className="text-gray-900">{children}</li>,
-                              strong: ({children}) => <strong className="font-semibold text-gray-900">{children}</strong>,
-                              em: ({children}) => <em className="italic text-gray-800">{children}</em>,
+                              li: ({children}) => <li className={colors.textPrimary}>{children}</li>,
+                              strong: ({children}) => <strong className={`font-semibold ${colors.textPrimary}`}>{children}</strong>,
+                              em: ({children}) => <em className={`italic ${colors.textSecondary}`}>{children}</em>,
                               code: ({children}) => (
-                                <code className="bg-gray-100 text-gray-800 px-1 py-0.5 rounded text-sm font-mono">
+                                <code className={`${colors.backgroundTertiary} ${colors.textPrimary} px-1 py-0.5 rounded text-sm font-mono`}>
                                   {children}
                                 </code>
                               ),
                               pre: ({children}) => (
-                                <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto my-2">
+                                <pre className={`${colors.backgroundTertiary} p-3 rounded-md overflow-x-auto my-2`}>
                                   {children}
                                 </pre>
                               ),
                               blockquote: ({children}) => (
-                                <blockquote className="border-l-4 border-gray-300 pl-4 italic my-2">
+                                <blockquote className={`border-l-4 ${colors.border} pl-4 italic my-2`}>
                                   {children}
                                 </blockquote>
                               ),
@@ -497,7 +499,7 @@ const ChatPage: React.FC = () => {
                         className={`absolute top-2 right-2 p-1.5 rounded-md transition-all opacity-0 group-hover:opacity-100 ${
                           message.role === 'user'
                             ? 'bg-white/20 hover:bg-white/30 text-white'
-                            : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                            : `${colors.backgroundTertiary} hover:opacity-80 ${colors.textSecondary}`
                         }`}
                         title="Copy message"
                       >
@@ -510,7 +512,7 @@ const ChatPage: React.FC = () => {
 
                       <div className="flex items-center justify-between mt-2">
                         <p className={`text-xs ${
-                          message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
+                          message.role === 'user' ? 'text-blue-100' : colors.textTertiary
                         }`}>
                           {formatTime(message.timestamp)}
                         </p>
@@ -542,10 +544,10 @@ const ChatPage: React.FC = () => {
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
                   <Bot className="w-4 h-4 text-white" />
                 </div>
-                <div className="bg-white border border-gray-200 rounded-2xl px-4 py-2">
+                <div className={`${colors.cardBackground} border ${colors.cardBorder} rounded-2xl px-4 py-2`}>
                   <div className="flex items-center space-x-2">
-                    <Loader className="w-4 h-4 animate-spin text-gray-500" />
-                    <span className="text-gray-500">AI is thinking...</span>
+                    <Loader className={`w-4 h-4 animate-spin ${colors.textTertiary}`} />
+                    <span className={colors.textTertiary}>AI is thinking...</span>
                   </div>
                 </div>
               </div>
@@ -556,7 +558,7 @@ const ChatPage: React.FC = () => {
         </div>
 
         {/* Message Input */}
-        <div className="bg-white border-t border-gray-200 p-4">
+        <div className={`${colors.cardBackground} border-t ${colors.cardBorder} p-4`}>
           <div className="flex items-end space-x-4">
             <div className="flex-1">
               <textarea
@@ -565,7 +567,7 @@ const ChatPage: React.FC = () => {
                 onKeyPress={handleKeyPress}
                 placeholder="Ask me about your goals, get advice, or brainstorm ideas..."
                 rows={1}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className={`w-full px-4 py-3 border ${colors.inputBorder} rounded-lg ${colors.inputBackground} ${colors.inputText} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none`}
                 style={{ minHeight: '48px', maxHeight: '120px' }}
                 disabled={isLoading || isStreaming}
               />
@@ -586,20 +588,20 @@ const ChatPage: React.FC = () => {
               )}
             </button>
           </div>
-          <p className="text-xs text-gray-500 mt-2">
+          <p className={`text-xs ${colors.textTertiary} mt-2`}>
             Press Enter to send, Shift+Enter for new line
           </p>
         </div>
 
         {/* Quick Actions */}
         {messages.length > 0 && messages.some(m => m.role === 'user' && isGoalRelatedMessage(m.content)) && (
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-t border-gray-200 p-4">
+          <div className={`${colors.backgroundTertiary} border-t ${colors.cardBorder} p-4`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <Target className="w-5 h-5 text-blue-600 mr-2" />
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900">Ready to turn ideas into action?</h4>
-                  <p className="text-xs text-gray-600">I noticed you mentioned some goals. Want to create an actionable plan?</p>
+                  <h4 className={`text-sm font-medium ${colors.textPrimary}`}>Ready to turn ideas into action?</h4>
+                  <p className={`text-xs ${colors.textSecondary}`}>I noticed you mentioned some goals. Want to create an actionable plan?</p>
                 </div>
               </div>
               <button

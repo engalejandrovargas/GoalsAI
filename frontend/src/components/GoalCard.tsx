@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTheme } from '../contexts/ThemeContext';
 import {
   Target,
   Calendar,
   DollarSign,
-  TrendingUp,
   Clock,
   Brain,
   Edit3,
@@ -15,7 +15,6 @@ import {
   BarChart3,
   CheckCircle,
   AlertCircle,
-  XCircle,
   ChevronDown,
   ChevronUp,
   AlertTriangle
@@ -48,6 +47,7 @@ interface GoalCardProps {
   onArchive: () => void;
   onAnalyze: () => void;
   onShowProgress: () => void;
+  onShowActionPlan?: () => void;
   getCategoryInfo: (category: string) => { value: string; label: string; color: string };
   getStatusInfo: (status: string) => { value: string; label: string; color: string };
   getPriorityInfo: (priority: string) => { value: string; label: string; color: string };
@@ -64,11 +64,13 @@ const GoalCard: React.FC<GoalCardProps> = ({
   onArchive,
   onAnalyze,
   onShowProgress,
+  onShowActionPlan,
   getCategoryInfo,
   getStatusInfo,
   getPriorityInfo,
   getProgressPercentage
 }) => {
+  const { colors } = useTheme();
   const [showMenu, setShowMenu] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -119,9 +121,11 @@ const GoalCard: React.FC<GoalCardProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className={`bg-white rounded-xl border-2 transition-all hover:shadow-md ${
-        isSelected ? 'border-blue-500 shadow-md' : 'border-gray-200'
+      onDoubleClick={() => onShowActionPlan?.()}
+      className={`${colors.cardBackground} rounded-xl border-2 transition-all hover:shadow-md cursor-pointer ${
+        isSelected ? 'border-blue-500 shadow-md' : `${colors.cardBorder}`
       }`}
+      title="Double-click to view action plan"
     >
       {/* Card Header */}
       <div className="p-4">
@@ -143,7 +147,7 @@ const GoalCard: React.FC<GoalCardProps> = ({
                   className="font-semibold text-gray-900 text-lg w-full border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               ) : (
-                <h3 className="font-semibold text-gray-900 text-lg mb-1 line-clamp-2">
+                <h3 className={`font-semibold ${colors.textPrimary} text-lg mb-1 line-clamp-2`}>
                   {goal.title}
                 </h3>
               )}
@@ -156,7 +160,7 @@ const GoalCard: React.FC<GoalCardProps> = ({
                   className="text-gray-600 text-sm w-full border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 />
               ) : (
-                <p className="text-gray-600 text-sm line-clamp-2">
+                <p className={`${colors.textSecondary} text-sm line-clamp-2`}>
                   {goal.description}
                 </p>
               )}
@@ -172,7 +176,7 @@ const GoalCard: React.FC<GoalCardProps> = ({
             </button>
 
             {showMenu && (
-              <div className="absolute right-0 top-8 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 w-40">
+              <div className={`absolute right-0 top-8 ${colors.cardBackground} rounded-lg shadow-lg border ${colors.cardBorder} py-1 z-10 w-40`}>
                 <button
                   onClick={() => {
                     setIsEditing(!isEditing);
@@ -192,6 +196,16 @@ const GoalCard: React.FC<GoalCardProps> = ({
                 >
                   <BarChart3 className="w-4 h-4 mr-2" />
                   Progress
+                </button>
+                <button
+                  onClick={() => {
+                    onShowActionPlan?.();
+                    setShowMenu(false);
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                >
+                  <Target className="w-4 h-4 mr-2" />
+                  Action Plan
                 </button>
                 <button
                   onClick={() => {
