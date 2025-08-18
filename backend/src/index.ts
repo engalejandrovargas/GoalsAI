@@ -14,6 +14,7 @@ import goalStepsRoutes from './routes/goalSteps';
 import goalPlanningRoutes from './routes/goalPlanning';
 import chatRoutes from './routes/chat';
 import progressRoutes from './routes/progress';
+import agentRoutes from './routes/agents';
 
 // Load environment variables
 dotenv.config();
@@ -52,6 +53,16 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Debug middleware
+app.use((req, res, next) => {
+  if (req.path.startsWith('/agents') || req.path.startsWith('/auth')) {
+    logger.info(`Request: ${req.method} ${req.path}, User authenticated: ${req.isAuthenticated()}, Session ID: ${req.sessionID}, User: ${JSON.stringify(req.user)}`);
+    logger.info(`Session data: ${JSON.stringify(req.session)}`);
+    logger.info(`Cookies: ${JSON.stringify(req.headers.cookie)}`);
+  }
+  next();
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
@@ -69,6 +80,7 @@ app.use('/goals', goalStepsRoutes);
 app.use('/planning', goalPlanningRoutes);
 app.use('/chat', chatRoutes);
 app.use('/progress', progressRoutes);
+app.use('/agents', agentRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {

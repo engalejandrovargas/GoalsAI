@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Target, Home, Sparkles, MessageCircle, BarChart3, Settings, LogOut, User, Palette } from 'lucide-react';
+import { Target, Home, Sparkles, MessageCircle, BarChart3, Settings, LogOut, User, Palette, Bot } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -78,6 +78,7 @@ const Layout: React.FC = () => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Home, description: 'Overview & goals' },
     { name: 'AI Analyzer', href: '/analyzer', icon: Sparkles, description: 'Goal feasibility' },
+    { name: 'AI Agents', href: '/agents', icon: Bot, description: 'Smart assistants' },
     { name: 'AI Chat', href: '/chat', icon: MessageCircle, description: 'Get guidance' },
     { name: 'Progress', href: '/progress', icon: BarChart3, description: 'Track achievements' },
     { name: 'Settings', href: '/settings', icon: Settings, description: 'Preferences' },

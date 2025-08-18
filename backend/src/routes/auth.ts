@@ -25,59 +25,57 @@ router.get('/google/callback',
     
     logger.info(`OAuth callback successful for user: ${user.email}`);
     
-    // Generate JWT token
-    const token = JWTService.generateToken(user);
-    const refreshToken = JWTService.generateRefreshToken(user);
+    // For now, let's use session-only authentication - remove JWT complexity
+    // The session should persist the user via Passport's serialize/deserialize
     
-    // Set secure HTTP-only cookies
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
-    
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
-    });
-    
-    // Redirect to frontend with token in URL (temporary for SPA)
+    // Redirect to frontend - session should be maintained via cookies
     const redirectUrl = user.onboardingCompleted 
-      ? `${process.env.FRONTEND_URL}/dashboard?token=${token}`
-      : `${process.env.FRONTEND_URL}/onboarding?token=${token}`;
+      ? `${process.env.FRONTEND_URL}/dashboard`
+      : `${process.env.FRONTEND_URL}/onboarding`;
     
     res.redirect(redirectUrl);
   }
 );
 
-// Get current user (JWT-based)
-router.get('/me', requireAuth, async (req, res) => {
+// Get current user (session-based)
+router.get('/me', (req: any, res) => {
   try {
-    const userId = (req.user as any)?.id;
-    
-    if (!userId) {
-      return res.status(401).json({ error: 'User not authenticated' });
+    if (req.isAuthenticated && req.isAuthenticated() && req.user) {
+      res.json({
+        success: true,
+        user: req.user,
+        authenticated: true
+      });
+    } else {
+      res.status(401).json({
+        success: false,
+        error: 'Not authenticated',
+        authenticated: false
+      });
     }
-
-    const user = await prisma.user.findUnique({
-      where: { id: userId }
-    });
-
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    res.json({
-      success: true,
-      user: user
-    });
   } catch (error) {
-    logger.error('Error fetching current user:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    logger.error('Get current user error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      authenticated: false
+    });
   }
+});
+
+// Session status check endpoint
+router.get('/session-status-debug', (req: any, res) => {
+  logger.info('Session debug - isAuthenticated:', req.isAuthenticated());
+  logger.info('Session debug - user:', req.user);
+  logger.info('Session debug - sessionID:', req.sessionID);
+  logger.info('Session debug - session:', req.session);
+  
+  res.json({
+    authenticated: req.isAuthenticated ? req.isAuthenticated() : false,
+    user: req.user || null,
+    sessionID: req.sessionID,
+    hasSession: !!req.session
+  });
 });
 
 // Get current user (session-based for OAuth flow)
@@ -88,19 +86,29 @@ router.get('/session-me', requireSessionAuth, (req, res) => {
   });
 });
 
-// Logout (JWT-based)
-router.post('/logout', requireAuth, (req, res) => {
+// Logout (session-based)
+router.post('/logout', (req: any, res) => {
   const userEmail = (req.user as any)?.email;
   
-  // Clear JWT cookies
-  res.clearCookie('token');
-  res.clearCookie('refreshToken');
-  
-  logger.info(`User logged out: ${userEmail}`);
-  
-  res.json({ 
-    success: true, 
-    message: 'Logged out successfully' 
+  req.logout((err: any) => {
+    if (err) {
+      logger.error('Logout error:', err);
+      return res.status(500).json({ error: 'Logout failed' });
+    }
+    
+    req.session.destroy((sessionErr: any) => {
+      if (sessionErr) {
+        logger.error('Session destruction error:', sessionErr);
+      }
+      
+      res.clearCookie('connect.sid'); // Clear session cookie
+      logger.info(`User logged out: ${userEmail}`);
+      
+      res.json({ 
+        success: true, 
+        message: 'Logged out successfully' 
+      });
+    });
   });
 });
 
@@ -136,29 +144,17 @@ router.post('/session-logout', requireSessionAuth, (req, res, next) => {
   });
 });
 
-// Check authentication status (JWT-based)
-router.get('/status', async (req, res) => {
+// Check authentication status (session-based)
+router.get('/status', (req: any, res) => {
   try {
-    const token = req.cookies?.token || req.headers.authorization?.substring(7);
-    
-    if (!token) {
-      return res.json({
-        authenticated: false,
-        user: null
-      });
-    }
-    
-    const payload = JWTService.verifyToken(token);
-    const user = await prisma.user.findUnique({
-      where: { id: payload.id }
-    });
-    
+    const isAuthenticated = req.isAuthenticated && req.isAuthenticated();
     res.json({
-      authenticated: !!user,
-      user: user
+      authenticated: isAuthenticated,
+      user: isAuthenticated ? req.user : null,
+      sessionID: req.sessionID
     });
-    
   } catch (error) {
+    logger.error('Status check error:', error);
     res.json({
       authenticated: false,
       user: null

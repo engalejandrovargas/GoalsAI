@@ -40,6 +40,7 @@ import GoalCreationModal from '../components/GoalCreationModal';
 import GoalProgressModal from '../components/GoalProgressModal';
 import GoalCard from '../components/GoalCard';
 import { apiService } from '../services/api';
+import { useConfirmation } from '../hooks/useConfirmation';
 import toast from 'react-hot-toast';
 
 interface Goal {
@@ -79,6 +80,7 @@ const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const { colors } = useTheme();
   const navigate = useNavigate();
+  const { confirm, ConfirmationDialog } = useConfirmation();
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
@@ -253,7 +255,16 @@ const DashboardPage: React.FC = () => {
   };
 
   const handleDeleteGoal = async (goalId: string) => {
-    if (!confirm('Are you sure you want to delete this goal? This action cannot be undone.')) {
+    const confirmed = await confirm({
+      title: 'Delete Goal',
+      message: 'Are you sure you want to delete this goal? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger',
+      icon: 'delete'
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -326,7 +337,16 @@ const DashboardPage: React.FC = () => {
     try {
       switch (action) {
         case 'delete':
-          if (!confirm(`Are you sure you want to delete ${goalIds.length} goals? This action cannot be undone.`)) {
+          const confirmed = await confirm({
+            title: 'Delete Multiple Goals',
+            message: `Are you sure you want to delete ${goalIds.length} goal${goalIds.length === 1 ? '' : 's'}? This action cannot be undone.`,
+            confirmText: 'Delete All',
+            cancelText: 'Cancel',
+            type: 'danger',
+            icon: 'delete'
+          });
+
+          if (!confirmed) {
             return;
           }
           await Promise.all(goalIds.map(id => apiService.deleteGoal(id)));
@@ -432,7 +452,7 @@ const DashboardPage: React.FC = () => {
             </button>
             <button
               onClick={() => setIsGoalModalOpen(true)}
-              className="btn-primary"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center transition-colors"
             >
               <Plus className="w-4 h-4 mr-2" />
               New Goal
@@ -440,83 +460,6 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">Total Goals</p>
-                <p className="text-3xl font-bold">{stats.totalGoals}</p>
-              </div>
-              <Target className="w-8 h-8 text-blue-200" />
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 text-white"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100 text-sm font-medium">In Progress</p>
-                <p className="text-3xl font-bold">{stats.inProgress}</p>
-              </div>
-              <Clock className="w-8 h-8 text-orange-200" />
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium">Completed</p>
-                <p className="text-3xl font-bold">{stats.completed}</p>
-              </div>
-              <Award className="w-8 h-8 text-green-200" />
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100 text-sm font-medium">Total Saved</p>
-                <p className="text-3xl font-bold">${stats.totalSavings.toLocaleString()}</p>
-              </div>
-              <DollarSign className="w-8 h-8 text-purple-200" />
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl p-6 text-white"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-indigo-100 text-sm font-medium">Avg Feasibility</p>
-                <p className="text-3xl font-bold">{stats.averageFeasibility.toFixed(1)}%</p>
-              </div>
-              <Sparkles className="w-8 h-8 text-indigo-200" />
-            </div>
-          </motion.div>
-        </div>
       </motion.div>
 
       {/* Dashboard Insights - Only show in dashboard view */}
@@ -527,72 +470,14 @@ const DashboardPage: React.FC = () => {
           transition={{ delay: 0.1 }}
           className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"
         >
-          {/* Recent Activity */}
-          <div className={`${colors.cardBackground} rounded-xl shadow-sm border ${colors.cardBorder} p-6`}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className={`text-lg font-semibold ${colors.textPrimary} flex items-center`}>
-                <Activity className="w-5 h-5 text-blue-600 mr-2" />
-                Recent Activity
-              </h3>
-            </div>
-            <div className="space-y-3">
-              {goals.slice(0, 4).map((goal) => (
-                <div key={goal.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg">
-                  <div className={`w-3 h-3 rounded-full ${getStatusInfo(goal.status).color.replace('text-', 'bg-').replace('100', '500')}`}></div>
-                  <div className="flex-1">
-                    <p className={`text-sm font-medium ${colors.textPrimary} truncate`}>{goal.title}</p>
-                    <p className={`text-xs ${colors.textSecondary}`}>{getStatusInfo(goal.status).label} • {getCategoryInfo(goal.category).label}</p>
-                  </div>
-                  <span className="text-xs text-gray-400">
-                    {new Date(goal.updatedAt || goal.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Goals by Category */}
-          <div className={`${colors.cardBackground} rounded-xl shadow-sm border ${colors.cardBorder} p-6`}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className={`text-lg font-semibold ${colors.textPrimary} flex items-center`}>
-                <TrendingUp className="w-5 h-5 text-green-600 mr-2" />
-                Goals by Category
-              </h3>
-            </div>
-            <div className="space-y-3">
-              {categories.slice(0, 5).map((category) => {
-                const count = goals.filter(g => g.category === category.value).length;
-                const percentage = goals.length > 0 ? (count / goals.length) * 100 : 0;
-                
-                if (count === 0) return null;
-                
-                return (
-                  <div key={category.value} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm">{category.icon}</span>
-                      <span className={`text-sm font-medium ${colors.textPrimary}`}>{category.label}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-16 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full ${category.color.replace('text-', 'bg-').replace('100', '500')}`}
-                          style={{ width: `${percentage}%` }}
-                        ></div>
-                      </div>
-                      <span className={`text-sm ${colors.textSecondary} w-8 text-right`}>{count}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
 
           {/* Priority Goals */}
           <div className={`${colors.cardBackground} rounded-xl shadow-sm border ${colors.cardBorder} p-6`}>
             <div className="flex items-center justify-between mb-4">
               <h3 className={`text-lg font-semibold ${colors.textPrimary} flex items-center`}>
                 <Zap className="w-5 h-5 text-orange-600 mr-2" />
-                Priority Goals
+                Priority Tasks
               </h3>
             </div>
             <div className="space-y-3">
@@ -619,7 +504,7 @@ const DashboardPage: React.FC = () => {
               {goals.filter(g => g.priority === 'high' && g.status !== 'completed').length === 0 && (
                 <div className="text-center py-4 text-gray-500">
                   <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-green-500" />
-                  <p className="text-sm">No high priority goals pending!</p>
+                  <p className="text-sm">No high priority tasks pending!</p>
                 </div>
               )}
             </div>
@@ -883,13 +768,15 @@ const DashboardPage: React.FC = () => {
                 }
               </p>
               {goals.length === 0 ? (
-                <button 
-                  onClick={() => setIsGoalModalOpen(true)}
-                  className="btn-primary"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Your First Goal
-                </button>
+                <div className="flex justify-center">
+                  <button 
+                    onClick={() => setIsGoalModalOpen(true)}
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl flex items-center transition-all shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transform hover:scale-105"
+                  >
+                    <Plus className="w-5 h-5 mr-2" />
+                    Create Your First Goal
+                  </button>
+                </div>
               ) : (
                 <button 
                   onClick={clearFilters}
@@ -955,6 +842,8 @@ const DashboardPage: React.FC = () => {
           initialTab={progressModalTab}
         />
       )}
+
+      <ConfirmationDialog />
     </div>
   );
 };

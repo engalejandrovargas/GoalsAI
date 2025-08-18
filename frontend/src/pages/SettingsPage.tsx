@@ -27,6 +27,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { apiService } from '../services/api';
+import { useConfirmation } from '../hooks/useConfirmation';
 import toast from 'react-hot-toast';
 
 interface UserPreferences {
@@ -48,6 +49,7 @@ interface AISettings {
 }
 
 interface ExtendedProfile {
+  nationality: string;
   occupation: string;
   workSchedule: string;
   personalityType: string;
@@ -63,6 +65,7 @@ interface ExtendedProfile {
 const SettingsPage: React.FC = () => {
   const { user, logout, checkAuth } = useAuth();
   const { theme, setTheme, colors } = useTheme();
+  const { confirm, ConfirmationDialog } = useConfirmation();
   const [activeTab, setActiveTab] = useState('profile');
   const [isLoading, setIsLoading] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -76,7 +79,6 @@ const SettingsPage: React.FC = () => {
     availableTime: user?.availableTime || '',
     riskTolerance: user?.riskTolerance || 'medium',
     preferredApproach: user?.preferredApproach || '',
-    firstGoal: user?.firstGoal || '',
     annualIncome: user?.annualIncome ? user.annualIncome.toString() : '',
     currentSavings: user?.currentSavings ? user.currentSavings.toString() : '',
   });
@@ -100,6 +102,7 @@ const SettingsPage: React.FC = () => {
   });
 
   const [extendedProfile, setExtendedProfile] = useState<ExtendedProfile>({
+    nationality: user?.nationality || '',
     occupation: user?.occupation || '',
     workSchedule: user?.workSchedule || '',
     personalityType: user?.personalityType || '',
@@ -295,7 +298,6 @@ const SettingsPage: React.FC = () => {
         availableTime: user.availableTime || '',
         riskTolerance: user.riskTolerance || 'medium',
         preferredApproach: user.preferredApproach || '',
-        firstGoal: user.firstGoal || '',
         annualIncome: user.annualIncome ? user.annualIncome.toString() : '',
         currentSavings: user.currentSavings ? user.currentSavings.toString() : '',
       });
@@ -319,6 +321,7 @@ const SettingsPage: React.FC = () => {
       });
 
       setExtendedProfile({
+        nationality: user.nationality || '',
         occupation: user.occupation || '',
         workSchedule: user.workSchedule || '',
         personalityType: user.personalityType || '',
@@ -382,7 +385,6 @@ const SettingsPage: React.FC = () => {
         availableTime: profileData.availableTime,
         riskTolerance: profileData.riskTolerance,
         preferredApproach: profileData.preferredApproach,
-        firstGoal: profileData.firstGoal,
         annualIncome: profileData.annualIncome ? parseInt(profileData.annualIncome) : null,
         currentSavings: profileData.currentSavings ? parseInt(profileData.currentSavings) : null,
         emailNotifications: preferences.emailNotifications,
@@ -398,6 +400,7 @@ const SettingsPage: React.FC = () => {
         aiDetailLevel: aiSettings.aiDetailLevel,
         aiApproachStyle: aiSettings.aiApproachStyle,
         // Extended Profile
+        nationality: extendedProfile.nationality,
         occupation: extendedProfile.occupation,
         workSchedule: extendedProfile.workSchedule,
         personalityType: extendedProfile.personalityType,
@@ -428,7 +431,6 @@ const SettingsPage: React.FC = () => {
             availableTime: response.user.availableTime || '',
             riskTolerance: response.user.riskTolerance || 'medium',
             preferredApproach: response.user.preferredApproach || '',
-            firstGoal: response.user.firstGoal || '',
             annualIncome: response.user.annualIncome ? response.user.annualIncome.toString() : '',
             currentSavings: response.user.currentSavings ? response.user.currentSavings.toString() : '',
           });
@@ -438,7 +440,7 @@ const SettingsPage: React.FC = () => {
             pushNotifications: response.user.pushNotifications ?? false,
             weeklyReports: response.user.weeklyReports ?? true,
             goalReminders: response.user.goalReminders ?? true,
-            theme: response.user.theme || 'light',
+            theme: response.user.theme || 'mixed',
             language: response.user.language || 'en',
             timezone: response.user.timezone || 'America/New_York',
             currency: response.user.currency || 'USD',
@@ -452,6 +454,7 @@ const SettingsPage: React.FC = () => {
           });
 
           setExtendedProfile({
+            nationality: response.user.nationality || '',
             occupation: response.user.occupation || '',
             workSchedule: response.user.workSchedule || '',
             personalityType: response.user.personalityType || '',
@@ -471,6 +474,11 @@ const SettingsPage: React.FC = () => {
               typeof response.user.skillsAndStrengths === 'string' ? JSON.parse(response.user.skillsAndStrengths) : response.user.skillsAndStrengths
             ) : [],
           });
+        }
+        
+        // Update theme context if theme changed
+        if (preferences.theme !== theme) {
+          setTheme(preferences.theme as 'light' | 'dark' | 'mixed');
         }
         
         // Refresh the user data in auth context
@@ -495,7 +503,16 @@ const SettingsPage: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    if (confirm('Are you sure you want to sign out?')) {
+    const confirmed = await confirm({
+      title: 'Sign Out',
+      message: 'Are you sure you want to sign out? You will need to log in again to access your goals.',
+      confirmText: 'Sign Out',
+      cancelText: 'Cancel',
+      type: 'warning',
+      icon: 'logout'
+    });
+
+    if (confirmed) {
       await logout();
     }
   };
@@ -562,6 +579,20 @@ const SettingsPage: React.FC = () => {
               <option value="65+">65+</option>
             </select>
           </div>
+          <div>
+            <label className={`block text-sm font-medium ${colors.textSecondary} mb-2`}>
+              <Globe className="w-4 h-4 inline mr-1" />
+              Nationality
+            </label>
+            <input
+              type="text"
+              value={extendedProfile.nationality}
+              onChange={(e) => handleExtendedProfileChange('nationality', e.target.value)}
+              placeholder="e.g., American, Brazilian, German"
+              className={`w-full px-3 py-2 border ${colors.inputBorder} rounded-lg ${colors.inputBackground} ${colors.inputText} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            />
+            <p className={`text-xs ${colors.textTertiary} mt-1`}>Helps AI provide culturally relevant recommendations</p>
+          </div>
         </div>
       </div>
 
@@ -604,54 +635,6 @@ const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Financial Information */}
-      <div>
-        <h3 className={`text-lg font-semibold ${colors.textPrimary} mb-4`}>Financial Information</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className={`block text-sm font-medium ${colors.textSecondary} mb-2`}>
-              <DollarSign className="w-4 h-4 inline mr-1" />
-              Annual Income
-            </label>
-            <input
-              type="number"
-              value={profileData.annualIncome}
-              onChange={(e) => handleProfileChange('annualIncome', e.target.value)}
-              placeholder="50000"
-              key={`annualIncome-${user?.id}-${user?.annualIncome}`}
-              className={`w-full px-3 py-2 border ${colors.inputBorder} rounded-lg ${colors.inputBackground} ${colors.inputText} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            />
-            <p className={`text-xs ${colors.textTertiary} mt-1`}>Used for AI financial recommendations</p>
-          </div>
-          <div>
-            <label className={`block text-sm font-medium ${colors.textSecondary} mb-2`}>
-              Current Savings
-            </label>
-            <input
-              type="number"
-              value={profileData.currentSavings}
-              onChange={(e) => handleProfileChange('currentSavings', e.target.value)}
-              placeholder="10000"
-              key={`currentSavings-${user?.id}-${user?.currentSavings}`}
-              className={`w-full px-3 py-2 border ${colors.inputBorder} rounded-lg ${colors.inputBackground} ${colors.inputText} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            />
-          </div>
-          <div className="md:col-span-2">
-            <label className={`block text-sm font-medium ${colors.textSecondary} mb-2`}>
-              Risk Tolerance
-            </label>
-            <select
-              value={profileData.riskTolerance}
-              onChange={(e) => handleProfileChange('riskTolerance', e.target.value)}
-              className={`w-full px-3 py-2 border ${colors.inputBorder} rounded-lg ${colors.inputBackground} ${colors.inputText} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            >
-              <option value="low">Low - I prefer safe investments</option>
-              <option value="medium">Medium - Balanced approach</option>
-              <option value="high">High - I'm comfortable with risk</option>
-            </select>
-          </div>
-        </div>
-      </div>
 
       {/* Personality & Learning Styles */}
       <div>
@@ -683,38 +666,6 @@ const SettingsPage: React.FC = () => {
               className={`w-full px-3 py-2 border ${colors.inputBorder} rounded-lg ${colors.inputBackground} ${colors.inputText} focus:outline-none focus:ring-2 focus:ring-blue-500`}
             >
               {learningStyles.map(style => (
-                <option key={style.value} value={style.value}>
-                  {style.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className={`block text-sm font-medium ${colors.textSecondary} mb-2`}>
-              Decision Making Style
-            </label>
-            <select
-              value={extendedProfile.decisionMakingStyle}
-              onChange={(e) => handleExtendedProfileChange('decisionMakingStyle', e.target.value)}
-              className={`w-full px-3 py-2 border ${colors.inputBorder} rounded-lg ${colors.inputBackground} ${colors.inputText} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            >
-              {decisionMakingStyles.map(style => (
-                <option key={style.value} value={style.value}>
-                  {style.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className={`block text-sm font-medium ${colors.textSecondary} mb-2`}>
-              Communication Style
-            </label>
-            <select
-              value={extendedProfile.communicationStyle}
-              onChange={(e) => handleExtendedProfileChange('communicationStyle', e.target.value)}
-              className={`w-full px-3 py-2 border ${colors.inputBorder} rounded-lg ${colors.inputBackground} ${colors.inputText} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            >
-              {communicationStyles.map(style => (
                 <option key={style.value} value={style.value}>
                   {style.label}
                 </option>
@@ -1031,9 +982,48 @@ const SettingsPage: React.FC = () => {
             </select>
           </div>
 
+
+        </div>
+      </div>
+
+      {/* Financial Information for Goal Planning */}
+      <div>
+        <h3 className={`text-lg font-semibold ${colors.textPrimary} mb-4`}>Financial Information</h3>
+        <p className={`${colors.textSecondary} mb-6`}>
+          This helps our AI suggest realistic budgets and timelines for your financial goals.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className={`block text-sm font-medium ${colors.textSecondary} mb-2`}>
-              Risk Tolerance
+              <DollarSign className="w-4 h-4 inline mr-1" />
+              Annual Income
+            </label>
+            <input
+              type="number"
+              value={profileData.annualIncome}
+              onChange={(e) => handleProfileChange('annualIncome', e.target.value)}
+              placeholder="50000"
+              key={`annualIncome-${user?.id}-${user?.annualIncome}`}
+              className={`w-full px-3 py-2 border ${colors.inputBorder} rounded-lg ${colors.inputBackground} ${colors.inputText} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            />
+            <p className={`text-xs ${colors.textTertiary} mt-1`}>Used for AI financial recommendations</p>
+          </div>
+          <div>
+            <label className={`block text-sm font-medium ${colors.textSecondary} mb-2`}>
+              Current Savings
+            </label>
+            <input
+              type="number"
+              value={profileData.currentSavings}
+              onChange={(e) => handleProfileChange('currentSavings', e.target.value)}
+              placeholder="10000"
+              key={`currentSavings-${user?.id}-${user?.currentSavings}`}
+              className={`w-full px-3 py-2 border ${colors.inputBorder} rounded-lg ${colors.inputBackground} ${colors.inputText} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className={`block text-sm font-medium ${colors.textSecondary} mb-2`}>
+              Financial Risk Tolerance
             </label>
             <select
               value={profileData.riskTolerance}
@@ -1041,26 +1031,52 @@ const SettingsPage: React.FC = () => {
               className={`w-full px-3 py-2 border ${colors.inputBorder} rounded-lg ${colors.inputBackground} ${colors.inputText} focus:outline-none focus:ring-2 focus:ring-blue-500`}
             >
               <option value="">Select your risk tolerance</option>
-              <option value="Conservative (prefer safe, proven methods)">Conservative (prefer safe, proven methods)</option>
-              <option value="Moderate (balanced approach)">Moderate (balanced approach)</option>
-              <option value="Adventurous (willing to try new approaches)">Adventurous (willing to try new approaches)</option>
+              <option value="low">Low - I prefer safe investments</option>
+              <option value="medium">Medium - Balanced approach</option>
+              <option value="high">High - I'm comfortable with risk</option>
             </select>
           </div>
+        </div>
+      </div>
 
-          <div className="md:col-span-2">
+      {/* Decision Making & Communication Preferences */}
+      <div>
+        <h3 className={`text-lg font-semibold ${colors.textPrimary} mb-4`}>Planning Preferences</h3>
+        <p className={`${colors.textSecondary} mb-6`}>
+          These preferences help our AI adapt its goal planning approach to match your style.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
             <label className={`block text-sm font-medium ${colors.textSecondary} mb-2`}>
-              Goal from Onboarding
+              Decision Making Style
             </label>
-            <textarea
-              value={profileData.firstGoal}
-              onChange={(e) => handleProfileChange('firstGoal', e.target.value)}
-              placeholder="Goal you mentioned during onboarding"
-              rows={3}
+            <select
+              value={extendedProfile.decisionMakingStyle}
+              onChange={(e) => handleExtendedProfileChange('decisionMakingStyle', e.target.value)}
               className={`w-full px-3 py-2 border ${colors.inputBorder} rounded-lg ${colors.inputBackground} ${colors.inputText} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            />
-            <p className={`text-xs ${colors.textTertiary} mt-1`}>
-              This is saved as reference data from your onboarding. You can edit it here or create it as a trackable goal.
-            </p>
+            >
+              {decisionMakingStyles.map(style => (
+                <option key={style.value} value={style.value}>
+                  {style.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={`block text-sm font-medium ${colors.textSecondary} mb-2`}>
+              Communication Style
+            </label>
+            <select
+              value={extendedProfile.communicationStyle}
+              onChange={(e) => handleExtendedProfileChange('communicationStyle', e.target.value)}
+              className={`w-full px-3 py-2 border ${colors.inputBorder} rounded-lg ${colors.inputBackground} ${colors.inputText} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            >
+              {communicationStyles.map(style => (
+                <option key={style.value} value={style.value}>
+                  {style.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
@@ -1144,7 +1160,7 @@ const SettingsPage: React.FC = () => {
             <div className="grid grid-cols-1 gap-3">
               {themes.map((themeOption) => (
                 <label key={themeOption.value} className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                  theme === themeOption.value 
+                  preferences.theme === themeOption.value 
                     ? `border-blue-500 ${colors.backgroundSecondary}` 
                     : `${colors.cardBorder} hover:${colors.backgroundSecondary} ${colors.cardBackground}`
                 }`}>
@@ -1152,8 +1168,8 @@ const SettingsPage: React.FC = () => {
                     type="radio"
                     name="theme"
                     value={themeOption.value}
-                    checked={theme === themeOption.value}
-                    onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'mixed')}
+                    checked={preferences.theme === themeOption.value}
+                    onChange={(e) => handlePreferenceChange('theme', e.target.value)}
                     className={`w-4 h-4 text-blue-600 ${colors.inputBorder} focus:ring-blue-500`}
                   />
                   <div className="flex-1">
@@ -1468,7 +1484,7 @@ const SettingsPage: React.FC = () => {
             className="fixed bottom-6 right-6 bg-white rounded-lg shadow-lg border border-gray-200 p-4"
           >
             <div className="flex items-center space-x-3">
-              <p className={`text-sm ${colors.textSecondary}`}>You have unsaved changes</p>
+              <p className="text-sm text-gray-800">You have unsaved changes</p>
               <button
                 onClick={handleSaveSettings}
                 disabled={isLoading}
@@ -1485,6 +1501,8 @@ const SettingsPage: React.FC = () => {
           </motion.div>
         )}
       </div>
+
+      <ConfirmationDialog />
     </div>
   );
 };

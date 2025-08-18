@@ -22,6 +22,7 @@ import {
 import { apiService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useConfirmation } from '../hooks/useConfirmation';
 import GoalCreationModal from '../components/GoalCreationModal';
 import toast from 'react-hot-toast';
 
@@ -47,6 +48,7 @@ interface ChatSession {
 const ChatPage: React.FC = () => {
   const { user } = useAuth();
   const { colors } = useTheme();
+  const { confirm, ConfirmationDialog } = useConfirmation();
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -190,7 +192,16 @@ const ChatPage: React.FC = () => {
   };
 
   const deleteSession = async (sessionId: string) => {
-    if (!confirm('Are you sure you want to delete this chat session?')) return;
+    const confirmed = await confirm({
+      title: 'Delete Chat Session',
+      message: 'Are you sure you want to delete this chat session? All messages in this conversation will be permanently lost.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger',
+      icon: 'delete'
+    });
+
+    if (!confirmed) return;
 
     try {
       const response = await apiService.deleteChatSession(sessionId);
@@ -209,7 +220,17 @@ const ChatPage: React.FC = () => {
 
   const clearSession = async () => {
     if (!currentSessionId) return;
-    if (!confirm('Are you sure you want to clear this conversation?')) return;
+    
+    const confirmed = await confirm({
+      title: 'Clear Conversation',
+      message: 'Are you sure you want to clear this conversation? All messages will be deleted but the session will remain.',
+      confirmText: 'Clear',
+      cancelText: 'Cancel',
+      type: 'warning',
+      icon: 'clear'
+    });
+
+    if (!confirmed) return;
 
     try {
       const response = await apiService.clearChatSession(currentSessionId);
@@ -631,6 +652,8 @@ const ChatPage: React.FC = () => {
         onGoalCreated={handleGoalCreated}
         prefillDescription={goalFromChat}
       />
+
+      <ConfirmationDialog />
     </div>
   );
 };

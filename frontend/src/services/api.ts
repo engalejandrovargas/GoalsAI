@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5003';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 class ApiService {
   private baseURL: string;
@@ -14,13 +14,9 @@ class ApiService {
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     
-    // Get token from localStorage
-    const token = localStorage.getItem('auth_token');
-    
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` }),
         ...options.headers,
       },
       credentials: 'include', // Important for cookies/sessions
@@ -478,7 +474,55 @@ class ApiService {
       body: JSON.stringify(aiSettings),
     });
   }
+
+  // Agent methods
+  async getAgents() {
+    return this.request<{
+      agents: any[];
+    }>('/agents');
+  }
+
+  async getAgentStatus(agentId: string) {
+    return this.request<any>(`/agents/${agentId}`);
+  }
+
+  async executeAgentTask(taskData: {
+    goalId: string;
+    taskType: string;
+    parameters: any;
+    priority?: 'high' | 'medium' | 'low';
+  }) {
+    return this.request<{
+      success: boolean;
+      result: any;
+      confidence: number;
+      error?: string;
+    }>('/agents/execute-task', {
+      method: 'POST',
+      body: JSON.stringify(taskData),
+    });
+  }
+
+  async assignAgentsToGoal(goalId: string, agentTypes: string[]) {
+    return this.request<{
+      message: string;
+      goalId: string;
+      assignedAgents: string[];
+    }>('/agents/assign-to-goal', {
+      method: 'POST',
+      body: JSON.stringify({ goalId, agentTypes }),
+    });
+  }
+
+  async getGoalActivities(goalId: string) {
+    return this.request<{
+      activities: any[];
+    }>(`/agents/goal/${goalId}/activities`);
+  }
 }
 
 export const apiService = new ApiService();
 export default apiService;
+
+// Export the api instance that components expect
+export const api = apiService;

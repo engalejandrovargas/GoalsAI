@@ -47,12 +47,30 @@ router.post('/complete-onboarding', requireAuth, async (req, res) => {
     let createdGoal = null;
     if (validatedData.firstGoal && validatedData.firstGoal.trim() !== '') {
       try {
+        // Map goals to appropriate categories
+        const goalCategoryMap: Record<string, string> = {
+          'Learn Spanish': 'learning',
+          'Run a 5K': 'health',
+          'Save $5,000': 'financial',
+          'Read 12 books this year': 'learning',
+          'Learn to cook Italian food': 'learning',
+          'Travel to Japan': 'travel',
+          'Learn Python programming': 'learning',
+          'Learn to play guitar': 'learning',
+          'Buy my first home': 'financial',
+          'Buy a car': 'financial',
+          'Start a side business': 'career',
+          'Meditate daily for 6 months': 'health',
+        };
+
+        const goalCategory = goalCategoryMap[validatedData.firstGoal] || 'personal';
+
         createdGoal = await GoalService.createGoal(userId, {
           title: validatedData.firstGoal.length > 50 
             ? validatedData.firstGoal.substring(0, 47) + '...' 
             : validatedData.firstGoal,
           description: validatedData.firstGoal,
-          category: 'personal', // Default category for first goal
+          category: goalCategory,
           status: 'planning',
         });
         logger.info(`Created first goal for user ${userId}: ${createdGoal.id}`);
@@ -96,6 +114,7 @@ router.post('/complete-onboarding', requireAuth, async (req, res) => {
         defaultGoalCategory: updatedUser.defaultGoalCategory,
         privacyLevel: updatedUser.privacyLevel,
         // Extended profile fields
+        nationality: updatedUser.nationality,
         occupation: updatedUser.occupation,
         workSchedule: updatedUser.workSchedule,
         personalityType: updatedUser.personalityType,
@@ -166,6 +185,7 @@ router.get('/profile', requireAuth, async (req, res) => {
         currency: user.currency,
         defaultGoalCategory: user.defaultGoalCategory,
         privacyLevel: user.privacyLevel,
+        nationality: user.nationality,
         onboardingCompleted: user.onboardingCompleted,
         createdAt: user.createdAt,
       },
@@ -225,6 +245,7 @@ router.put('/profile', requireAuth, async (req, res) => {
         defaultGoalCategory: updatedUser.defaultGoalCategory,
         privacyLevel: updatedUser.privacyLevel,
         // Extended profile fields
+        nationality: updatedUser.nationality,
         occupation: updatedUser.occupation,
         workSchedule: updatedUser.workSchedule,
         personalityType: updatedUser.personalityType,
@@ -299,6 +320,7 @@ router.patch('/profile', requireAuth, async (req, res) => {
         defaultGoalCategory: updatedUser.defaultGoalCategory,
         privacyLevel: updatedUser.privacyLevel,
         // Extended profile fields
+        nationality: updatedUser.nationality,
         occupation: updatedUser.occupation,
         workSchedule: updatedUser.workSchedule,
         personalityType: updatedUser.personalityType,
@@ -419,6 +441,7 @@ router.delete('/profile', requireAuth, async (req, res) => {
 
 // Validation schema for extended profile
 const extendedProfileSchema = z.object({
+  nationality: z.string().optional(),
   occupation: z.string().optional(),
   annualIncome: z.number().positive().optional(),
   currentSavings: z.number().min(0).optional(),
@@ -468,6 +491,7 @@ router.put('/extended-profile', requireAuth, async (req, res) => {
       success: true,
       message: 'Extended profile updated successfully',
       profile: {
+        nationality: updatedUser.nationality,
         occupation: updatedUser.occupation,
         annualIncome: updatedUser.annualIncome,
         currentSavings: updatedUser.currentSavings,

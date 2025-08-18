@@ -25,6 +25,7 @@ model User {
   onboardingCompleted   Boolean  @default(false)
   
   // Optional profile data (for settings/profile page)
+  nationality           String?
   occupation            String?
   annualIncome          Int?
   currentSavings        Int?
@@ -92,6 +93,12 @@ model Goal {
   aiPlan                String?  // JSON string
   researchData          String?  // JSON string
   
+  // Agent System
+  assignedAgents        String?  // JSON array of agent IDs
+  agentFindings         String?  // JSON object with agent results
+  monitoringActive      Boolean  @default(false)
+  lastAgentUpdate       DateTime?
+  
   // User interaction
   chatHistory           String?  // JSON string
   imageUrl              String?
@@ -99,6 +106,8 @@ model Goal {
   steps                 GoalStep[]
   pivots                GoalPivot[]
   chatSessions          ChatSession[]
+  agentTasks            AgentTask[]
+  monitors              AgentMonitor[]
   
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
@@ -156,4 +165,110 @@ model ChatSession {
   updatedAt             DateTime @updatedAt
   
   @@map("chat_sessions")
+}
+
+model Agent {
+  id                    String   @id @default(cuid())
+  name                  String   // "TravelAgent", "FinancialAgent", etc.
+  type                  String   // "travel", "financial", "research", "learning"
+  description           String
+  capabilities          String   // JSON array of capabilities
+  apiEndpoints          String?  // JSON object with API configurations
+  isActive              Boolean  @default(true)
+  version               String   @default("1.0.0")
+  
+  // Performance metrics
+  successRate           Float    @default(0.0)
+  averageResponseTime   Int      @default(0) // milliseconds
+  totalExecutions       Int      @default(0)
+  lastExecuted          DateTime?
+  
+  tasks                 AgentTask[]
+  apiKeys               AgentApiKey[]
+  monitors              AgentMonitor[]
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@map("agents")
+}
+
+model AgentTask {
+  id                    String   @id @default(cuid())
+  agentId               String
+  agent                 Agent    @relation(fields: [agentId], references: [id])
+  goalId                String
+  goal                  Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  
+  taskType              String   // "research", "monitor", "calculate", "analyze"
+  parameters            String   // JSON object with task parameters
+  status                String   @default("pending") // pending, running, completed, failed
+  priority              String   @default("medium") // high, medium, low
+  
+  // Results
+  result                String?  // JSON object with task results
+  confidence            Float?   // 0.0 to 1.0
+  errorMessage          String?
+  
+  // Timing
+  startedAt             DateTime?
+  completedAt           DateTime?
+  retryCount            Int      @default(0)
+  maxRetries            Int      @default(3)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@map("agent_tasks")
+}
+
+model AgentApiKey {
+  id                    String   @id @default(cuid())
+  agentId               String
+  agent                 Agent    @relation(fields: [agentId], references: [id])
+  
+  provider              String   // "skyscanner", "xe", "openai", etc.
+  keyName               String   // "API_KEY", "CLIENT_ID", etc.
+  encryptedValue        String   // Encrypted API key
+  isActive              Boolean  @default(true)
+  expiresAt             DateTime?
+  
+  // Usage tracking
+  usageCount            Int      @default(0)
+  lastUsed              DateTime?
+  monthlyLimit          Int?
+  monthlyUsed           Int      @default(0)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@unique([agentId, provider, keyName])
+  @@map("agent_api_keys")
+}
+
+model AgentMonitor {
+  id                    String   @id @default(cuid())
+  goalId                String
+  goal                  Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  agentId               String
+  agent                 Agent    @relation(fields: [agentId], references: [id])
+  
+  monitorType           String   // "price_alert", "deadline_reminder", "market_change"
+  parameters            String   // JSON object with monitoring parameters
+  isActive              Boolean  @default(true)
+  frequency             String   @default("daily") // hourly, daily, weekly
+  
+  // Thresholds
+  threshold             Float?
+  thresholdType         String?  // "above", "below", "change_percent"
+  
+  // Last check
+  lastChecked           DateTime?
+  lastTriggered         DateTime?
+  triggerCount          Int      @default(0)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@map("agent_monitors")
 }

@@ -32,6 +32,7 @@ export interface User {
   aiDetailLevel?: string;
   aiApproachStyle?: string;
   // Extended profile
+  nationality?: string;
   occupation?: string;
   workSchedule?: string;
   personalityType?: string;

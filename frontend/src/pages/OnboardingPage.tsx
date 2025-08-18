@@ -480,14 +480,14 @@ const OnboardingPage: React.FC = () => {
                 Your First Goal
               </h2>
               <p className="text-gray-600">
-                Choose a goal to get started, or write your own. You can add more goals later!
+                Choose a goal to get started. You can add more goals later!
               </p>
             </div>
 
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Popular Goals ✨
+                  Choose Your First Goal ✨
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   {quickGoalSuggestions.map((goal, index) => (
@@ -512,31 +512,6 @@ const OnboardingPage: React.FC = () => {
                     </button>
                   ))}
                 </div>
-              </div>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">or write your own</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Custom Goal
-                </label>
-                <textarea
-                  value={data.firstGoal}
-                  onChange={(e) => setData(prev => ({ ...prev, firstGoal: e.target.value }))}
-                  placeholder="e.g., 'Write a novel', 'Start a podcast', 'Learn photography'"
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
-                />
-                <p className="mt-2 text-xs text-gray-500">
-                  💡 Keep it simple - our AI will help you break it down and make it SMART
-                </p>
               </div>
             </div>
           </motion.div>

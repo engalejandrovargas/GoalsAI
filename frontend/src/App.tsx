@@ -10,6 +10,7 @@ import GoalAnalyzerPage from './pages/GoalAnalyzerPage';
 import ProgressPage from './pages/ProgressPage';
 import ChatPage from './pages/ChatPage';
 import SettingsPage from './pages/SettingsPage';
+import AgentDashboardPage from './pages/AgentDashboardPage';
 import Layout from './components/Layout';
 import LoadingSpinner from './components/LoadingSpinner';
 
@@ -170,6 +171,17 @@ function App() {
               }
             >
               <Route index element={<SettingsPage />} />
+            </Route>
+
+            <Route
+              path="/agents"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<AgentDashboardPage />} />
             </Route>
 
             {/* Onboarding Route - accessible only when authenticated but not onboarded */}

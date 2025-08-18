@@ -135,7 +135,7 @@ const GoalCard: React.FC<GoalCardProps> = ({
               type="checkbox"
               checked={isSelected}
               onChange={onSelect}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-1"
+              className={`rounded border ${colors.inputBorder} text-blue-600 focus:ring-blue-500 mt-1 ${colors.inputBackground}`}
             />
             
             <div className="flex-1">
@@ -144,7 +144,7 @@ const GoalCard: React.FC<GoalCardProps> = ({
                   type="text"
                   value={editData.title}
                   onChange={(e) => setEditData(prev => ({ ...prev, title: e.target.value }))}
-                  className="font-semibold text-gray-900 text-lg w-full border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`font-semibold ${colors.textPrimary} text-lg w-full border ${colors.inputBorder} rounded px-2 py-1 ${colors.inputBackground} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                 />
               ) : (
                 <h3 className={`font-semibold ${colors.textPrimary} text-lg mb-1 line-clamp-2`}>
@@ -157,7 +157,7 @@ const GoalCard: React.FC<GoalCardProps> = ({
                   value={editData.description}
                   onChange={(e) => setEditData(prev => ({ ...prev, description: e.target.value }))}
                   rows={2}
-                  className="text-gray-600 text-sm w-full border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  className={`${colors.textSecondary} text-sm w-full border ${colors.inputBorder} rounded px-2 py-1 ${colors.inputBackground} focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none`}
                 />
               ) : (
                 <p className={`${colors.textSecondary} text-sm line-clamp-2`}>
@@ -182,7 +182,7 @@ const GoalCard: React.FC<GoalCardProps> = ({
                     setIsEditing(!isEditing);
                     setShowMenu(false);
                   }}
-                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                  className={`w-full px-3 py-2 text-left text-sm ${colors.textPrimary} hover:${colors.backgroundSecondary} flex items-center`}
                 >
                   <Edit3 className="w-4 h-4 mr-2" />
                   {isEditing ? 'Cancel Edit' : 'Edit'}
@@ -192,7 +192,7 @@ const GoalCard: React.FC<GoalCardProps> = ({
                     onShowProgress();
                     setShowMenu(false);
                   }}
-                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                  className={`w-full px-3 py-2 text-left text-sm ${colors.textPrimary} hover:${colors.backgroundSecondary} flex items-center`}
                 >
                   <BarChart3 className="w-4 h-4 mr-2" />
                   Progress
@@ -202,7 +202,7 @@ const GoalCard: React.FC<GoalCardProps> = ({
                     onShowActionPlan?.();
                     setShowMenu(false);
                   }}
-                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                  className={`w-full px-3 py-2 text-left text-sm ${colors.textPrimary} hover:${colors.backgroundSecondary} flex items-center`}
                 >
                   <Target className="w-4 h-4 mr-2" />
                   Action Plan
@@ -212,7 +212,7 @@ const GoalCard: React.FC<GoalCardProps> = ({
                     onAnalyze();
                     setShowMenu(false);
                   }}
-                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                  className={`w-full px-3 py-2 text-left text-sm ${colors.textPrimary} hover:${colors.backgroundSecondary} flex items-center`}
                 >
                   <Brain className="w-4 h-4 mr-2" />
                   AI Analyze
@@ -222,7 +222,7 @@ const GoalCard: React.FC<GoalCardProps> = ({
                     onDuplicate();
                     setShowMenu(false);
                   }}
-                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                  className={`w-full px-3 py-2 text-left text-sm ${colors.textPrimary} hover:${colors.backgroundSecondary} flex items-center`}
                 >
                   <Copy className="w-4 h-4 mr-2" />
                   Duplicate
@@ -232,7 +232,7 @@ const GoalCard: React.FC<GoalCardProps> = ({
                     onArchive();
                     setShowMenu(false);
                   }}
-                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                  className={`w-full px-3 py-2 text-left text-sm ${colors.textPrimary} hover:${colors.backgroundSecondary} flex items-center`}
                 >
                   <Archive className="w-4 h-4 mr-2" />
                   Archive
@@ -263,7 +263,7 @@ const GoalCard: React.FC<GoalCardProps> = ({
             <select
               value={editData.status}
               onChange={(e) => setEditData(prev => ({ ...prev, status: e.target.value }))}
-              className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+              className={`px-2 py-1 text-xs border ${colors.inputBorder} rounded focus:ring-1 focus:ring-blue-500 ${colors.inputBackground} ${colors.textPrimary}`}
             >
               <option value="planning">Planning</option>
               <option value="in_progress">In Progress</option>
@@ -281,7 +281,7 @@ const GoalCard: React.FC<GoalCardProps> = ({
             <select
               value={editData.priority}
               onChange={(e) => setEditData(prev => ({ ...prev, priority: e.target.value }))}
-              className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+              className={`px-2 py-1 text-xs border ${colors.inputBorder} rounded focus:ring-1 focus:ring-blue-500 ${colors.inputBackground} ${colors.textPrimary}`}
             >
               <option value="low">Low</option>
               <option value="medium">Medium</option>
