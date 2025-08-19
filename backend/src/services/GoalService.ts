@@ -11,6 +11,7 @@ export interface CreateGoalData {
   estimatedCost?: number;
   currentSaved?: number;
   targetDate?: Date;
+  smartGoalData?: string;
 }
 
 export interface UpdateGoalData {
@@ -28,6 +29,7 @@ export interface UpdateGoalData {
   suggestedAlternatives?: any[];
   aiPlan?: any;
   researchData?: any;
+  smartGoalData?: string;
 }
 
 export interface CreateGoalStepData {
@@ -158,24 +160,49 @@ export class GoalService {
 
   static async updateGoal(goalId: string, userId: string, updateData: UpdateGoalData): Promise<Goal> {
     try {
+      // Filter out invalid fields and prepare data for update
+      const updateFields: any = {};
+      
+      // Copy valid fields
+      if (updateData.title !== undefined) updateFields.title = updateData.title;
+      if (updateData.description !== undefined) updateFields.description = updateData.description;
+      if (updateData.category !== undefined) updateFields.category = updateData.category;
+      if (updateData.priority !== undefined) updateFields.priority = updateData.priority;
+      if (updateData.status !== undefined) updateFields.status = updateData.status;
+      if (updateData.estimatedCost !== undefined) updateFields.estimatedCost = updateData.estimatedCost;
+      if (updateData.currentSaved !== undefined) updateFields.currentSaved = updateData.currentSaved;
+      if (updateData.targetDate !== undefined) updateFields.targetDate = updateData.targetDate;
+      if (updateData.feasibilityScore !== undefined) updateFields.feasibilityScore = updateData.feasibilityScore;
+      if (updateData.smartGoalData !== undefined) updateFields.smartGoalData = updateData.smartGoalData;
+      
+      // Handle JSON fields
+      if (updateData.feasibilityAnalysis !== undefined) {
+        updateFields.feasibilityAnalysis = updateData.feasibilityAnalysis ? 
+          JSON.stringify(updateData.feasibilityAnalysis) : null;
+      }
+      if (updateData.redFlags !== undefined) {
+        updateFields.redFlags = updateData.redFlags ? 
+          JSON.stringify(updateData.redFlags) : null;
+      }
+      if (updateData.suggestedAlternatives !== undefined) {
+        updateFields.suggestedAlternatives = updateData.suggestedAlternatives ? 
+          JSON.stringify(updateData.suggestedAlternatives) : null;
+      }
+      if (updateData.aiPlan !== undefined) {
+        updateFields.aiPlan = updateData.aiPlan ? 
+          JSON.stringify(updateData.aiPlan) : null;
+      }
+      if (updateData.researchData !== undefined) {
+        updateFields.researchData = updateData.researchData ? 
+          JSON.stringify(updateData.researchData) : null;
+      }
+
       const goal = await prisma.goal.updateMany({
         where: { 
           id: goalId,
           userId: userId
         },
-        data: {
-          ...updateData,
-          feasibilityAnalysis: updateData.feasibilityAnalysis ? 
-            JSON.stringify(updateData.feasibilityAnalysis) : undefined,
-          redFlags: updateData.redFlags ? 
-            JSON.stringify(updateData.redFlags) : undefined,
-          suggestedAlternatives: updateData.suggestedAlternatives ? 
-            JSON.stringify(updateData.suggestedAlternatives) : undefined,
-          aiPlan: updateData.aiPlan ? 
-            JSON.stringify(updateData.aiPlan) : undefined,
-          researchData: updateData.researchData ? 
-            JSON.stringify(updateData.researchData) : undefined,
-        }
+        data: updateFields
       });
 
       if (goal.count === 0) {

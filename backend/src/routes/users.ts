@@ -1,7 +1,7 @@
 import express from 'express';
 import { z } from 'zod';
 import { prisma } from '../config/database';
-import { requireAuth } from '../middleware/auth';
+import { requireSessionAuth } from '../middleware/auth';
 import { UserService } from '../services/UserService';
 import { GoalService } from '../services/GoalService';
 import logger from '../utils/logger';
@@ -20,7 +20,7 @@ const onboardingSchema = z.object({
 });
 
 // POST /users/complete-onboarding - Complete user onboarding
-router.post('/complete-onboarding', requireAuth, async (req, res) => {
+router.post('/complete-onboarding', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     
@@ -148,7 +148,7 @@ router.post('/complete-onboarding', requireAuth, async (req, res) => {
 });
 
 // GET /users/profile - Get current user profile
-router.get('/profile', requireAuth, async (req, res) => {
+router.get('/profile', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     
@@ -197,7 +197,7 @@ router.get('/profile', requireAuth, async (req, res) => {
 });
 
 // PUT /users/profile - Update user profile
-router.put('/profile', requireAuth, async (req, res) => {
+router.put('/profile', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     
@@ -272,7 +272,7 @@ router.put('/profile', requireAuth, async (req, res) => {
 });
 
 // PATCH /users/profile - Partially update user profile
-router.patch('/profile', requireAuth, async (req, res) => {
+router.patch('/profile', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     
@@ -347,7 +347,7 @@ router.patch('/profile', requireAuth, async (req, res) => {
 });
 
 // GET /users/stats - Get user statistics
-router.get('/stats', requireAuth, async (req, res) => {
+router.get('/stats', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     
@@ -368,7 +368,7 @@ router.get('/stats', requireAuth, async (req, res) => {
 });
 
 // PUT /users/preferences - Update user preferences
-router.put('/preferences', requireAuth, async (req, res) => {
+router.put('/preferences', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     
@@ -419,7 +419,7 @@ router.put('/preferences', requireAuth, async (req, res) => {
 });
 
 // DELETE /users/profile - Delete user account
-router.delete('/profile', requireAuth, async (req, res) => {
+router.delete('/profile', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     
@@ -457,7 +457,7 @@ const extendedProfileSchema = z.object({
 });
 
 // PUT /users/extended-profile - Update extended profile information
-router.put('/extended-profile', requireAuth, async (req, res) => {
+router.put('/extended-profile', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     
@@ -528,7 +528,7 @@ const aiSettingsSchema = z.object({
 });
 
 // PUT /users/ai-settings - Update AI behavior settings
-router.put('/ai-settings', requireAuth, async (req, res) => {
+router.put('/ai-settings', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     
@@ -567,7 +567,7 @@ router.put('/ai-settings', requireAuth, async (req, res) => {
 });
 
 // GET /users/ai-settings - Get AI behavior settings
-router.get('/ai-settings', requireAuth, async (req, res) => {
+router.get('/ai-settings', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     

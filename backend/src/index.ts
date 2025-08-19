@@ -26,8 +26,10 @@ const PORT = process.env.PORT || 5000;
 app.use(helmet());
 app.use(cors({
   origin: [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
-    'http://localhost:5174' // Alternative port
+    process.env.FRONTEND_URL || 'http://localhost:5176',
+    'http://localhost:5173', // Default port
+    'http://localhost:5174', // Alternative port
+    'http://localhost:5175'  // Another alternative
   ],
   credentials: true
 }));
@@ -55,8 +57,8 @@ app.use(passport.session());
 
 // Debug middleware
 app.use((req, res, next) => {
-  if (req.path.startsWith('/agents') || req.path.startsWith('/auth')) {
-    logger.info(`Request: ${req.method} ${req.path}, User authenticated: ${req.isAuthenticated()}, Session ID: ${req.sessionID}, User: ${JSON.stringify(req.user)}`);
+  if (req.path.startsWith('/api') || req.path.startsWith('/agents') || req.path.startsWith('/auth')) {
+    logger.info(`Request: ${req.method} ${req.path}, User authenticated: ${req.isAuthenticated()}, Session ID: ${req.sessionID}, User: ${req.user ? 'exists' : 'undefined'}`);
     logger.info(`Session data: ${JSON.stringify(req.session)}`);
     logger.info(`Cookies: ${JSON.stringify(req.headers.cookie)}`);
   }
@@ -74,13 +76,53 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use('/auth', authRoutes);
-app.use('/users', userRoutes);
-app.use('/goals', goalRoutes);
-app.use('/goals', goalStepsRoutes);
-app.use('/planning', goalPlanningRoutes);
-app.use('/chat', chatRoutes);
-app.use('/progress', progressRoutes);
-app.use('/agents', agentRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/goals', goalRoutes);
+app.use('/api/goals', goalStepsRoutes);
+app.use('/api/planning', goalPlanningRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/progress', progressRoutes);
+app.use('/api/agents', agentRoutes);
+
+// Test endpoint for agent functionality (development only)
+if (process.env.NODE_ENV !== 'production') {
+  app.post('/test-agents', async (req, res) => {
+    try {
+      const { AgentManager } = require('./services/AgentManager');
+      const agentManager = new AgentManager(prisma);
+      
+      const { taskType, parameters } = req.body;
+      
+      if (!taskType || !parameters) {
+        return res.status(400).json({ error: 'taskType and parameters are required' });
+      }
+
+      const taskParams = {
+        goalId: `test-${Date.now()}`,
+        userId: 'test-user',
+        type: taskType,
+        priority: 'medium' as 'medium',
+        parameters,
+      };
+
+      const result = await agentManager.executeTask(taskParams);
+      
+      res.json({
+        success: result.success,
+        result: result.data,
+        confidence: result.confidence,
+        metadata: result.metadata,
+        error: result.error,
+      });
+    } catch (error) {
+      logger.error('Test agent execution failed:', error);
+      res.status(500).json({ 
+        error: 'Failed to execute test agent task', 
+        details: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
+}
 
 // Root endpoint
 app.get('/', (req, res) => {

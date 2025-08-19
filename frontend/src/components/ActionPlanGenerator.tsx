@@ -121,7 +121,7 @@ const ActionPlanGenerator: React.FC<ActionPlanGeneratorProps> = ({ goal, onSteps
       const response = await apiService.request<{
         success: boolean;
         steps: ActionStep[];
-      }>('/goals/steps/generate-basic', {
+      }>('/api/goals/steps/generate-basic', {
         method: 'POST',
         body: JSON.stringify({
           goalId: goal.id,

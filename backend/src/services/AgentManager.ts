@@ -56,6 +56,14 @@ export class AgentManager {
           const { LearningAgent } = await import('../agents/LearningAgent');
           AgentClass = LearningAgent;
           break;
+        case 'weather':
+          const { WeatherAgent } = await import('../agents/WeatherAgent');
+          AgentClass = WeatherAgent;
+          break;
+        case 'goal_analyzer':
+          const { GoalAnalyzerAgent } = await import('../agents/GoalAnalyzerAgent');
+          AgentClass = GoalAnalyzerAgent;
+          break;
         default:
           logger.warn(`Unknown agent type: ${agentData.type}`);
           return;
@@ -221,23 +229,42 @@ export class AgentManager {
   private getAgentTypeForTask(taskType: string): string {
     // Map task types to agent types
     const taskToAgentMap: Record<string, string> = {
+      // Travel Agent tasks
       'searchFlights': 'travel',
       'searchHotels': 'travel',
       'checkVisaRequirements': 'travel',
       'calculateTravelBudget': 'travel',
+      
+      // Weather Agent tasks
+      'getWeatherForecast': 'weather',
+      'getCurrentWeather': 'weather',
+      'getWeatherAlerts': 'weather',
+      'getOutdoorActivityAdvice': 'weather',
+      
+      // Financial Agent tasks
       'convertCurrency': 'financial',
       'calculateSavingsPlan': 'financial',
       'analyzeInvestmentOptions': 'financial',
       'budgetOptimization': 'financial',
+      
+      // Research Agent tasks
       'conductMarketResearch': 'research',
       'marketResearch': 'research',
       'competitiveAnalysis': 'research',
       'trendAnalysis': 'research',
       'feasibilityStudy': 'research',
+      
+      // Learning Agent tasks
       'findCourses': 'learning',
       'createLearningPath': 'learning',
       'assessSkillGap': 'learning',
       'findCertifications': 'learning',
+      
+      // Goal Analyzer Agent tasks
+      'analyzeGoalComplexity': 'goal_analyzer',
+      'determineRequiredAgents': 'goal_analyzer',
+      'generateClarificationQuestions': 'goal_analyzer',
+      'decomposeComplexGoal': 'goal_analyzer',
     };
     
     return taskToAgentMap[taskType] || 'research'; // Default to research agent

@@ -1,0 +1,267 @@
+// Goal category to component mapping with contextual intelligence
+
+export interface GoalCategoryConfig {
+  id: string;
+  name: string;
+  description: string;
+  defaultDeadlineDays: number;
+  defaultEstimatedCost: number;
+  requiredComponents: string[]; // Always include
+  contextualComponents: string[]; // Include based on goal details
+  optionalComponents: string[]; // User can add if desired
+  suggestedAgents: string[];
+  examples: string[];
+}
+
+export const GOAL_CATEGORY_MAPPING: Record<string, GoalCategoryConfig> = {
+  // === FINANCIAL GOALS ===
+  savings: {
+    id: 'savings',
+    name: 'Savings & Money',
+    description: 'Save money for specific purposes or general financial security',
+    defaultDeadlineDays: 180, // 6 months
+    defaultEstimatedCost: 5000,
+    requiredComponents: ['simple_savings_tracker', 'completion_meter', 'agent_info'],
+    contextualComponents: ['progress_chart', 'milestone_timeline', 'habit_tracker'],
+    optionalComponents: ['budget_breakdown', 'expense_tracker', 'motivation_center'],
+    suggestedAgents: ['financial'],
+    examples: ['Save $5000 for emergency fund', 'Save for vacation', 'Save for down payment']
+  },
+
+  investment: {
+    id: 'investment',
+    name: 'Investment & Wealth Building',
+    description: 'Build wealth through investments and financial planning',
+    defaultDeadlineDays: 1825, // 5 years
+    defaultEstimatedCost: 50000,
+    requiredComponents: ['financial_calculator', 'investment_tracker', 'market_data', 'agent_info'],
+    contextualComponents: ['progress_chart', 'milestone_timeline', 'budget_breakdown'],
+    optionalComponents: ['currency_converter', 'goal_reflection', 'social_accountability'],
+    suggestedAgents: ['financial', 'research'],
+    examples: ['Build $50k investment portfolio', 'Retire by 40', 'Generate passive income']
+  },
+
+  debt_payoff: {
+    id: 'debt_payoff',
+    name: 'Debt Elimination',
+    description: 'Pay off debts and achieve financial freedom',
+    defaultDeadlineDays: 365, // 1 year
+    defaultEstimatedCost: 25000,
+    requiredComponents: ['debt_payoff_tracker', 'financial_calculator', 'progress_chart', 'agent_info'],
+    contextualComponents: ['milestone_timeline', 'budget_breakdown', 'expense_tracker'],
+    optionalComponents: ['habit_tracker', 'motivation_center', 'goal_reflection'],
+    suggestedAgents: ['financial'],
+    examples: ['Pay off credit card debt', 'Eliminate student loans', 'Become debt-free']
+  },
+
+  // === LEARNING & EDUCATION ===
+  language: {
+    id: 'language',
+    name: 'Language Learning',
+    description: 'Learn a new language or improve language skills',
+    defaultDeadlineDays: 730, // 2 years
+    defaultEstimatedCost: 500,
+    requiredComponents: ['learning_dashboard', 'skill_assessment', 'habit_tracker', 'agent_info'],
+    contextualComponents: ['streak_counter', 'progress_chart', 'milestone_timeline'],
+    optionalComponents: ['resource_library', 'social_accountability', 'motivation_center'],
+    suggestedAgents: ['learning', 'research'],
+    examples: ['Learn Spanish fluently', 'Pass TOEFL exam', 'Become conversational in French']
+  },
+
+  education: {
+    id: 'education',
+    name: 'Education & Certification',
+    description: 'Complete courses, get certified, or pursue formal education',
+    defaultDeadlineDays: 365, // 1 year
+    defaultEstimatedCost: 2000,
+    requiredComponents: ['learning_dashboard', 'project_timeline', 'resource_library', 'agent_info'],
+    contextualComponents: ['skill_assessment', 'reading_tracker', 'progress_chart'],
+    optionalComponents: ['calendar_widget', 'document_checklist', 'budget_breakdown'],
+    suggestedAgents: ['learning', 'research'],
+    examples: ['Get AWS certification', 'Complete MBA', 'Learn data science']
+  },
+
+  skill_development: {
+    id: 'skill_development',
+    name: 'Skill Development',
+    description: 'Develop specific professional or personal skills',
+    defaultDeadlineDays: 180, // 6 months
+    defaultEstimatedCost: 500,
+    requiredComponents: ['skill_assessment', 'habit_tracker', 'progress_chart', 'agent_info'],
+    contextualComponents: ['learning_dashboard', 'resource_library', 'project_timeline'],
+    optionalComponents: ['reading_tracker', 'social_accountability', 'motivation_center'],
+    suggestedAgents: ['learning', 'research'],
+    examples: ['Master React development', 'Improve public speaking', 'Learn photography']
+  },
+
+  // === HEALTH & FITNESS ===
+  weight_loss: {
+    id: 'weight_loss',
+    name: 'Weight Loss',
+    description: 'Lose weight and improve body composition',
+    defaultDeadlineDays: 180, // 6 months
+    defaultEstimatedCost: 1000,
+    requiredComponents: ['health_dashboard', 'weight_tracker', 'habit_tracker', 'agent_info'],
+    contextualComponents: ['workout_tracker', 'progress_chart', 'milestone_timeline'],
+    optionalComponents: ['mood_tracker', 'motivation_center', 'social_accountability'],
+    suggestedAgents: ['health', 'research'],
+    examples: ['Lose 30 pounds', 'Reach target BMI', 'Fit into old clothes']
+  },
+
+  fitness: {
+    id: 'fitness',
+    name: 'Fitness & Exercise',
+    description: 'Improve fitness level and build healthy exercise habits',
+    defaultDeadlineDays: 90, // 3 months
+    defaultEstimatedCost: 500,
+    requiredComponents: ['health_dashboard', 'workout_tracker', 'habit_tracker', 'agent_info'],
+    contextualComponents: ['progress_chart', 'streak_counter', 'milestone_timeline'],
+    optionalComponents: ['weight_tracker', 'motivation_center', 'social_accountability'],
+    suggestedAgents: ['health'],
+    examples: ['Run a 5K', 'Build muscle mass', 'Exercise 5x per week']
+  },
+
+  wellness: {
+    id: 'wellness',
+    name: 'Health & Wellness',
+    description: 'Improve overall health and wellbeing',
+    defaultDeadlineDays: 365, // 1 year
+    defaultEstimatedCost: 1500,
+    requiredComponents: ['health_dashboard', 'habit_tracker', 'mood_tracker', 'agent_info'],
+    contextualComponents: ['progress_chart', 'milestone_timeline', 'goal_reflection'],
+    optionalComponents: ['weight_tracker', 'workout_tracker', 'motivation_center'],
+    suggestedAgents: ['health', 'research'],
+    examples: ['Improve sleep quality', 'Reduce stress', 'Build healthy routines']
+  },
+
+  // === TRAVEL ===
+  travel: {
+    id: 'travel',
+    name: 'Travel & Adventure',
+    description: 'Plan and save for travel experiences',
+    defaultDeadlineDays: 365, // 1 year
+    defaultEstimatedCost: 5000,
+    requiredComponents: ['travel_dashboard', 'financial_calculator', 'document_checklist', 'agent_info'],
+    contextualComponents: ['budget_breakdown', 'weather_widget', 'milestone_timeline'],
+    optionalComponents: ['currency_converter', 'calendar_widget', 'progress_chart'],
+    suggestedAgents: ['travel', 'financial', 'weather'],
+    examples: ['Trip to Japan', 'European backpacking', 'Family vacation to Disney']
+  },
+
+  // === CAREER & BUSINESS ===
+  career: {
+    id: 'career',
+    name: 'Career Development',
+    description: 'Advance career, change jobs, or develop professionally',
+    defaultDeadlineDays: 365, // 1 year
+    defaultEstimatedCost: 2000,
+    requiredComponents: ['career_dashboard', 'skill_assessment', 'project_timeline', 'agent_info'],
+    contextualComponents: ['learning_dashboard', 'resource_library', 'milestone_timeline'],
+    optionalComponents: ['document_checklist', 'social_accountability', 'goal_reflection'],
+    suggestedAgents: ['research', 'learning'],
+    examples: ['Get promoted', 'Change careers', 'Find dream job']
+  },
+
+  business: {
+    id: 'business',
+    name: 'Business & Entrepreneurship',
+    description: 'Start a business, launch a product, or grow a company',
+    defaultDeadlineDays: 730, // 2 years
+    defaultEstimatedCost: 10000,
+    requiredComponents: ['business_dashboard', 'financial_calculator', 'project_timeline', 'agent_info'],
+    contextualComponents: ['market_data', 'budget_breakdown', 'milestone_timeline'],
+    optionalComponents: ['resource_library', 'document_checklist', 'social_accountability'],
+    suggestedAgents: ['research', 'financial', 'business'],
+    examples: ['Launch startup', 'Open restaurant', 'Build SaaS product']
+  },
+
+  // === PERSONAL DEVELOPMENT ===
+  habits: {
+    id: 'habits',
+    name: 'Habit Building',
+    description: 'Build positive habits and break negative ones',
+    defaultDeadlineDays: 90, // 3 months
+    defaultEstimatedCost: 100,
+    requiredComponents: ['habit_tracker', 'streak_counter', 'completion_meter', 'agent_info'],
+    contextualComponents: ['progress_chart', 'mood_tracker', 'milestone_timeline'],
+    optionalComponents: ['motivation_center', 'goal_reflection', 'social_accountability'],
+    suggestedAgents: ['research'],
+    examples: ['Read daily', 'Meditate every morning', 'Quit smoking']
+  },
+
+  creative: {
+    id: 'creative',
+    name: 'Creative Projects',
+    description: 'Complete creative endeavors and artistic projects',
+    defaultDeadlineDays: 180, // 6 months
+    defaultEstimatedCost: 500,
+    requiredComponents: ['project_timeline', 'task_manager', 'progress_chart', 'agent_info'],
+    contextualComponents: ['milestone_timeline', 'resource_library', 'habit_tracker'],
+    optionalComponents: ['calendar_widget', 'motivation_center', 'social_accountability'],
+    suggestedAgents: ['research'],
+    examples: ['Write a novel', 'Create art portfolio', 'Compose album']
+  },
+
+  relationships: {
+    id: 'relationships',
+    name: 'Relationships & Social',
+    description: 'Improve relationships and social connections',
+    defaultDeadlineDays: 180, // 6 months
+    defaultEstimatedCost: 200,
+    requiredComponents: ['goal_reflection', 'habit_tracker', 'milestone_timeline', 'agent_info'],
+    contextualComponents: ['mood_tracker', 'social_accountability', 'progress_chart'],
+    optionalComponents: ['calendar_widget', 'motivation_center', 'resource_library'],
+    suggestedAgents: ['research'],
+    examples: ['Improve marriage', 'Make new friends', 'Better work relationships']
+  },
+
+  // === SIMPLE CATEGORIES ===
+  general: {
+    id: 'general',
+    name: 'General Goal',
+    description: 'Generic goal that doesn\'t fit specific categories',
+    defaultDeadlineDays: 90, // 3 months
+    defaultEstimatedCost: 500,
+    requiredComponents: ['completion_meter', 'task_manager', 'agent_info'],
+    contextualComponents: ['progress_chart', 'milestone_timeline', 'habit_tracker'],
+    optionalComponents: ['goal_reflection', 'motivation_center', 'calendar_widget'],
+    suggestedAgents: ['research'],
+    examples: ['Complete personal project', 'Achieve life goal', 'Finish important task']
+  }
+};
+
+// Quick access arrays for the UI
+export const GOAL_CATEGORIES = Object.values(GOAL_CATEGORY_MAPPING);
+
+export const CATEGORY_NAMES = Object.keys(GOAL_CATEGORY_MAPPING);
+
+// Helper function to get components for a category
+export function getComponentsForCategory(categoryId: string, includeOptional: boolean = false): string[] {
+  const category = GOAL_CATEGORY_MAPPING[categoryId];
+  if (!category) return [];
+  
+  const components = [
+    ...category.requiredComponents,
+    ...category.contextualComponents
+  ];
+  
+  if (includeOptional) {
+    components.push(...category.optionalComponents);
+  }
+  
+  return [...new Set(components)]; // Remove duplicates
+}
+
+// Helper function to get default settings for a category
+export function getDefaultsForCategory(categoryId: string): {
+  deadlineDays: number;
+  estimatedCost: number;
+  suggestedAgents: string[];
+} {
+  const category = GOAL_CATEGORY_MAPPING[categoryId] || GOAL_CATEGORY_MAPPING.general;
+  return {
+    deadlineDays: category.defaultDeadlineDays,
+    estimatedCost: category.defaultEstimatedCost,
+    suggestedAgents: category.suggestedAgents,
+  };
+}

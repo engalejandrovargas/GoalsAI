@@ -1,7 +1,7 @@
 import express from 'express';
 import { z } from 'zod';
 import { prisma } from '../config/database';
-import { requireAuth } from '../middleware/auth';
+import { requireSessionAuth } from '../middleware/auth';
 import { aiService } from '../services/aiService';
 import logger from '../utils/logger';
 
@@ -15,7 +15,7 @@ const sendMessageSchema = z.object({
 });
 
 // POST /chat/stream - Send a message to AI with streaming response
-router.post('/stream', requireAuth, async (req, res) => {
+router.post('/stream', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     
@@ -184,7 +184,7 @@ router.post('/stream', requireAuth, async (req, res) => {
 });
 
 // POST /chat/message - Send a message to AI
-router.post('/message', requireAuth, async (req, res) => {
+router.post('/message', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     
@@ -328,7 +328,7 @@ router.post('/message', requireAuth, async (req, res) => {
 });
 
 // GET /chat/sessions - Get user's chat sessions
-router.get('/sessions', requireAuth, async (req, res) => {
+router.get('/sessions', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     
@@ -380,7 +380,7 @@ router.get('/sessions', requireAuth, async (req, res) => {
 });
 
 // GET /chat/sessions/:id - Get specific chat session
-router.get('/sessions/:id', requireAuth, async (req, res) => {
+router.get('/sessions/:id', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     const sessionId = req.params.id;
@@ -421,7 +421,7 @@ router.get('/sessions/:id', requireAuth, async (req, res) => {
 });
 
 // DELETE /chat/sessions/:id - Delete chat session
-router.delete('/sessions/:id', requireAuth, async (req, res) => {
+router.delete('/sessions/:id', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     const sessionId = req.params.id;
@@ -460,7 +460,7 @@ router.delete('/sessions/:id', requireAuth, async (req, res) => {
 });
 
 // POST /chat/sessions/:id/clear - Clear chat session messages
-router.post('/sessions/:id/clear', requireAuth, async (req, res) => {
+router.post('/sessions/:id/clear', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     const sessionId = req.params.id;

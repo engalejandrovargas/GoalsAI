@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import OnboardingPage from './pages/OnboardingPage';
 import GoalAnalyzerPage from './pages/GoalAnalyzerPage';
+import GoalDashboardPage from './pages/GoalDashboardPage';
 import ProgressPage from './pages/ProgressPage';
 import ChatPage from './pages/ChatPage';
 import SettingsPage from './pages/SettingsPage';
@@ -183,6 +184,17 @@ function App() {
             >
               <Route index element={<AgentDashboardPage />} />
             </Route>
+
+            {/* Individual Goal Dashboard - No Layout */}
+            <Route
+              path="/goal/:goalId"
+              element={
+                <ProtectedRoute>
+                  <GoalDashboardPage />
+                </ProtectedRoute>
+              }
+            />
+
 
             {/* Onboarding Route - accessible only when authenticated but not onboarded */}
             <Route

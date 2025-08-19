@@ -64,7 +64,7 @@ class ApiService {
 
   // User methods
   async completeOnboarding(data: any) {
-    return this.request<any>('/users/complete-onboarding', {
+    return this.request<any>('/api/users/complete-onboarding', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -74,7 +74,7 @@ class ApiService {
     return this.request<{
       success: boolean;
       user: any;
-    }>('/users/profile');
+    }>('/api/users/profile');
   }
 
   async updateUserProfile(profileData: any) {
@@ -82,7 +82,7 @@ class ApiService {
       success: boolean;
       user: any;
       message: string;
-    }>('/users/profile', {
+    }>('/api/users/profile', {
       method: 'PATCH',
       body: JSON.stringify(profileData),
     });
@@ -109,7 +109,7 @@ class ApiService {
     }
     
     const queryString = queryParams.toString();
-    const url = queryString ? `/goals?${queryString}` : '/goals';
+    const url = queryString ? `/api/goals?${queryString}` : '/api/goals';
     
     return this.request<{
       success: boolean;
@@ -127,7 +127,7 @@ class ApiService {
     return this.request<{
       success: boolean;
       goal: any;
-    }>('/goals', {
+    }>('/api/goals', {
       method: 'POST',
       body: JSON.stringify(goalData),
     });
@@ -138,7 +138,7 @@ class ApiService {
       success: boolean;
       analysis: any;
       goalDescription: string;
-    }>('/goals/analyze', {
+    }>('/api/goals/analyze', {
       method: 'POST',
       body: JSON.stringify({ goalDescription }),
     });
@@ -148,14 +148,14 @@ class ApiService {
     return this.request<{
       success: boolean;
       goal: any;
-    }>(`/goals/${goalId}`);
+    }>(`/api/goals/${goalId}`);
   }
 
   async updateGoal(goalId: string, updateData: any) {
     return this.request<{
       success: boolean;
       goal: any;
-    }>(`/goals/${goalId}`, {
+    }>(`/api/goals/${goalId}`, {
       method: 'PUT',
       body: JSON.stringify(updateData),
     });
@@ -165,7 +165,7 @@ class ApiService {
     return this.request<{
       success: boolean;
       message: string;
-    }>(`/goals/${goalId}`, {
+    }>(`/api/goals/${goalId}`, {
       method: 'DELETE',
     });
   }
@@ -175,7 +175,7 @@ class ApiService {
       success: boolean;
       goal: any;
       analysis: any;
-    }>(`/goals/${goalId}/analyze`, {
+    }>(`/api/goals/${goalId}/analyze`, {
       method: 'POST',
     });
   }
@@ -187,7 +187,7 @@ class ApiService {
       sessionId: string;
       message: string;
       sessionType: string;
-    }>('/chat/message', {
+    }>('/api/chat/message', {
       method: 'POST',
       body: JSON.stringify({ message, sessionId, sessionType }),
     });
@@ -199,7 +199,7 @@ class ApiService {
     content?: string;
     message?: string;
   }, void, unknown> {
-    const response = await fetch(`${this.baseURL}/chat/stream`, {
+    const response = await fetch(`${this.baseURL}/api/chat/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -251,21 +251,21 @@ class ApiService {
     return this.request<{
       success: boolean;
       sessions: any[];
-    }>('/chat/sessions');
+    }>('/api/chat/sessions');
   }
 
   async getChatSession(sessionId: string) {
     return this.request<{
       success: boolean;
       session: any;
-    }>(`/chat/sessions/${sessionId}`);
+    }>(`/api/chat/sessions/${sessionId}`);
   }
 
   async deleteChatSession(sessionId: string) {
     return this.request<{
       success: boolean;
       message: string;
-    }>(`/chat/sessions/${sessionId}`, {
+    }>(`/api/chat/sessions/${sessionId}`, {
       method: 'DELETE',
     });
   }
@@ -275,7 +275,7 @@ class ApiService {
       success: boolean;
       message: string;
       session: any;
-    }>(`/chat/sessions/${sessionId}/clear`, {
+    }>(`/api/chat/sessions/${sessionId}/clear`, {
       method: 'POST',
     });
   }
@@ -285,14 +285,14 @@ class ApiService {
     return this.request<{
       success: boolean;
       steps: any[];
-    }>(`/goals/${goalId}/steps`);
+    }>(`/api/goals/${goalId}/steps`);
   }
 
   async createGoalStep(goalId: string, stepData: any) {
     return this.request<{
       success: boolean;
       step: any;
-    }>(`/goals/${goalId}/steps`, {
+    }>(`/api/goals/${goalId}/steps`, {
       method: 'POST',
       body: JSON.stringify(stepData),
     });
@@ -302,7 +302,7 @@ class ApiService {
     return this.request<{
       success: boolean;
       step: any;
-    }>(`/goals/${goalId}/steps/${stepId}`, {
+    }>(`/api/goals/${goalId}/steps/${stepId}`, {
       method: 'PATCH',
       body: JSON.stringify(updateData),
     });
@@ -312,7 +312,7 @@ class ApiService {
     return this.request<{
       success: boolean;
       message: string;
-    }>(`/goals/${goalId}/steps/${stepId}`, {
+    }>(`/api/goals/${goalId}/steps/${stepId}`, {
       method: 'DELETE',
     });
   }
@@ -321,7 +321,7 @@ class ApiService {
     return this.request<{
       success: boolean;
       goal: any;
-    }>(`/goals/${goalId}/progress`, {
+    }>(`/api/goals/${goalId}/progress`, {
       method: 'PATCH',
       body: JSON.stringify({ currentSaved }),
     });
@@ -332,14 +332,14 @@ class ApiService {
     return this.request<{
       success: boolean;
       categories: any[];
-    }>('/goals/categories');
+    }>('/api/goals/categories');
   }
 
   async bulkUpdateGoals(updates: Array<{ id: string; data: any }>) {
     return this.request<{
       success: boolean;
       updatedGoals: any[];
-    }>('/goals/bulk-update', {
+    }>('/api/goals/bulk-update', {
       method: 'PATCH',
       body: JSON.stringify({ updates }),
     });
@@ -349,7 +349,7 @@ class ApiService {
     return this.request<{
       success: boolean;
       message: string;
-    }>('/goals/bulk-delete', {
+    }>('/api/goals/bulk-delete', {
       method: 'DELETE',
       body: JSON.stringify({ goalIds }),
     });
@@ -359,7 +359,7 @@ class ApiService {
     return this.request<{
       success: boolean;
       goal: any;
-    }>(`/goals/${goalId}/duplicate`, {
+    }>(`/api/goals/${goalId}/duplicate`, {
       method: 'POST',
     });
   }
@@ -368,7 +368,7 @@ class ApiService {
     return this.request<{
       success: boolean;
       goal: any;
-    }>(`/goals/${goalId}/archive`, {
+    }>(`/api/goals/${goalId}/archive`, {
       method: 'PATCH',
     });
   }
@@ -377,7 +377,7 @@ class ApiService {
     return this.request<{
       success: boolean;
       goal: any;
-    }>(`/goals/${goalId}/unarchive`, {
+    }>(`/api/goals/${goalId}/unarchive`, {
       method: 'PATCH',
     });
   }
@@ -387,11 +387,11 @@ class ApiService {
     return this.request<{
       success: boolean;
       metrics: any;
-    }>('/progress/metrics');
+    }>('/api/progress/metrics');
   }
 
   async getProgressInsights(goalId?: string) {
-    const url = goalId ? `/progress/insights?goalId=${goalId}` : '/progress/insights';
+    const url = goalId ? `/api/progress/insights?goalId=${goalId}` : '/api/progress/insights';
     return this.request<{
       success: boolean;
       insights: any;
@@ -402,7 +402,7 @@ class ApiService {
     return this.request<{
       success: boolean;
       analytics: any;
-    }>('/progress/analytics');
+    }>('/api/progress/analytics');
   }
 
   async updateProgress(goalId: string, progressData: {
@@ -415,7 +415,7 @@ class ApiService {
       success: boolean;
       goal: any;
       message: string;
-    }>(`/progress/update/${goalId}`, {
+    }>(`/api/progress/update/${goalId}`, {
       method: 'PUT',
       body: JSON.stringify(progressData),
     });
@@ -440,7 +440,7 @@ class ApiService {
       success: boolean;
       profile: any;
       message: string;
-    }>('/users/extended-profile', {
+    }>('/api/users/extended-profile', {
       method: 'PUT',
       body: JSON.stringify(profileData),
     });
@@ -456,7 +456,7 @@ class ApiService {
         aiDetailLevel: string;
         aiApproachStyle: string;
       };
-    }>('/users/ai-settings');
+    }>('/api/users/ai-settings');
   }
 
   async updateAISettings(aiSettings: {
@@ -469,7 +469,7 @@ class ApiService {
       success: boolean;
       aiSettings: any;
       message: string;
-    }>('/users/ai-settings', {
+    }>('/api/users/ai-settings', {
       method: 'PUT',
       body: JSON.stringify(aiSettings),
     });
@@ -479,11 +479,11 @@ class ApiService {
   async getAgents() {
     return this.request<{
       agents: any[];
-    }>('/agents');
+    }>('/api/agents');
   }
 
   async getAgentStatus(agentId: string) {
-    return this.request<any>(`/agents/${agentId}`);
+    return this.request<any>(`/api/agents/${agentId}`);
   }
 
   async executeAgentTask(taskData: {
@@ -497,7 +497,7 @@ class ApiService {
       result: any;
       confidence: number;
       error?: string;
-    }>('/agents/execute-task', {
+    }>('/api/agents/execute-task', {
       method: 'POST',
       body: JSON.stringify(taskData),
     });
@@ -508,7 +508,7 @@ class ApiService {
       message: string;
       goalId: string;
       assignedAgents: string[];
-    }>('/agents/assign-to-goal', {
+    }>('/api/agents/assign-to-goal', {
       method: 'POST',
       body: JSON.stringify({ goalId, agentTypes }),
     });
@@ -517,7 +517,89 @@ class ApiService {
   async getGoalActivities(goalId: string) {
     return this.request<{
       activities: any[];
-    }>(`/agents/goal/${goalId}/activities`);
+    }>(`/api/agents/goal/${goalId}/activities`);
+  }
+
+  // Smart Goals methods
+  async analyzeSmartGoal(goalDescription: string, userContext?: any) {
+    return this.request<{
+      success: boolean;
+      analysis: any;
+      goalDescription: string;
+      message: string;
+    }>('/smart-goals/analyze', {
+      method: 'POST',
+      body: JSON.stringify({ goalDescription, userContext }),
+    });
+  }
+
+  async createSmartGoal(goalData: {
+    goalDescription: string;
+    title: string;
+    category?: string;
+    targetDate?: string;
+    estimatedCost?: number;
+    answers?: any;
+  }) {
+    return this.request<{
+      success: boolean;
+      goal: any;
+      analysis: any;
+      executionPlan: any;
+      message: string;
+    }>('/smart-goals', {
+      method: 'POST',
+      body: JSON.stringify(goalData),
+    });
+  }
+
+  async updateSmartGoalProgress(goalId: string, progressData: {
+    currentSaved?: number;
+    actualProgress?: number;
+    budgetChanged?: number;
+    timelineChanged?: number;
+    scopeChanged?: boolean;
+    userContext?: any;
+  }) {
+    return this.request<{
+      success: boolean;
+      replanned: boolean;
+      newAnalysis?: any;
+      newExecutionPlan?: any;
+      message: string;
+    }>(`/api/smart-goals/${goalId}/progress`, {
+      method: 'PUT',
+      body: JSON.stringify(progressData),
+    });
+  }
+
+  async executeSmartGoal(goalId: string) {
+    return this.request<{
+      success: boolean;
+      execution: any;
+      message: string;
+    }>(`/smart-goals/${goalId}/execute`, {
+      method: 'POST',
+    });
+  }
+
+  async getSmartGoalStatus(goalId: string) {
+    return this.request<{
+      success: boolean;
+      goal: any;
+    }>(`/smart-goals/${goalId}/status`);
+  }
+
+  async reanalyzeSmartGoal(goalId: string, updatedContext?: any, reason?: string) {
+    return this.request<{
+      success: boolean;
+      newAnalysis: any;
+      newExecutionPlan: any;
+      message: string;
+    }>(`/smart-goals/${goalId}/reanalyze`, {
+      method: 'POST',
+      body: JSON.stringify({ updatedContext, reason }),
+    });
   }
 }
 

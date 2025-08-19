@@ -31,7 +31,8 @@ import {
   TrendingDown,
   Activity,
   CheckCircle2,
-  PlayCircle
+  PlayCircle,
+  Brain
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -39,6 +40,8 @@ import { useNavigate } from 'react-router-dom';
 import GoalCreationModal from '../components/GoalCreationModal';
 import GoalProgressModal from '../components/GoalProgressModal';
 import GoalCard from '../components/GoalCard';
+import { SmartGoalModal } from '../components/SmartGoalModal';
+import { SmartGoalCard } from '../components/SmartGoalCard';
 import { apiService } from '../services/api';
 import { useConfirmation } from '../hooks/useConfirmation';
 import toast from 'react-hot-toast';
@@ -55,6 +58,14 @@ interface Goal {
   currentSaved?: number;
   feasibilityScore?: number;
   feasibilityAnalysis?: any;
+  aiPlan?: string;
+  assignedAgents?: string;
+  smartGoalData?: string;
+  progress?: {
+    percentage: number;
+    completedSteps: number;
+    totalSteps: number;
+  };
   createdAt: string;
   updatedAt?: string;
 }
@@ -81,7 +92,7 @@ const DashboardPage: React.FC = () => {
   const { colors } = useTheme();
   const navigate = useNavigate();
   const { confirm, ConfirmationDialog } = useConfirmation();
-  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+  const [isSmartGoalModalOpen, setIsSmartGoalModalOpen] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -329,6 +340,29 @@ const DashboardPage: React.FC = () => {
     }
   };
 
+  const handleUpdateProgress = async (goalId: string, amount: number) => {
+    try {
+      const response = await apiService.updateGoalProgress(goalId, amount);
+      if (response.success) {
+        setGoals(prev => 
+          prev.map(goal => 
+            goal.id === goalId ? { ...goal, currentSaved: amount } : goal
+          )
+        );
+        toast.success('Progress updated successfully!');
+      }
+    } catch (error) {
+      console.error('Error updating progress:', error);
+      toast.error('Failed to update progress');
+    }
+  };
+
+  const handleToggleTask = async (goalId: string, taskId: number) => {
+    // This would require backend implementation for task updates
+    // For now, just show a placeholder message
+    toast('Task toggle functionality coming soon!');
+  };
+
   const handleBulkAction = async (action: string) => {
     if (selectedGoals.size === 0) return;
 
@@ -451,11 +485,11 @@ const DashboardPage: React.FC = () => {
               {view === 'dashboard' ? 'View All Goals' : 'Dashboard View'}
             </button>
             <button
-              onClick={() => setIsGoalModalOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center transition-colors"
+              onClick={() => setIsSmartGoalModalOpen(true)}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-2 px-4 rounded-lg flex items-center transition-colors shadow-lg hover:shadow-xl transform hover:scale-105"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              New Goal
+              <Target className="w-4 h-4 mr-2" />
+              Create Goal
             </button>
           </div>
         </div>
@@ -770,10 +804,10 @@ const DashboardPage: React.FC = () => {
               {goals.length === 0 ? (
                 <div className="flex justify-center">
                   <button 
-                    onClick={() => setIsGoalModalOpen(true)}
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl flex items-center transition-all shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transform hover:scale-105"
+                    onClick={() => setIsSmartGoalModalOpen(true)}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl flex items-center transition-all shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transform hover:scale-105"
                   >
-                    <Plus className="w-5 h-5 mr-2" />
+                    <Target className="w-5 h-5 mr-2" />
                     Create Your First Goal
                   </button>
                 </div>
@@ -788,26 +822,85 @@ const DashboardPage: React.FC = () => {
             </div>
           ) : (
             /* Goals Grid */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {(view === 'dashboard' ? filteredGoals.slice(0, 6) : filteredGoals).map((goal) => (
-                <GoalCard
-                  key={goal.id}
-                  goal={goal}
-                  isSelected={selectedGoals.has(goal.id)}
-                  onSelect={() => toggleGoalSelection(goal.id)}
-                  onEdit={(updateData) => handleEditGoal(goal.id, updateData)}
-                  onDelete={() => handleDeleteGoal(goal.id)}
-                  onDuplicate={() => handleDuplicateGoal(goal.id)}
-                  onArchive={() => handleArchiveGoal(goal.id)}
-                  onAnalyze={() => handleAnalyzeGoal(goal.id)}
-                  onShowProgress={() => handleShowProgress(goal)}
-                  onShowActionPlan={() => handleShowActionPlan(goal)}
-                  getCategoryInfo={getCategoryInfo}
-                  getStatusInfo={getStatusInfo}
-                  getPriorityInfo={getPriorityInfo}
-                  getProgressPercentage={getProgressPercentage}
-                />
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <AnimatePresence>
+                {(view === 'dashboard' ? filteredGoals.slice(0, 6) : filteredGoals).map((goal) => {
+                  const categoryInfo = getCategoryInfo(goal.category);
+                  const statusInfo = getStatusInfo(goal.status);
+                  const progressPercentage = getProgressPercentage(goal);
+                  
+                  return (
+                    <motion.div
+                      key={goal.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      onClick={() => navigate(`/goal/${goal.id}`)}
+                      className="bg-white rounded-xl border border-gray-200 hover:border-blue-400 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer transform hover:scale-[1.02] group"
+                    >
+                      {/* Header */}
+                      <div className="p-6">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="text-3xl">{categoryInfo.icon}</div>
+                            <div>
+                              <h3 className="font-semibold text-gray-900 text-lg leading-tight group-hover:text-blue-600 transition-colors">
+                                {goal.title}
+                              </h3>
+                              <p className="text-sm text-gray-600 mt-1">
+                                {goal.description.length > 80 
+                                  ? `${goal.description.substring(0, 80)}...` 
+                                  : goal.description}
+                              </p>
+                            </div>
+                          </div>
+                          <div className={`px-3 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
+                            {statusInfo.label}
+                          </div>
+                        </div>
+
+                        {/* Progress Bar */}
+                        {progressPercentage > 0 && (
+                          <div className="mb-4">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-sm font-medium text-gray-700">Financial Progress</span>
+                              <span className="text-sm text-gray-600">{progressPercentage.toFixed(1)}%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${progressPercentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Quick Stats */}
+                        <div className="flex items-center justify-between text-sm text-gray-600">
+                          <div className="flex items-center space-x-4">
+                            {goal.targetDate && (
+                              <div className="flex items-center space-x-1">
+                                <Calendar className="w-4 h-4" />
+                                <span>{new Date(goal.targetDate).toLocaleDateString()}</span>
+                              </div>
+                            )}
+                            {goal.estimatedCost && (
+                              <div className="flex items-center space-x-1">
+                                <DollarSign className="w-4 h-4" />
+                                <span>${goal.estimatedCost.toLocaleString()}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-1 text-blue-600 group-hover:text-blue-700 font-medium">
+                            <span>View Dashboard</span>
+                            <Target className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
             </div>
           )}
 
@@ -825,10 +918,10 @@ const DashboardPage: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* Goal Creation Modal */}
-      <GoalCreationModal
-        isOpen={isGoalModalOpen}
-        onClose={() => setIsGoalModalOpen(false)}
+      {/* AI-Powered Goal Creation Modal */}
+      <SmartGoalModal
+        isOpen={isSmartGoalModalOpen}
+        onClose={() => setIsSmartGoalModalOpen(false)}
         onGoalCreated={handleGoalCreated}
       />
 

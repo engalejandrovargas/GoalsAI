@@ -101,14 +101,21 @@ export class ResearchAgent extends BaseAgent {
     logger.info(`Conducting market research for ${industry} industry in ${region}`);
     
     try {
-      // Use free news API to get market trends and insights
-      const newsResponse = await fetch(`https://newsapi.org/v2/everything?q="${industry} market trends"&sortBy=publishedAt&language=en&pageSize=5&apiKey=demo`);
+      // Use NewsAPI to get market trends and insights
+      const newsApiKey = process.env.NEWS_API_KEY;
+      if (!newsApiKey) {
+        throw new Error('NEWS_API_KEY not configured');
+      }
+      const newsResponse = await fetch(`https://newsapi.org/v2/everything?q="${industry} market trends"&sortBy=publishedAt&language=en&pageSize=5&apiKey=${newsApiKey}`);
       
       let newsInsights = [];
       let newsApiWorking = false;
       
+      logger.info(`NewsAPI response status: ${newsResponse.status}`);
+      
       if (newsResponse.ok) {
         const newsData = await newsResponse.json() as any;
+        logger.info(`NewsAPI response data:`, JSON.stringify(newsData, null, 2));
         newsApiWorking = true;
         newsInsights = newsData.articles?.slice(0, 3).map((article: any) => ({
           headline: article.title,
@@ -117,6 +124,9 @@ export class ResearchAgent extends BaseAgent {
           publishedAt: article.publishedAt,
           url: article.url,
         })) || [];
+        logger.info(`Successfully fetched ${newsInsights.length} news insights from NewsAPI`);
+      } else {
+        logger.warn(`NewsAPI request failed with status ${newsResponse.status}`);
       }
       
       // Generate market analysis with mix of real insights and industry knowledge

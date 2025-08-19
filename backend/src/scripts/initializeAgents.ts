@@ -230,11 +230,118 @@ async function initializeAgents() {
       }
     });
 
-    logger.info(`Initialized 4 agents:`);
+    // Weather Agent
+    const weatherAgent = await prisma.agent.create({
+      data: {
+        name: 'Weather Agent',
+        type: 'weather',
+        description: 'Provides weather forecasts, alerts, and activity recommendations for any location worldwide',
+        capabilities: JSON.stringify([
+          {
+            name: 'getWeatherForecast',
+            description: 'Get detailed weather forecast for any location',
+            parameters: {
+              city: { type: 'string', required: true },
+              country: { type: 'string', required: false },
+              days: { type: 'number', default: 5 },
+              coordinates: { type: 'object', required: false }
+            }
+          },
+          {
+            name: 'getCurrentWeather',
+            description: 'Get current weather conditions for any location',
+            parameters: {
+              city: { type: 'string', required: true },
+              country: { type: 'string', required: false },
+              coordinates: { type: 'object', required: false }
+            }
+          },
+          {
+            name: 'getWeatherAlerts',
+            description: 'Set up weather alerts and warnings',
+            parameters: {
+              city: { type: 'string', required: true },
+              country: { type: 'string', required: false },
+              alertTypes: { type: 'array', required: true },
+              thresholds: { type: 'object', required: false }
+            }
+          },
+          {
+            name: 'getOutdoorActivityAdvice',
+            description: 'Get weather-based advice for outdoor activities',
+            parameters: {
+              city: { type: 'string', required: true },
+              country: { type: 'string', required: false },
+              activity: { type: 'string', required: true },
+              date: { type: 'string', required: false }
+            }
+          }
+        ]),
+        isActive: true,
+        version: '1.0.0',
+        successRate: 0.90,
+        averageResponseTime: 1500,
+        totalExecutions: 0
+      }
+    });
+
+    // Goal Analyzer Agent
+    const goalAnalyzerAgent = await prisma.agent.create({
+      data: {
+        name: 'Goal Analyzer Agent',
+        type: 'goal_analyzer',
+        description: 'Analyzes goals, determines complexity, coordinates multiple agents, and provides intelligent goal refinement',
+        capabilities: JSON.stringify([
+          {
+            name: 'analyzeGoalComplexity',
+            description: 'Analyze goal complexity and determine required information',
+            parameters: {
+              goalDescription: { type: 'string', required: true },
+              userProfile: { type: 'object', required: true }
+            }
+          },
+          {
+            name: 'determineRequiredAgents',
+            description: 'Determine which agents are needed for a complex goal',
+            parameters: {
+              goalDescription: { type: 'string', required: true },
+              complexity: { type: 'object', required: true },
+              userContext: { type: 'object', required: true }
+            }
+          },
+          {
+            name: 'generateClarificationQuestions',
+            description: 'Generate questions to clarify vague or incomplete goals',
+            parameters: {
+              goalDescription: { type: 'string', required: true },
+              userContext: { type: 'object', required: true }
+            }
+          },
+          {
+            name: 'decomposeComplexGoal',
+            description: 'Break down complex goals into manageable sub-goals',
+            parameters: {
+              goalDescription: { type: 'string', required: true },
+              userContext: { type: 'object', required: true },
+              requiredAgents: { type: 'array', required: true }
+            }
+          }
+        ]),
+        isActive: true,
+        version: '1.0.0',
+        successRate: 0.92,
+        averageResponseTime: 2000,
+        totalExecutions: 0
+      }
+    });
+
+    logger.info(`Initialized 6 agents:`);
     logger.info(`- ${travelAgent.name} (${travelAgent.id})`);
     logger.info(`- ${financialAgent.name} (${financialAgent.id})`);
     logger.info(`- ${researchAgent.name} (${researchAgent.id})`);
     logger.info(`- ${learningAgent.name} (${learningAgent.id})`);
+    logger.info(`- ${weatherAgent.name} (${weatherAgent.id})`);
+    logger.info(`- ${goalAnalyzerAgent.name} (${goalAnalyzerAgent.id})`);
 
   } catch (error) {
     logger.error('Failed to initialize agents:', error);

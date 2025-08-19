@@ -1,0 +1,19 @@
+So, I want to create a goal, for example travel to Japan. Ai should anayse the goal, decide which agents are useful and make the queries
+to the proper APIs. Eventually the goals are not clear, for example. Do you want to travel alone or with someone, so if we do not have
+enough information to analyse the goal, we have to ask the user with ai. Ai should ask just once all the relevant information.
+Once we have all the information, we should display step by step what are the tasks needed to achieve the goals. It should have some
+checkboxes, financial calculators calculating how much money is needed from today to the deadline.
+It should create a checkbox list with all the activities needed for acomplish the goal. Money, Visa, hotel, etc.
+This should looks like a "mini dashboard". Every goal eventually is different, so everytime you have to build a goal-dashboard that looks
+beautiful and adapts to the goal a hand.
+
+Basd on this document, I want to create the goals-dashboard. So, the idea is that every goal. Should have a beautiful calculator displaying how
+   much money is needed per day, week and month to achieve the goal. It should display the step by step with checkboxes planning what's needs to 
+  be done. It should have some graphs as well. The idea is that every goal use the agent according at the goal. So, the main agent should route 
+  to the other ones to gather information useful for the user to achieve those goals. The user should be informed of what APIs were used. Since 
+  every goal is different, the components should be renderer accordingly to the goal from the user. So, let's start planning a list of possible 
+  components that the goals should have. I think by default we should have a beautiful calculator displaying the money needed with the option to 
+  add or withdraw money to see the advances. Also the checkboxes with the todo list with options for the user to edit as well.
+
+  Since there are some things that we need by default. Just put 1 month as default of the goal. The user should be able to change this deadline    │
+│   anytime. 

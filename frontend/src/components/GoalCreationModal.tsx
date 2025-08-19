@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Target, Plus, Loader, Brain, CheckCircle } from 'lucide-react';
+import { X, Target, Plus, Loader, Brain, CheckCircle, Info } from 'lucide-react';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
+import { GOAL_CATEGORY_MAPPING, getDefaultsForCategory } from '../config/GoalCategoryMapping';
 
 interface GoalCreationModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface GoalFormData {
   description: string;
   category: string;
   targetDate: string;
+  estimatedCost: number;
   priority: 'low' | 'medium' | 'high';
 }
 
@@ -29,21 +31,30 @@ const GoalCreationModal: React.FC<GoalCreationModalProps> = ({
   const [formData, setFormData] = useState<GoalFormData>({
     title: '',
     description: '',
-    category: 'personal',
+    category: 'general',
     targetDate: '',
+    estimatedCost: 0,
     priority: 'medium',
   });
   const [analysis, setAnalysis] = useState<any>(null);
 
   const categories = [
-    { value: 'personal', label: 'Personal Development', icon: '🌟' },
-    { value: 'career', label: 'Career & Business', icon: '💼' },
-    { value: 'health', label: 'Health & Fitness', icon: '💪' },
-    { value: 'finance', label: 'Financial', icon: '💰' },
-    { value: 'education', label: 'Education & Learning', icon: '📚' },
-    { value: 'relationships', label: 'Relationships', icon: '❤️' },
-    { value: 'creative', label: 'Creative & Hobbies', icon: '🎨' },
-    { value: 'travel', label: 'Travel & Adventure', icon: '✈️' },
+    { value: 'savings', label: 'Savings & Money', icon: '💰', duration: '6 months', cost: '$5,000' },
+    { value: 'investment', label: 'Investment & Wealth', icon: '📈', duration: '5 years', cost: '$50,000' },
+    { value: 'debt_payoff', label: 'Debt Elimination', icon: '💳', duration: '1 year', cost: '$25,000' },
+    { value: 'language', label: 'Language Learning', icon: '🗣️', duration: '2 years', cost: '$500' },
+    { value: 'education', label: 'Education & Certification', icon: '📚', duration: '1 year', cost: '$2,000' },
+    { value: 'skill_development', label: 'Skill Development', icon: '🚀', duration: '6 months', cost: '$500' },
+    { value: 'weight_loss', label: 'Weight Loss', icon: '⚖️', duration: '6 months', cost: '$1,000' },
+    { value: 'fitness', label: 'Fitness & Exercise', icon: '💪', duration: '3 months', cost: '$500' },
+    { value: 'wellness', label: 'Health & Wellness', icon: '🧘', duration: '1 year', cost: '$1,500' },
+    { value: 'travel', label: 'Travel & Adventure', icon: '✈️', duration: '1 year', cost: '$5,000' },
+    { value: 'career', label: 'Career Development', icon: '💼', duration: '1 year', cost: '$2,000' },
+    { value: 'business', label: 'Business & Entrepreneurship', icon: '🏢', duration: '2 years', cost: '$10,000' },
+    { value: 'habits', label: 'Habit Building', icon: '🔄', duration: '3 months', cost: '$100' },
+    { value: 'creative', label: 'Creative Projects', icon: '🎨', duration: '6 months', cost: '$500' },
+    { value: 'relationships', label: 'Relationships & Social', icon: '❤️', duration: '6 months', cost: '$200' },
+    { value: 'general', label: 'General Goal', icon: '🎯', duration: '3 months', cost: '$500' },
   ];
 
   const priorityOptions = [
@@ -52,8 +63,22 @@ const GoalCreationModal: React.FC<GoalCreationModalProps> = ({
     { value: 'high', label: 'High', color: 'text-red-600 bg-red-100' },
   ];
 
-  const handleInputChange = (field: keyof GoalFormData, value: string) => {
+  const handleInputChange = (field: keyof GoalFormData, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Auto-update defaults when category changes
+  const handleCategoryChange = (categoryId: string) => {
+    const defaults = getDefaultsForCategory(categoryId);
+    const defaultDate = new Date();
+    defaultDate.setDate(defaultDate.getDate() + defaults.deadlineDays);
+    
+    setFormData(prev => ({
+      ...prev,
+      category: categoryId,
+      targetDate: defaultDate.toISOString().split('T')[0],
+      estimatedCost: defaults.estimatedCost,
+    }));
   };
 
   const analyzeGoal = async () => {
@@ -80,14 +105,16 @@ const GoalCreationModal: React.FC<GoalCreationModalProps> = ({
     setStep('saving');
     try {
       const goalData = {
-        ...formData,
-        analysis: analysis,
-        status: 'active',
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        targetDate: formData.targetDate ? formData.targetDate : undefined,
+        estimatedCost: formData.estimatedCost || undefined
       };
 
       const response = await apiService.createGoal(goalData);
       if (response.success) {
-        toast.success('Goal created successfully!');
+        toast.success('🚀 Smart Goal created with AI analysis!');
         onGoalCreated?.();
         resetModal();
         onClose();
@@ -104,8 +131,9 @@ const GoalCreationModal: React.FC<GoalCreationModalProps> = ({
     setFormData({
       title: '',
       description: prefillDescription,
-      category: 'personal',
+      category: 'general',
       targetDate: '',
+      estimatedCost: 0,
       priority: 'medium',
     });
     setAnalysis(null);
@@ -193,29 +221,40 @@ const GoalCreationModal: React.FC<GoalCreationModalProps> = ({
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Category
+                    Category <span className="text-xs text-gray-500">(automatically sets realistic deadline & cost)</span>
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
                     {categories.map((category) => (
                       <button
                         key={category.value}
-                        onClick={() => handleInputChange('category', category.value)}
+                        onClick={() => handleCategoryChange(category.value)}
                         className={`p-3 text-left border rounded-lg transition-colors ${
                           formData.category === category.value
                             ? 'border-blue-500 bg-blue-50 text-blue-700'
                             : 'border-gray-300 hover:border-gray-400'
                         }`}
                       >
-                        <div className="flex items-center">
-                          <span className="text-lg mr-2">{category.icon}</span>
-                          <span className="text-sm font-medium">{category.label}</span>
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center">
+                            <span className="text-lg mr-2">{category.icon}</span>
+                            <div>
+                              <span className="text-sm font-medium block">{category.label}</span>
+                              <div className="text-xs text-gray-500 mt-1">
+                                <div>{category.duration}</div>
+                                <div>{category.cost}</div>
+                              </div>
+                            </div>
+                          </div>
+                          {formData.category === category.value && (
+                            <Info className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                          )}
                         </div>
                       </button>
                     ))}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Target Date
@@ -225,6 +264,20 @@ const GoalCreationModal: React.FC<GoalCreationModalProps> = ({
                       value={formData.targetDate}
                       onChange={(e) => handleInputChange('targetDate', e.target.value)}
                       min={new Date().toISOString().split('T')[0]}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Estimated Cost ($)
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.estimatedCost}
+                      onChange={(e) => handleInputChange('estimatedCost', parseInt(e.target.value) || 0)}
+                      min={0}
+                      placeholder="0"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
@@ -246,6 +299,34 @@ const GoalCreationModal: React.FC<GoalCreationModalProps> = ({
                     </select>
                   </div>
                 </div>
+
+                {/* Category Info Display */}
+                {formData.category !== 'general' && GOAL_CATEGORY_MAPPING[formData.category] && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start">
+                      <Info className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                      <div>
+                        <h4 className="font-medium text-blue-800 mb-1">
+                          {GOAL_CATEGORY_MAPPING[formData.category]?.name} Goal
+                        </h4>
+                        <p className="text-blue-700 text-sm mb-2">
+                          {GOAL_CATEGORY_MAPPING[formData.category]?.description}
+                        </p>
+                        <div className="text-sm text-blue-600">
+                          <div className="mb-1">
+                            <strong>Typical Timeline:</strong> {Math.round(GOAL_CATEGORY_MAPPING[formData.category]?.defaultDeadlineDays / 30)} months
+                          </div>
+                          <div className="mb-1">
+                            <strong>Average Cost:</strong> ${GOAL_CATEGORY_MAPPING[formData.category]?.defaultEstimatedCost?.toLocaleString()}
+                          </div>
+                          <div>
+                            <strong>Suggested AI Agents:</strong> {GOAL_CATEGORY_MAPPING[formData.category]?.suggestedAgents?.join(', ')}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex justify-end space-x-3 pt-4">
                   <button

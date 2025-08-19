@@ -92,6 +92,7 @@ model Goal {
   suggestedAlternatives String?  // JSON string
   aiPlan                String?  // JSON string
   researchData          String?  // JSON string
+  smartGoalData         String?  // JSON string for smart goal dashboard data
   
   // Agent System
   assignedAgents        String?  // JSON array of agent IDs

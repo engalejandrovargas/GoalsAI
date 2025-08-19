@@ -84,11 +84,14 @@ export const requireAuth = async (req: AuthenticatedRequest, res: Response, next
 
 // Session-based authentication (for OAuth flow)
 export const requireSessionAuth = (req: Request, res: Response, next: NextFunction) => {
+  logger.info(`Session auth check for ${req.path} - isAuthenticated: ${req.isAuthenticated ? req.isAuthenticated() : 'no function'}, user: ${req.user ? 'exists' : 'null'}`);
+  
   if (req.isAuthenticated && req.isAuthenticated()) {
+    logger.info(`Authentication successful for ${req.path}`);
     return next();
   }
   
-  logger.warn(`Unauthorized access attempt to ${req.path}`);
+  logger.warn(`Unauthorized access attempt to ${req.path} - Session details: ${JSON.stringify((req as any).session)}`);
   
   res.status(401).json({
     success: false,

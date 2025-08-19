@@ -1,7 +1,7 @@
 import express from 'express';
 import { z } from 'zod';
 import { prisma } from '../config/database';
-import { requireAuth } from '../middleware/auth';
+import { requireSessionAuth } from '../middleware/auth';
 import { aiService } from '../services/aiService';
 import logger from '../utils/logger';
 
@@ -23,7 +23,7 @@ const createStepSchema = z.object({
 });
 
 // POST /planning/generate - Generate AI plan for a goal
-router.post('/generate', requireAuth, async (req, res) => {
+router.post('/generate', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     
@@ -189,7 +189,7 @@ router.post('/generate', requireAuth, async (req, res) => {
 });
 
 // POST /planning/steps - Create a manual goal step
-router.post('/steps', requireAuth, async (req, res) => {
+router.post('/steps', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     
@@ -246,7 +246,7 @@ router.post('/steps', requireAuth, async (req, res) => {
 });
 
 // PUT /planning/steps/:id/complete - Mark step as completed
-router.put('/steps/:id/complete', requireAuth, async (req, res) => {
+router.put('/steps/:id/complete', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     const stepId = req.params.id;
@@ -294,7 +294,7 @@ router.put('/steps/:id/complete', requireAuth, async (req, res) => {
 });
 
 // GET /planning/:goalId/steps - Get all steps for a goal
-router.get('/:goalId/steps', requireAuth, async (req, res) => {
+router.get('/:goalId/steps', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     const goalId = req.params.goalId;
@@ -333,7 +333,7 @@ router.get('/:goalId/steps', requireAuth, async (req, res) => {
 });
 
 // POST /planning/generate-action-plan - Generate comprehensive action plan with smart steps
-router.post('/generate-action-plan', requireAuth, async (req, res) => {
+router.post('/generate-action-plan', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     
@@ -641,7 +641,7 @@ async function generateSmartActionPlan(goal: any, user: any): Promise<any[]> {
 }
 
 // PUT /planning/steps/:id - Update a goal step
-router.put('/steps/:id', requireAuth, async (req, res) => {
+router.put('/steps/:id', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     const stepId = req.params.id;
@@ -684,7 +684,7 @@ router.put('/steps/:id', requireAuth, async (req, res) => {
 });
 
 // DELETE /planning/steps/:id - Delete a goal step
-router.delete('/steps/:id', requireAuth, async (req, res) => {
+router.delete('/steps/:id', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     const stepId = req.params.id;

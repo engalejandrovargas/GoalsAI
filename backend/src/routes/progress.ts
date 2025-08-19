@@ -1,12 +1,12 @@
 import express from 'express';
-import { requireAuth } from '../middleware/auth';
+import { requireSessionAuth } from '../middleware/auth';
 import { ProgressService } from '../services/ProgressService';
 import logger from '../utils/logger';
 
 const router = express.Router();
 
 // GET /progress/metrics - Get user progress metrics
-router.get('/metrics', requireAuth, async (req, res) => {
+router.get('/metrics', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     
@@ -28,7 +28,7 @@ router.get('/metrics', requireAuth, async (req, res) => {
 });
 
 // GET /progress/insights - Get goal insights
-router.get('/insights', requireAuth, async (req, res) => {
+router.get('/insights', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     const goalId = req.query.goalId as string;
@@ -51,7 +51,7 @@ router.get('/insights', requireAuth, async (req, res) => {
 });
 
 // GET /progress/analytics - Get user analytics
-router.get('/analytics', requireAuth, async (req, res) => {
+router.get('/analytics', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     
@@ -73,7 +73,7 @@ router.get('/analytics', requireAuth, async (req, res) => {
 });
 
 // PUT /progress/update/:goalId - Update goal progress
-router.put('/update/:goalId', requireAuth, async (req, res) => {
+router.put('/update/:goalId', requireSessionAuth, async (req, res) => {
   try {
     const userId = (req.user as any)?.id;
     const goalId = req.params.goalId;

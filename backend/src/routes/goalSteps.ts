@@ -1,13 +1,13 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import { requireAuth } from '../middleware/auth';
+import { requireSessionAuth } from '../middleware/auth';
 import logger from '../utils/logger';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // Create a new step for a goal
-router.post('/:goalId/steps', requireAuth, async (req, res) => {
+router.post('/:goalId/steps', requireSessionAuth, async (req, res) => {
   try {
     const { goalId } = req.params;
     const { title, description, estimatedCost, estimatedDuration, deadline } = req.body;
@@ -67,7 +67,7 @@ router.post('/:goalId/steps', requireAuth, async (req, res) => {
 });
 
 // Get all steps for a goal
-router.get('/:goalId/steps', requireAuth, async (req, res) => {
+router.get('/:goalId/steps', requireSessionAuth, async (req, res) => {
   try {
     const { goalId } = req.params;
     const userId = (req.user as any)?.id;
@@ -103,7 +103,7 @@ router.get('/:goalId/steps', requireAuth, async (req, res) => {
 });
 
 // Update step completion status
-router.patch('/:goalId/steps/:stepId', requireAuth, async (req, res) => {
+router.patch('/:goalId/steps/:stepId', requireSessionAuth, async (req, res) => {
   try {
     const { goalId, stepId } = req.params;
     const { completed, title, description, estimatedCost, estimatedDuration, deadline } = req.body;
@@ -184,7 +184,7 @@ router.patch('/:goalId/steps/:stepId', requireAuth, async (req, res) => {
 });
 
 // Delete a step
-router.delete('/:goalId/steps/:stepId', requireAuth, async (req, res) => {
+router.delete('/:goalId/steps/:stepId', requireSessionAuth, async (req, res) => {
   try {
     const { goalId, stepId } = req.params;
     const userId = (req.user as any)?.id;
@@ -231,7 +231,7 @@ router.delete('/:goalId/steps/:stepId', requireAuth, async (req, res) => {
 });
 
 // Update goal progress (savings)
-router.patch('/:goalId/progress', requireAuth, async (req, res) => {
+router.patch('/:goalId/progress', requireSessionAuth, async (req, res) => {
   try {
     const { goalId } = req.params;
     const { currentSaved } = req.body;
