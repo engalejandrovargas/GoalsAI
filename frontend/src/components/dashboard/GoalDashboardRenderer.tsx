@@ -1,7 +1,8 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { ComponentRegistry } from '../../services/ComponentRegistry';
-import { Loader2, Settings, Maximize2, Minimize2, RefreshCw, Target } from 'lucide-react';
+import { Loader2, Settings, Maximize2, Minimize2, RefreshCw, Target, X } from 'lucide-react';
+import ErrorBoundary from '../ErrorBoundary';
 
 // Local type definitions to avoid import issues
 type ComponentType = 
@@ -114,7 +115,15 @@ const GoalDashboardRenderer: React.FC<GoalDashboardRendererProps> = ({
     new Date(goal.createdAt).getTime() + DEFAULT_GOAL_SETTINGS.DEADLINE_DAYS * 24 * 60 * 60 * 1000
   ).toISOString();
 
-  const assignedAgents = goal.assignedAgents || smartData?.assignedAgents || [];
+  // Parse assigned agents from JSON string
+  let assignedAgents = [];
+  try {
+    assignedAgents = goal.assignedAgents ? JSON.parse(goal.assignedAgents) : (smartData?.assignedAgents || []);
+  } catch (e) {
+    console.error('Failed to parse assigned agents:', e);
+    assignedAgents = smartData?.assignedAgents || [];
+  }
+  
   const tasks = smartData?.goalDashboard?.tasks || [];
 
   useEffect(() => {
@@ -298,7 +307,7 @@ const GoalDashboardRenderer: React.FC<GoalDashboardRendererProps> = ({
           </div>
 
           {/* AI Agents Footer */}
-          {assignedAgents.length > 0 && (
+          {Array.isArray(assignedAgents) && assignedAgents.length > 0 && (
             <div className="px-3 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
               <div className="text-xs text-gray-500 dark:text-gray-400">
                 <div className="font-medium mb-1">AI Agents Active:</div>
@@ -343,63 +352,83 @@ const GoalDashboardRenderer: React.FC<GoalDashboardRendererProps> = ({
 
             {/* Main Content Body */}
             <div className="p-6">
-              <Suspense
-                fallback={
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-                    <span className="ml-3 text-gray-600 dark:text-gray-400">
-                      Loading {selectedComponent.title}...
-                    </span>
-                  </div>
-                }
-              >
-                {(() => {
-                  const config = componentRegistry.getComponent(selectedComponent.type);
-                  if (!config) {
-                    return (
-                      <div className="text-center py-8">
-                        <p className="text-red-600">Component not found: {selectedComponent.type}</p>
-                      </div>
-                    );
+              <ErrorBoundary componentName={selectedComponent.title}>
+                <Suspense
+                  fallback={
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                      <span className="ml-3 text-gray-600 dark:text-gray-400">
+                        Loading {selectedComponent.title}...
+                      </span>
+                    </div>
                   }
+                >
+                  {(() => {
+                    const config = componentRegistry.getComponent(selectedComponent.type);
+                    if (!config) {
+                      return (
+                        <div className="flex flex-col items-center justify-center py-12 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">
+                          <div className="text-center space-y-4">
+                            <div className="w-12 h-12 mx-auto bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
+                              <Target className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+                            </div>
+                            <div className="space-y-2">
+                              <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-200">
+                                Component Not Available
+                              </h3>
+                              <p className="text-yellow-700 dark:text-yellow-300 max-w-md mx-auto text-sm">
+                                The "{selectedComponent.title}" component is not available yet. Try selecting a different component from the sidebar.
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => setSelectedComponent(null)}
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors font-medium text-sm"
+                            >
+                              Back to Components
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
 
-                  const Component = config.component;
-                  const commonProps = {
-                    goalId: goal.id,
-                    ...config.defaultProps,
-                    ...selectedComponent.props,
-                  };
+                    const Component = config.component;
+                    const commonProps = {
+                      goalId: goal.id,
+                      ...config.defaultProps,
+                      ...selectedComponent.props,
+                    };
 
-                  // Add specific props based on component type
-                  let specificProps = {};
-                  
-                  switch (selectedComponent.type) {
-                    case 'financial_calculator':
-                      specificProps = {
-                        estimatedCost: goal.estimatedCost || 0,
-                        currentSaved: goal.currentSaved || 0,
-                        targetDate,
-                        onUpdateSavings: handleUpdateSavings,
-                        onUpdateDeadline: handleUpdateDeadline,
-                      };
-                      break;
-                    case 'task_manager':
-                      specificProps = {
-                        tasks,
-                        onUpdateTasks: handleUpdateTasks,
-                      };
-                      break;
-                    case 'agent_info':
-                      specificProps = {
-                        assignedAgents,
-                        onRefreshAgents: handleRefreshDashboard,
-                      };
-                      break;
-                  }
+                    // Add specific props based on component type
+                    let specificProps = {};
+                    
+                    switch (selectedComponent.type) {
+                      case 'financial_calculator':
+                        specificProps = {
+                          estimatedCost: goal.estimatedCost || 0,
+                          currentSaved: goal.currentSaved || 0,
+                          targetDate,
+                          onUpdateSavings: handleUpdateSavings,
+                          onUpdateDeadline: handleUpdateDeadline,
+                        };
+                        break;
+                      case 'task_manager':
+                        specificProps = {
+                          tasks,
+                          onUpdateTasks: handleUpdateTasks,
+                        };
+                        break;
+                      case 'agent_info':
+                        specificProps = {
+                          assignedAgents,
+                          onRefreshAgents: handleRefreshDashboard,
+                        };
+                        break;
+                    }
 
-                  return <Component {...commonProps} {...specificProps} />;
-                })()}
-              </Suspense>
+                    return <Component {...commonProps} {...specificProps} />;
+                  })()}
+                </Suspense>
+              </ErrorBoundary>
             </div>
           </div>
         ) : (

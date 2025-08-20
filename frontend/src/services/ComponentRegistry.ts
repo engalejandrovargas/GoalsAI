@@ -32,7 +32,15 @@ type ComponentType =
   | 'reading_tracker'
   | 'career_dashboard'
   | 'motivation_center'
-  | 'social_accountability';
+  | 'social_accountability'
+  | 'milestone_timeline'
+  | 'task_manager'
+  | 'progress_chart'
+  | 'completion_meter'
+  | 'simple_savings_tracker'
+  | 'learning_dashboard'
+  | 'health_dashboard'
+  | 'business_dashboard';
 
 interface ComponentConfig {
   component: React.ComponentType<any>;
@@ -74,6 +82,14 @@ const CurrencyConverter = React.lazy(() => import('../components/dashboard/Curre
 const CalendarWidget = React.lazy(() => import('../components/dashboard/CalendarWidget'));
 const ProjectTimeline = React.lazy(() => import('../components/dashboard/ProjectTimeline'));
 const TravelDashboard = React.lazy(() => import('../components/TravelDashboard'));
+const MilestoneTimeline = React.lazy(() => import('../components/dashboard/MilestoneTimeline'));
+const TaskManager = React.lazy(() => import('../components/dashboard/TaskManager'));
+const ProgressChart = React.lazy(() => import('../components/dashboard/ProgressChart'));
+const CompletionMeter = React.lazy(() => import('../components/dashboard/CompletionMeter'));
+const SimpleSavingsTracker = React.lazy(() => import('../components/dashboard/SimpleSavingsTracker'));
+const LearningDashboard = React.lazy(() => import('../components/dashboard/LearningDashboard'));
+const HealthDashboard = React.lazy(() => import('../components/dashboard/HealthDashboard'));
+const BusinessDashboard = React.lazy(() => import('../components/dashboard/BusinessDashboard'));
 
 export class ComponentRegistry {
   private static instance: ComponentRegistry;
@@ -208,12 +224,89 @@ export class ComponentRegistry {
       }
     });
 
+    // Additional existing components
+    this.registerComponent('milestone_timeline', {
+      component: MilestoneTimeline,
+      defaultProps: {
+        showProgress: true,
+        allowEdit: true,
+      }
+    });
+
+    this.registerComponent('task_manager', {
+      component: TaskManager,
+      defaultProps: {
+        showCompleted: true,
+        allowEdit: true,
+      }
+    });
+
+    this.registerComponent('progress_chart', {
+      component: ProgressChart,
+      defaultProps: {
+        chartType: 'line',
+        showGrid: true,
+      }
+    });
+
+    this.registerComponent('completion_meter', {
+      component: CompletionMeter,
+      defaultProps: {
+        animated: true,
+        showPercentage: true,
+      }
+    });
+
+    this.registerComponent('simple_savings_tracker', {
+      component: SimpleSavingsTracker,
+      defaultProps: {
+        showChart: true,
+        allowEdit: true,
+      }
+    });
+
     // Goal-specific components
     this.registerComponent('travel_dashboard', {
       component: TravelDashboard,
       requirements: {
         goalTypes: ['travel'],
         agents: ['travel', 'weather'],
+      }
+    });
+
+    this.registerComponent('learning_dashboard', {
+      component: LearningDashboard,
+      defaultProps: {
+        showProgressChart: true,
+        showSkillRadar: true,
+        showStudyTime: true,
+      },
+      requirements: {
+        goalTypes: ['language', 'education', 'skill_development'],
+      }
+    });
+
+    this.registerComponent('health_dashboard', {
+      component: HealthDashboard,
+      defaultProps: {
+        showWeightChart: true,
+        showWorkoutLog: true,
+        showSleepTracker: true,
+      },
+      requirements: {
+        goalTypes: ['weight_loss', 'fitness', 'wellness'],
+      }
+    });
+
+    this.registerComponent('business_dashboard', {
+      component: BusinessDashboard,
+      defaultProps: {
+        showRevenueChart: true,
+        showCustomerMetrics: true,
+        showKPIs: true,
+      },
+      requirements: {
+        goalTypes: ['business', 'career'],
       }
     });
   }
@@ -235,8 +328,23 @@ export class ComponentRegistry {
     const components: DashboardComponent[] = [];
 
     // Get intelligent component selection from category mapping
-    const requiredComponentIds = getComponentsForCategory(goalType, false);
-    const allComponentIds = getComponentsForCategory(goalType, true);
+    let requiredComponentIds = getComponentsForCategory(goalType, false);
+    let allComponentIds = getComponentsForCategory(goalType, true);
+    
+    // Fallback: if no components found for this goal type, use general category or show all
+    if (requiredComponentIds.length === 0 && allComponentIds.length === 0) {
+      console.log(`No components found for goal type: ${goalType}, using general category`);
+      requiredComponentIds = getComponentsForCategory('general', false);
+      allComponentIds = getComponentsForCategory('general', true);
+      
+      // If even general doesn't work, show all registered components
+      if (requiredComponentIds.length === 0) {
+        console.log('Using fallback: showing all registered components');
+        const allRegisteredComponents = Array.from(this.components.keys());
+        requiredComponentIds = allRegisteredComponents.slice(0, 4); // First 4 as required
+        allComponentIds = allRegisteredComponents;
+      }
+    }
     
     // Get category defaults for this goal type
     const defaults = getDefaultsForCategory(goalType);
@@ -420,6 +528,11 @@ export class ComponentRegistry {
       career_dashboard: 'Career Progress',
       motivation_center: 'Motivation Hub',
       social_accountability: 'Social Support',
+      milestone_timeline: 'Milestone Timeline',
+      task_manager: 'Task Manager',
+      progress_chart: 'Progress Chart',
+      completion_meter: 'Completion Meter',
+      simple_savings_tracker: 'Simple Savings Tracker',
     };
 
     return titles[type] || 'Component';
