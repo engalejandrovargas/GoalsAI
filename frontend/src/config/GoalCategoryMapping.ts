@@ -141,9 +141,9 @@ export const GOAL_CATEGORY_MAPPING: Record<string, GoalCategoryConfig> = {
     description: 'Plan and save for travel experiences',
     defaultDeadlineDays: 365, // 1 year
     defaultEstimatedCost: 5000,
-    requiredComponents: ['travel_dashboard', 'financial_calculator', 'document_checklist', 'agent_info'],
-    contextualComponents: ['budget_breakdown', 'weather_widget', 'milestone_timeline'],
-    optionalComponents: ['currency_converter', 'calendar_widget', 'progress_chart'],
+    requiredComponents: ['financial_calculator', 'smart_action_timeline', 'progress_dashboard', 'agent_info'],
+    contextualComponents: ['budget_breakdown', 'currency_converter', 'calendar_widget', 'project_timeline'],
+    optionalComponents: ['travel_dashboard', 'expense_tracker', 'weather_widget', 'document_checklist'],
     suggestedAgents: ['travel', 'financial', 'weather'],
     examples: ['Trip to Japan', 'European backpacking', 'Family vacation to Disney']
   },
@@ -222,9 +222,23 @@ export const GOAL_CATEGORY_MAPPING: Record<string, GoalCategoryConfig> = {
     description: 'Generic goal that doesn\'t fit specific categories',
     defaultDeadlineDays: 90, // 3 months
     defaultEstimatedCost: 500,
-    requiredComponents: ['completion_meter', 'task_manager', 'agent_info'],
-    contextualComponents: ['progress_chart', 'milestone_timeline', 'habit_tracker'],
-    optionalComponents: ['goal_reflection', 'motivation_center', 'calendar_widget'],
+    requiredComponents: [
+      'financial_calculator', 
+      'smart_action_timeline', 
+      'progress_dashboard', 
+      'agent_info',
+      'budget_breakdown',
+      'expense_tracker',
+      'debt_payoff_tracker',
+      'currency_converter', 
+      'calendar_widget', 
+      'project_timeline',
+      'habit_tracker',
+      'streak_counter',
+      'mood_tracker'
+    ],
+    contextualComponents: [],
+    optionalComponents: ['travel_dashboard'],
     suggestedAgents: ['research'],
     examples: ['Complete personal project', 'Achieve life goal', 'Finish important task']
   }

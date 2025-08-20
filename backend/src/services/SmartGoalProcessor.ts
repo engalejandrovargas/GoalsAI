@@ -69,11 +69,13 @@ export class SmartGoalProcessor {
    * Step 1: Analyze if the goal needs clarification using AI
    */
   async analyzeGoal(goalDescription: string, userContext: any): Promise<GoalAnalysis> {
-    logger.info(`AI analyzing goal: "${goalDescription.substring(0, 50)}..."`);
+    logger.info(`Smart analyzing goal: "${goalDescription.substring(0, 50)}..."`);
 
     try {
       // Use AI service for intelligent goal analysis
+      logger.info('Calling AI service for feasibility analysis...');
       const feasibilityAnalysis = await aiService.analyzeFeasibility(goalDescription, userContext);
+      logger.info(`AI feasibility analysis completed with score: ${feasibilityAnalysis.feasibilityScore}`);
       
       // Determine if goal needs clarification based on AI analysis and goal complexity
       const clarity = this.determineGoalClarity(goalDescription);
@@ -87,19 +89,27 @@ export class SmartGoalProcessor {
         estimatedComplexity: complexity,
       };
 
+      logger.info(`Goal analysis completed - Needs clarification: ${analysis.needsClirification}, Clarity: ${analysis.clarity}`);
+
       if (analysis.needsClirification) {
+        logger.info('Generating smart clarification questions...');
         analysis.questions = await this.generateSmartQuestions(goalDescription, userContext, feasibilityAnalysis);
+        logger.info(`Generated ${analysis.questions?.length || 0} clarification questions`);
       }
 
       return analysis;
-    } catch (error) {
-      logger.error('Error in AI goal analysis, falling back to basic analysis:', error);
+    } catch (error: any) {
+      logger.error('Error in AI goal analysis, falling back to basic analysis:', {
+        message: error.message,
+        stack: error.stack
+      });
       
       // Fallback to basic analysis if AI fails
       const clarity = this.determineGoalClarity(goalDescription);
       const requiredAgents = this.determineRequiredAgents(goalDescription);
       const complexity = this.calculateComplexity(goalDescription, requiredAgents);
       
+      logger.info('Using fallback analysis with basic question generation');
       return {
         needsClirification: clarity !== 'clear',
         clarity,

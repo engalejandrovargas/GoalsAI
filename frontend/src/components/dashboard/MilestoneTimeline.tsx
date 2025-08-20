@@ -191,26 +191,44 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
   const progressPercentage = totalMilestones > 0 ? (completedMilestones / totalMilestones) * 100 : 0;
 
   return (
-    <motion.div
+    <motion.div 
+      className="h-full flex flex-col"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6"
+      transition={{ duration: 0.3 }}
     >
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-purple-600" />
-          Timeline & Milestones
-        </h3>
-        <div className="flex items-center gap-3">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            {completedMilestones}/{totalMilestones} completed
+      {/* Beautiful Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl shadow-lg">
+            <Calendar className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Timeline & Milestones
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
+              Track your journey to success
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <div className="text-2xl font-bold text-purple-600">
+              {completedMilestones}/{totalMilestones}
+            </div>
+            <div className="text-xs text-gray-500 uppercase tracking-wide">
+              Completed
+            </div>
           </div>
           {allowEdit && (
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="group flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-200" />
+              <span className="font-medium">Add Milestone</span>
             </button>
           )}
         </div>
@@ -218,22 +236,32 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
 
       {/* Progress Overview */}
       {showProgress && (
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Milestone Progress
+        <div className="mb-8 p-6 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-2xl border border-purple-200 dark:border-purple-800">
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-lg font-semibold text-purple-900 dark:text-purple-100">
+              Overall Progress
             </span>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-3xl font-bold text-purple-600">
               {progressPercentage.toFixed(0)}%
             </span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div className="w-full bg-white dark:bg-gray-700 rounded-full h-3 shadow-inner">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progressPercentage}%` }}
-              transition={{ duration: 1, ease: "easeOut" }}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full"
-            />
+              transition={{ duration: 1.5, ease: "easeOut" }}
+              className="bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600 h-3 rounded-full shadow-lg relative overflow-hidden"
+            >
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
+                animate={{ x: ['0%', '100%'] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              />
+            </motion.div>
+          </div>
+          <div className="flex justify-between mt-2 text-sm text-purple-700 dark:text-purple-300">
+            <span>Started</span>
+            <span>Goal Achieved!</span>
           </div>
         </div>
       )}
@@ -322,129 +350,183 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
         </motion.div>
       )}
 
-      {/* Timeline */}
-      <div className="relative">
+      {/* Beautiful Timeline */}
+      <div className="flex-1 relative">
         {/* Timeline line */}
-        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-300 dark:bg-gray-600"></div>
+        <div className="absolute left-8 top-0 bottom-0 w-1 bg-gradient-to-b from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded-full"></div>
         
         {/* Progress line */}
         <motion.div
-          className="absolute left-6 top-0 w-0.5 bg-gradient-to-b from-purple-500 to-pink-500 origin-top"
+          className="absolute left-8 top-0 w-1 bg-gradient-to-b from-purple-400 via-indigo-500 to-purple-600 rounded-full shadow-lg origin-top"
           initial={{ scaleY: 0 }}
-          animate={{ scaleY: progressPercentage / 100 }}
-          transition={{ duration: 1.5, ease: "easeInOut" }}
-          style={{ height: `${(completedMilestones / totalMilestones) * 100}%` }}
-        ></motion.div>
+          animate={{ scaleY: completedMilestones / totalMilestones }}
+          transition={{ duration: 2, ease: "easeInOut" }}
+          style={{ 
+            height: `${Math.min(completedMilestones / totalMilestones * 100, 100)}%`,
+            maxHeight: `${sortedMilestones.length * 140}px`
+          }}
+        />
 
         {/* Milestones */}
-        <div className="space-y-6">
+        <div className="space-y-8">
           {sortedMilestones.map((milestone, index) => (
             <motion.div
               key={milestone.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="relative flex items-start gap-4"
+              initial={{ opacity: 0, x: -30, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              transition={{ delay: index * 0.2, duration: 0.5, ease: "easeOut" }}
+              className="relative flex items-start gap-6"
             >
               {/* Timeline dot */}
-              <div className={`relative z-10 w-12 h-12 rounded-full border-4 flex items-center justify-center ${
-                milestone.completed 
-                  ? 'bg-green-100 border-green-500 dark:bg-green-900/20' 
-                  : isOverdue(milestone.date, milestone.completed)
-                  ? 'bg-red-100 border-red-500 dark:bg-red-900/20'
-                  : 'bg-white border-gray-300 dark:bg-gray-800 dark:border-gray-600'
-              }`}>
-                {getMilestoneIcon(milestone.type, milestone.completed)}
+              <div className="relative z-10">
+                <motion.div 
+                  className={`w-16 h-16 rounded-2xl border-4 flex items-center justify-center shadow-xl ${
+                    milestone.completed 
+                      ? 'bg-gradient-to-br from-emerald-400 to-green-600 border-emerald-300' 
+                      : isOverdue(milestone.date, milestone.completed)
+                      ? 'bg-gradient-to-br from-red-400 to-red-600 border-red-300'
+                      : 'bg-gradient-to-br from-purple-100 to-indigo-100 border-purple-300 dark:from-gray-700 dark:to-gray-600 dark:border-gray-500'
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {getMilestoneIcon(milestone.type, milestone.completed)}
+                </motion.div>
+                {milestone.completed && (
+                  <motion.div
+                    className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-emerald-400 to-green-500 opacity-20"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1.2, opacity: 0.3 }}
+                    transition={{ duration: 0.5 }}
+                  />
+                )}
               </div>
 
               {/* Milestone content */}
-              <div className={`flex-1 p-4 rounded-lg border-l-4 ${getPriorityColor(milestone.priority)} ${
-                isOverdue(milestone.date, milestone.completed) ? 'ring-2 ring-red-200' : ''
-              }`}>
+              <motion.div 
+                className={`flex-1 p-6 rounded-2xl backdrop-blur-sm border-2 shadow-lg hover:shadow-xl transition-all duration-300 ${
+                  milestone.completed 
+                    ? 'bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200 dark:from-emerald-900/20 dark:to-green-900/20 dark:border-emerald-700' 
+                    : isOverdue(milestone.date, milestone.completed)
+                    ? 'bg-gradient-to-r from-red-50 to-rose-50 border-red-200 dark:from-red-900/20 dark:to-rose-900/20 dark:border-red-700'
+                    : 'bg-gradient-to-r from-white to-gray-50 border-gray-200 dark:from-gray-800 dark:to-gray-700 dark:border-gray-600'
+                }`}
+                whileHover={{ scale: 1.02 }}
+              >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className={`font-semibold ${
+                    <div className="flex items-center gap-3 mb-3">
+                      <h4 className={`text-xl font-bold ${
                         milestone.completed 
-                          ? 'line-through text-gray-500 dark:text-gray-400' 
+                          ? 'line-through text-emerald-700 dark:text-emerald-300' 
+                          : isOverdue(milestone.date, milestone.completed)
+                          ? 'text-red-700 dark:text-red-300'
                           : 'text-gray-900 dark:text-white'
                       }`}>
                         {milestone.title}
                       </h4>
                       {milestone.value && (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300 text-xs rounded-full">
+                        <span className="px-3 py-1 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm rounded-full font-medium shadow-md">
                           ${milestone.value}
                         </span>
                       )}
+                      <div className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        milestone.priority === 'high' 
+                          ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                          : milestone.priority === 'medium'
+                          ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
+                          : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                      }`}>
+                        {milestone.priority} priority
+                      </div>
                     </div>
                     
                     {milestone.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                      <p className="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">
                         {milestone.description}
                       </p>
                     )}
                     
-                    <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {new Date(milestone.date).toLocaleDateString()}
+                    <div className="flex items-center gap-4 text-sm">
+                      <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                        <Calendar className="w-4 h-4" />
+                        {new Date(milestone.date).toLocaleDateString('en-US', { 
+                          weekday: 'short', 
+                          year: 'numeric', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
                       </span>
-                      <span className="capitalize">{milestone.type}</span>
+                      <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs font-medium capitalize">
+                        {milestone.type}
+                      </span>
                       {isOverdue(milestone.date, milestone.completed) && (
-                        <span className="text-red-600 dark:text-red-400 font-medium">Overdue</span>
+                        <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-full text-xs font-bold animate-pulse">
+                          Overdue
+                        </span>
                       )}
                     </div>
                   </div>
 
                   {allowEdit && (
-                    <div className="flex items-center gap-1 ml-2">
-                      <button
+                    <div className="flex items-center gap-1 ml-4">
+                      <motion.button
                         onClick={() => toggleMilestone(milestone.id)}
-                        className={`p-1 rounded ${
-                          milestone.completed ? 'text-green-600' : 'text-gray-400 hover:text-green-600'
+                        className={`p-2 rounded-xl transition-all duration-200 ${
+                          milestone.completed 
+                            ? 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30' 
+                            : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
                         }`}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
                         title={milestone.completed ? 'Mark as incomplete' : 'Mark as complete'}
                       >
-                        <CheckCircle className="w-4 h-4" />
-                      </button>
-                      <button
+                        <CheckCircle className="w-5 h-5" />
+                      </motion.button>
+                      <motion.button
                         onClick={() => setEditingMilestone(milestone.id)}
-                        className="p-1 text-gray-400 hover:text-blue-600 rounded"
+                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl transition-all duration-200"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
                         title="Edit milestone"
                       >
-                        <Edit3 className="w-3 h-3" />
-                      </button>
-                      <button
+                        <Edit3 className="w-4 h-4" />
+                      </motion.button>
+                      <motion.button
                         onClick={() => deleteMilestone(milestone.id)}
-                        className="p-1 text-gray-400 hover:text-red-600 rounded"
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-200"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
                         title="Delete milestone"
                       >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
+                        <Trash2 className="w-4 h-4" />
+                      </motion.button>
                     </div>
                   )}
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
           ))}
         </div>
       </div>
 
       {/* Summary */}
-      {sortedMilestones.length === 0 && (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-          <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p>No milestones yet.</p>
-          {allowEdit && (
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="mt-2 text-purple-600 hover:text-purple-700 text-sm"
-            >
-              Add your first milestone
-            </button>
-          )}
-        </div>
-      )}
+      <div>
+        {sortedMilestones.length === 0 && (
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+            <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>No milestones yet.</p>
+            {allowEdit && (
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="mt-2 text-purple-600 hover:text-purple-700 text-sm"
+              >
+                Add your first milestone
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 };

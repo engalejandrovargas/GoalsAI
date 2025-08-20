@@ -121,41 +121,47 @@ const GoalDashboardPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => navigate('/dashboard')}
-                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-4 h-4" />
+                Back
               </button>
-              <div className="flex items-center space-x-3">
-                <div className="text-2xl">{getCategoryIcon(goal.category)}</div>
-                <div>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center justify-center w-12 h-12 text-2xl bg-gray-100 dark:bg-gray-700 rounded-xl">
+                  {getCategoryIcon(goal.category)}
+                </div>
+                <div className="space-y-1">
                   <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{goal.title}</h1>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{goal.description}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md">{goal.description}</p>
                 </div>
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                <Share2 className="w-5 h-5" />
+              <button className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <Share2 className="w-4 h-4" />
+                Share
               </button>
-              <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                <Download className="w-5 h-5" />
+              <button className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <Download className="w-4 h-4" />
+                Export
               </button>
-              <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                <Settings className="w-5 h-5" />
+              <button className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <Settings className="w-4 h-4" />
+                Settings
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Dashboard - Using New Dynamic System */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      {/* Main Dashboard - Sidebar Layout */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <GoalDashboardRenderer
           goal={goal}
           onUpdateGoal={handleUpdateGoal}

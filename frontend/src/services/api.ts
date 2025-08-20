@@ -521,15 +521,18 @@ class ApiService {
   }
 
   // Smart Goals methods
-  async analyzeSmartGoal(goalDescription: string, userContext?: any) {
+  async analyzeSmartGoal(goalDescription: string, answers?: any) {
     return this.request<{
       success: boolean;
-      analysis: any;
-      goalDescription: string;
-      message: string;
-    }>('/smart-goals/analyze', {
+      analysis?: any;
+      needsClirification?: boolean;
+      questions?: any[];
+      processedGoal?: any;
+      message?: string;
+      fallback?: boolean;
+    }>('/api/goals/smart-analyze', {
       method: 'POST',
-      body: JSON.stringify({ goalDescription, userContext }),
+      body: JSON.stringify({ goalDescription, answers }),
     });
   }
 

@@ -5,35 +5,31 @@ import { COMPONENT_DICTIONARY } from '../config/ComponentDictionary';
 // Local type definitions to avoid import issues
 type ComponentType = 
   | 'financial_calculator'
-  | 'task_manager'
+  | 'smart_action_timeline'
+  | 'progress_dashboard'
   | 'agent_info'
-  | 'progress_chart'
-  | 'milestone_timeline'
-  | 'completion_meter'
-  | 'goal_health'
+  | 'budget_breakdown'
+  | 'expense_tracker'
+  | 'debt_payoff_tracker'
+  | 'currency_converter'
+  | 'calendar_widget'
+  | 'project_timeline'
+  | 'habit_tracker'
+  | 'streak_counter'
+  | 'mood_tracker'
   | 'travel_dashboard'
   | 'learning_dashboard'
   | 'business_dashboard'
   | 'health_dashboard'
-  | 'budget_breakdown'
-  | 'calendar_widget'
   | 'weather_widget'
-  | 'currency_converter'
   | 'document_checklist'
   | 'resource_library'
   | 'market_data'
-  | 'simple_savings_tracker'
-  | 'expense_tracker'
   | 'investment_tracker'
-  | 'debt_payoff_tracker'
-  | 'habit_tracker'
-  | 'streak_counter'
   | 'skill_assessment'
   | 'weight_tracker'
   | 'workout_tracker'
   | 'reading_tracker'
-  | 'mood_tracker'
-  | 'project_timeline'
   | 'career_dashboard'
   | 'motivation_center'
   | 'social_accountability';
@@ -63,18 +59,20 @@ interface DashboardComponent {
   };
 }
 
-// Lazy imports for better performance
+// Lazy imports for better performance - New Consolidated Components
 const FinancialCalculator = React.lazy(() => import('../components/dashboard/FinancialCalculator'));
-const TaskManager = React.lazy(() => import('../components/dashboard/TaskManager'));
+const SmartActionTimeline = React.lazy(() => import('../components/dashboard/SmartActionTimeline'));
+const ProgressDashboard = React.lazy(() => import('../components/dashboard/ProgressDashboard'));
 const AgentInfoPanel = React.lazy(() => import('../components/dashboard/AgentInfoPanel'));
-const ProgressChart = React.lazy(() => import('../components/dashboard/ProgressChart'));
-const MilestoneTimeline = React.lazy(() => import('../components/dashboard/MilestoneTimeline'));
-const CompletionMeter = React.lazy(() => import('../components/dashboard/CompletionMeter'));
 const BudgetBreakdown = React.lazy(() => import('../components/dashboard/BudgetBreakdown'));
-const SimpleSavingsTracker = React.lazy(() => import('../components/dashboard/SimpleSavingsTracker'));
 const HabitTracker = React.lazy(() => import('../components/dashboard/HabitTracker'));
 const StreakCounter = React.lazy(() => import('../components/dashboard/StreakCounter'));
 const MoodTracker = React.lazy(() => import('../components/dashboard/MoodTracker'));
+const ExpenseTracker = React.lazy(() => import('../components/dashboard/ExpenseTracker'));
+const DebtPayoffTracker = React.lazy(() => import('../components/dashboard/DebtPayoffTracker'));
+const CurrencyConverter = React.lazy(() => import('../components/dashboard/CurrencyConverter'));
+const CalendarWidget = React.lazy(() => import('../components/dashboard/CalendarWidget'));
+const ProjectTimeline = React.lazy(() => import('../components/dashboard/ProjectTimeline'));
 const TravelDashboard = React.lazy(() => import('../components/TravelDashboard'));
 
 export class ComponentRegistry {
@@ -93,7 +91,7 @@ export class ComponentRegistry {
   }
 
   private registerDefaultComponents(): void {
-    // Core components (always required)
+    // Core consolidated components (always required)
     this.registerComponent('financial_calculator', {
       component: FinancialCalculator,
       defaultProps: {
@@ -104,13 +102,19 @@ export class ComponentRegistry {
       }
     });
 
-    this.registerComponent('task_manager', {
-      component: TaskManager,
+    this.registerComponent('smart_action_timeline', {
+      component: SmartActionTimeline,
       defaultProps: {
-        allowEditing: true,
-        showPriority: true,
-        showDeadlines: true,
-        showCategories: true,
+        showTimeline: true,
+        allowEdit: true,
+      }
+    });
+
+    this.registerComponent('progress_dashboard', {
+      component: ProgressDashboard,
+      defaultProps: {
+        showChart: true,
+        showMeter: true,
       }
     });
 
@@ -123,33 +127,7 @@ export class ComponentRegistry {
       }
     });
 
-    // Progress components
-    this.registerComponent('progress_chart', {
-      component: ProgressChart,
-      defaultProps: {
-        chartType: 'line',
-        showProjection: true,
-        timeRange: '30d',
-      }
-    });
-
-    this.registerComponent('milestone_timeline', {
-      component: MilestoneTimeline,
-      defaultProps: {
-        showProgress: true,
-        allowEdit: true,
-      }
-    });
-
-    this.registerComponent('completion_meter', {
-      component: CompletionMeter,
-      defaultProps: {
-        style: 'circular',
-        showPercentage: true,
-        animated: true,
-      }
-    });
-
+    // Additional components
     this.registerComponent('budget_breakdown', {
       component: BudgetBreakdown,
       defaultProps: {
@@ -162,19 +140,6 @@ export class ComponentRegistry {
       }
     });
 
-    // Savings and Financial Tracking
-    this.registerComponent('simple_savings_tracker', {
-      component: SimpleSavingsTracker,
-      defaultProps: {
-        targetAmount: 5000,
-        currentSaved: 2500,
-      },
-      requirements: {
-        minEstimatedCost: 1,
-      }
-    });
-
-    // Habit and Progress Tracking
     this.registerComponent('habit_tracker', {
       component: HabitTracker,
       defaultProps: {
@@ -196,6 +161,50 @@ export class ComponentRegistry {
       defaultProps: {
         showCalendar: true,
         showInsights: true,
+      }
+    });
+
+    // Financial components
+    this.registerComponent('expense_tracker', {
+      component: ExpenseTracker,
+      defaultProps: {
+        showCategories: true,
+        allowEdit: true,
+        showChart: true,
+      }
+    });
+
+    this.registerComponent('debt_payoff_tracker', {
+      component: DebtPayoffTracker,
+      defaultProps: {
+        strategy: 'avalanche',
+        showProgress: true,
+      }
+    });
+
+    this.registerComponent('currency_converter', {
+      component: CurrencyConverter,
+      defaultProps: {
+        showFavorites: true,
+        showChart: true,
+      }
+    });
+
+    // Planning components
+    this.registerComponent('calendar_widget', {
+      component: CalendarWidget,
+      defaultProps: {
+        showUpcoming: true,
+        allowEdit: true,
+      }
+    });
+
+    this.registerComponent('project_timeline', {
+      component: ProjectTimeline,
+      defaultProps: {
+        view: 'weeks',
+        showProgress: true,
+        allowEdit: true,
       }
     });
 
@@ -243,9 +252,9 @@ export class ComponentRegistry {
           required: true,
           props: config.defaultProps,
           gridPosition: {
-            row: Math.floor(index / 3),
-            col: index % 3,
-            colSpan: componentId === 'financial_calculator' ? 2 : 1,
+            row: Math.floor(index / 2),
+            col: index % 2,
+            colSpan: 1,
           }
         });
       }
@@ -383,35 +392,31 @@ export class ComponentRegistry {
   private getComponentTitle(type: ComponentType): string {
     const titles: Record<ComponentType, string> = {
       financial_calculator: 'Financial Calculator',
-      task_manager: 'Action Plan',
+      smart_action_timeline: 'Smart Action Timeline',
+      progress_dashboard: 'Progress Dashboard',
       agent_info: 'AI Agents',
-      progress_chart: 'Progress Over Time',
-      milestone_timeline: 'Timeline & Milestones',
-      completion_meter: 'Goal Progress',
-      goal_health: 'Goal Health',
+      budget_breakdown: 'Budget Breakdown',
+      expense_tracker: 'Expense Tracker',
+      debt_payoff_tracker: 'Debt Payoff',
+      currency_converter: 'Currency Converter',
+      calendar_widget: 'Calendar',
+      project_timeline: 'Project Timeline',
+      habit_tracker: 'Habit Tracker',
+      streak_counter: 'Streak Counter',
+      mood_tracker: 'Mood Journal',
       travel_dashboard: 'Travel Planning',
       learning_dashboard: 'Learning Path',
       business_dashboard: 'Business Metrics',
       health_dashboard: 'Health Tracking',
-      budget_breakdown: 'Budget Breakdown',
-      calendar_widget: 'Calendar',
       weather_widget: 'Weather Forecast',
-      currency_converter: 'Currency Converter',
       document_checklist: 'Document Checklist',
       resource_library: 'Resources',
       market_data: 'Market Data',
-      simple_savings_tracker: 'Simple Savings',
-      expense_tracker: 'Expense Tracker',
       investment_tracker: 'Investment Portfolio',
-      debt_payoff_tracker: 'Debt Payoff',
-      habit_tracker: 'Habit Tracker',
-      streak_counter: 'Streak Counter',
       skill_assessment: 'Skill Assessment',
       weight_tracker: 'Weight Tracker',
       workout_tracker: 'Workout Log',
       reading_tracker: 'Reading Progress',
-      mood_tracker: 'Mood Journal',
-      project_timeline: 'Project Timeline',
       career_dashboard: 'Career Progress',
       motivation_center: 'Motivation Hub',
       social_accountability: 'Social Support',

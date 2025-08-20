@@ -97,24 +97,27 @@ const StreakCounter: React.FC<StreakCounterProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 relative overflow-hidden"
+      className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 relative overflow-hidden"
     >
-      {/* Background decoration */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${getStreakColor()} opacity-5`} />
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl ${getStreakColor()} rounded-full -translate-y-32 translate-x-32`}></div>
+        <div className={`absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr ${getStreakColor()} rounded-full translate-y-24 -translate-x-24`}></div>
+      </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 relative z-10">
-        <div className="flex items-center">
-          <div className={`p-2 bg-gradient-to-r ${getStreakColor()} rounded-lg mr-3`}>
-            <Flame className="w-5 h-5 text-white" />
+      <div className="flex items-center justify-between mb-8 relative z-10">
+        <div className="flex items-center gap-4">
+          <div className={`p-3 bg-gradient-to-br ${getStreakColor()} rounded-xl shadow-lg`}>
+            <Flame className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Streak Counter</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{streakType}</p>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Streak Counter</h3>
+            <p className="text-gray-600 dark:text-gray-400">{streakType}</p>
           </div>
         </div>
-        <div className={`px-3 py-1 bg-gradient-to-r ${getStreakColor()} text-white rounded-full text-xs font-medium flex items-center`}>
-          <span className="mr-1">{streakLevel.icon}</span>
+        <div className={`px-4 py-2 bg-gradient-to-r ${getStreakColor()} text-white rounded-full text-sm font-medium flex items-center shadow-lg`}>
+          <span className="mr-2">{streakLevel.icon}</span>
           {streakLevel.level}
         </div>
       </div>
@@ -170,29 +173,29 @@ const StreakCounter: React.FC<StreakCounterProps> = ({
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4 mb-6 relative z-10">
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-          <div className="flex items-center mb-2">
-            <Trophy className="w-4 h-4 text-yellow-500 mr-2" />
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Best Streak</span>
+      <div className="grid grid-cols-2 gap-6 mb-8 relative z-10">
+        <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl p-6 text-white shadow-lg">
+          <div className="flex items-center gap-3 mb-2">
+            <Trophy className="w-6 h-6" />
+            <span className="text-sm font-medium opacity-90">Best Streak</span>
           </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">
+          <div className="text-3xl font-bold">
             {longestStreak}
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="text-sm opacity-80">
             {unit}
           </div>
         </div>
 
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-          <div className="flex items-center mb-2">
-            <Target className="w-4 h-4 text-blue-500 mr-2" />
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Next Goal</span>
+        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl p-6 text-white shadow-lg">
+          <div className="flex items-center gap-3 mb-2">
+            <Target className="w-6 h-6" />
+            <span className="text-sm font-medium opacity-90">Next Goal</span>
           </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">
+          <div className="text-3xl font-bold">
             {nextMilestone}
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="text-sm opacity-80">
             milestone
           </div>
         </div>
@@ -225,12 +228,12 @@ const StreakCounter: React.FC<StreakCounterProps> = ({
       </div>
 
       {/* Last Activity */}
-      <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded-lg p-3 relative z-10">
-        <div className="flex items-center">
-          <Calendar className="w-4 h-4 mr-2" />
+      <div className="flex items-center justify-between text-sm bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-200 dark:border-gray-700 relative z-10 mb-6">
+        <div className="flex items-center text-gray-600 dark:text-gray-400">
+          <Calendar className="w-5 h-5 mr-3" />
           <span>Last activity</span>
         </div>
-        <span className="font-medium">
+        <span className="font-semibold text-gray-900 dark:text-white">
           {new Date(lastActivityDate).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric'
@@ -239,9 +242,9 @@ const StreakCounter: React.FC<StreakCounterProps> = ({
       </div>
 
       {/* Achievement Badges */}
-      <div className="mt-4 relative z-10">
-        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center">
-          <Award className="w-4 h-4 mr-2" />
+      <div className="relative z-10">
+        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+          <Award className="w-5 h-5 mr-3" />
           Achievement Milestones
         </h4>
         <div className="flex flex-wrap gap-2">

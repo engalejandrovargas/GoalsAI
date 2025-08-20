@@ -179,47 +179,54 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6"
+      className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 relative overflow-hidden"
     >
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-pink-500 to-purple-600 rounded-full -translate-y-32 translate-x-32"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-purple-500 to-pink-500 rounded-full translate-y-24 -translate-x-24"></div>
+      </div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <div className="p-2 bg-pink-100 dark:bg-pink-900 rounded-lg mr-3">
-            <Heart className="w-5 h-5 text-pink-600 dark:text-pink-400" />
+      <div className="flex items-center justify-between mb-8 relative z-10">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl shadow-lg">
+            <Heart className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Mood Tracker</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">How are you feeling today?</p>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Mood Tracker</h3>
+            <p className="text-gray-600 dark:text-gray-400">How are you feeling today?</p>
           </div>
         </div>
 
         {/* View Mode Toggle */}
-        <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+        <div className="flex bg-gray-100 dark:bg-gray-700 rounded-xl p-1 relative z-10">
           <button
             onClick={() => setViewMode('calendar')}
-            className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
               viewMode === 'calendar'
-                ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-400'
+                ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-md'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
-            <Calendar className="w-3 h-3" />
+            <Calendar className="w-4 h-4" />
+            Calendar
           </button>
           <button
             onClick={() => setViewMode('chart')}
-            className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
               viewMode === 'chart'
-                ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-400'
+                ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-md'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
-            <TrendingUp className="w-3 h-3" />
+            <TrendingUp className="w-4 h-4" />
+            Chart
           </button>
         </div>
       </div>
 
       {/* Current Mood Display */}
-      <div className="text-center mb-6">
+      <div className="text-center mb-8 relative z-10">
         <div className="text-6xl mb-2">
           {moodEmojis[selectedMood as keyof typeof moodEmojis].emoji}
         </div>
@@ -229,33 +236,37 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
       </div>
 
       {/* Mood Selector */}
-      {renderMoodSelector()}
+      <div className="relative z-10 mb-8">
+        {renderMoodSelector()}
+      </div>
 
       {/* Mood Note */}
-      <div className="mb-6">
+      <div className="mb-8 relative z-10">
         <textarea
           value={moodNote}
           onChange={(e) => setMoodNote(e.target.value)}
           placeholder="How are you feeling today? What's affecting your mood?"
-          className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm resize-none"
+          className="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm resize-none shadow-lg"
           rows={3}
         />
       </div>
 
       {/* View Toggle Content */}
-      <div className="mb-6">
-        {viewMode === 'calendar' ? renderCalendarView() : renderChartView()}
+      <div className="mb-8 relative z-10">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+          {viewMode === 'calendar' ? renderCalendarView() : renderChartView()}
+        </div>
       </div>
 
       {/* Insights */}
-      <div className="space-y-4">
+      <div className="space-y-6 relative z-10">
         {/* Mood Trends */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <div className="flex items-center mb-2">
-            <TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-400 mr-2" />
-            <h4 className="font-medium text-blue-800 dark:text-blue-400">Weekly Insight</h4>
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-6">
+          <div className="flex items-center gap-3 mb-3">
+            <TrendingUp className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <h4 className="font-semibold text-blue-800 dark:text-blue-400 text-lg">Weekly Insight</h4>
           </div>
-          <p className="text-sm text-blue-700 dark:text-blue-500">
+          <p className="text-blue-700 dark:text-blue-500">
             {averageMood >= 4 
               ? '🌟 Great week! Your mood has been consistently positive.'
               : averageMood >= 3
@@ -267,16 +278,16 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
         </div>
 
         {/* Top Triggers */}
-        <div>
-          <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center">
-            <MessageCircle className="w-4 h-4 mr-2" />
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+          <h4 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center text-lg">
+            <MessageCircle className="w-5 h-5 mr-3" />
             Common Influences
           </h4>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             {topTriggers.map((trigger, index) => (
               <span
                 key={index}
-                className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm"
+                className="px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-300 rounded-full text-sm font-medium"
               >
                 {trigger}
               </span>
@@ -290,13 +301,13 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4"
+          className="mt-6 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-800 rounded-2xl p-6 relative z-10"
         >
-          <div className="flex items-center">
-            <Smile className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2" />
+          <div className="flex items-center gap-3">
+            <Smile className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
             <div>
-              <h4 className="font-medium text-yellow-800 dark:text-yellow-400">Remember 🤗</h4>
-              <p className="text-sm text-yellow-700 dark:text-yellow-500 mt-1">
+              <h4 className="font-semibold text-yellow-800 dark:text-yellow-400 text-lg">Remember 🤗</h4>
+              <p className="text-yellow-700 dark:text-yellow-500 mt-2">
                 It's okay to have difficult days. Every emotion is valid and temporary. Tomorrow is a new opportunity.
               </p>
             </div>

@@ -75,12 +75,9 @@ interface GoalComplexitySettings {
 export class AIService {
   // Fallback model chain - ordered by preference (best to fallback)
   private modelFallbackChain = [
-    'gemini-2.5-flash',           // Latest, best performance
-    'gemini-2.0-flash',           // Newer generation
-    'gemini-2.5-flash-lite',      // Lightweight version
-    'gemini-2.0-flash-lite',      // Most cost-efficient
-    'gemini-1.5-flash',           // Legacy stable
-    'gemini-1.5-flash-8b'         // Smallest fallback
+    'gemini-1.5-flash',           // Most reliable current model
+    'gemini-1.5-pro',             // Alternative stable model 
+    'gemini-pro'                  // Legacy fallback
   ];
   
   private currentModelIndex = 0;
@@ -139,15 +136,25 @@ export class AIService {
 
   async analyzeFeasibility(goalDescription: string, userContext: UserContext): Promise<FeasibilityAnalysis> {
     try {
+      // Check if API key is configured
+      if (!process.env.GOOGLE_GEMINI_API_KEY) {
+        logger.warn('Google Gemini API key not configured, using fallback analysis');
+        return this.getFallbackAnalysis(goalDescription);
+      }
+
       const prompt = this.buildFeasibilityPrompt(goalDescription, userContext);
+      logger.info(`Starting AI analysis for goal: "${goalDescription.substring(0, 50)}..."`);
       
       const result = await this.tryWithFallback(async (model) => {
+        logger.info('Sending request to Gemini API...');
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        return response.text();
+        const text = response.text();
+        logger.info(`Received AI response of length: ${text.length}`);
+        return text;
       });
       
-      logger.info('Gemini AI response received for feasibility analysis');
+      logger.info('Gemini AI response received successfully');
       
       // Parse the JSON response from Gemini (handle markdown code blocks)
       let cleanText = result.trim();
@@ -157,15 +164,23 @@ export class AIService {
         cleanText = cleanText.replace(/^```\n/, '').replace(/\n```$/, '');
       }
       
+      logger.info('Attempting to parse AI response as JSON...');
       const analysis = JSON.parse(cleanText);
+      logger.info('AI response parsed successfully');
       
       // Validate and ensure all required fields are present
       return this.validateAnalysis(analysis);
       
-    } catch (error) {
-      logger.error('Error in AI feasibility analysis - all models failed:', error);
+    } catch (error: any) {
+      logger.error('Error in AI feasibility analysis - all models failed:', {
+        message: error.message,
+        status: error.status,
+        statusText: error.statusText,
+        stack: error.stack
+      });
       
       // Return a fallback analysis if all AI models fail
+      logger.info('Returning fallback analysis due to AI failure');
       return this.getFallbackAnalysis(goalDescription);
     }
   }

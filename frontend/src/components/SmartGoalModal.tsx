@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Brain, CheckCircle, Clock, Users, DollarSign, MapPin, Calendar } from 'lucide-react';
+import { apiService } from '../services/api';
 
 interface SmartGoalModalProps {
   isOpen: boolean;
@@ -51,31 +52,21 @@ export const SmartGoalModal: React.FC<SmartGoalModalProps> = ({
     setError(null);
 
     try {
-      const response = await fetch('/api/goals/smart-analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          goalDescription: goalDescription.trim(),
-        }),
-      });
+      const data = await apiService.analyzeSmartGoal(goalDescription.trim());
+      
+      if (data.success) {
+        setAnalysis(data.analysis);
 
-      if (!response.ok) {
-        throw new Error('Failed to analyze goal');
-      }
-
-      const data = await response.json();
-      setAnalysis(data.analysis);
-
-      if (data.needsClirification && data.questions) {
-        setStep('questions');
+        if (data.needsClirification && data.questions) {
+          setStep('questions');
+        } else {
+          // Goal is clear, process immediately
+          await processGoalWithoutQuestions();
+        }
       } else {
-        // Goal is clear, process immediately
-        await processGoalWithoutQuestions();
+        throw new Error(data.message || 'Failed to analyze goal');
       }
-    } catch (err) {
+    } catch (err: any) {
       setError('Failed to analyze goal. Please try again.');
       console.error('Error analyzing goal:', err);
     } finally {
@@ -86,26 +77,15 @@ export const SmartGoalModal: React.FC<SmartGoalModalProps> = ({
   const processGoalWithoutQuestions = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/goals/smart-analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          goalDescription: goalDescription.trim(),
-          answers: {},
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to process goal');
+      const data = await apiService.analyzeSmartGoal(goalDescription.trim(), {});
+      
+      if (data.success && data.processedGoal) {
+        setProcessedGoal(data.processedGoal);
+        setStep('dashboard');
+      } else {
+        throw new Error(data.message || 'Failed to process goal');
       }
-
-      const data = await response.json();
-      setProcessedGoal(data.processedGoal);
-      setStep('dashboard');
-    } catch (err) {
+    } catch (err: any) {
       setError('Failed to process goal. Please try again.');
       console.error('Error processing goal:', err);
     } finally {
@@ -128,26 +108,15 @@ export const SmartGoalModal: React.FC<SmartGoalModalProps> = ({
     setError(null);
 
     try {
-      const response = await fetch('/api/goals/smart-analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          goalDescription: goalDescription.trim(),
-          answers,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to process goal with answers');
+      const data = await apiService.analyzeSmartGoal(goalDescription.trim(), answers);
+      
+      if (data.success && data.processedGoal) {
+        setProcessedGoal(data.processedGoal);
+        setStep('dashboard');
+      } else {
+        throw new Error(data.message || 'Failed to process goal with answers');
       }
-
-      const data = await response.json();
-      setProcessedGoal(data.processedGoal);
-      setStep('dashboard');
-    } catch (err) {
+    } catch (err: any) {
       setError('Failed to process goal. Please try again.');
       console.error('Error processing goal with answers:', err);
     } finally {
@@ -160,29 +129,24 @@ export const SmartGoalModal: React.FC<SmartGoalModalProps> = ({
 
     setLoading(true);
     try {
-      const response = await fetch('/api/goals', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          title: processedGoal.goalDashboard.goalSummary.title,
-          description: processedGoal.clarifiedGoal,
-          category: processedGoal.goalDashboard.goalSummary.category,
-          estimatedCost: processedGoal.goalDashboard.financialCalculator?.totalBudget || 0,
-          smartGoalData: JSON.stringify(processedGoal),
-        }),
-      });
+      const goalData = {
+        title: processedGoal.goalDashboard.goalSummary.title,
+        description: processedGoal.clarifiedGoal,
+        category: processedGoal.goalDashboard.goalSummary.category,
+        estimatedCost: processedGoal.goalDashboard.financialCalculator?.totalBudget || 0,
+        smartGoalData: JSON.stringify(processedGoal),
+      };
 
-      if (!response.ok) {
-        throw new Error('Failed to create goal');
+      const response = await apiService.createGoal(goalData);
+      
+      if (response.success) {
+        onGoalCreated();
+        onClose();
+        resetModal();
+      } else {
+        throw new Error(response.message || 'Failed to create goal');
       }
-
-      onGoalCreated();
-      onClose();
-      resetModal();
-    } catch (err) {
+    } catch (err: any) {
       setError('Failed to create goal. Please try again.');
       console.error('Error creating goal:', err);
     } finally {

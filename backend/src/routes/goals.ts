@@ -38,9 +38,12 @@ router.post('/smart-analyze', requireSessionAuth, async (req, res) => {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
+    logger.info(`Smart-analyze request received for user ${userId}`);
+
     const { goalDescription, answers } = smartGoalSchema.parse(req.body);
 
     // Get user context for personalized analysis
+    logger.info(`Fetching user context for user ${userId}`);
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -71,6 +74,7 @@ router.post('/smart-analyze', requireSessionAuth, async (req, res) => {
     });
 
     if (!user) {
+      logger.error(`User ${userId} not found in database`);
       return res.status(404).json({ error: 'User not found' });
     }
 
@@ -82,34 +86,145 @@ router.post('/smart-analyze', requireSessionAuth, async (req, res) => {
       skillsAndStrengths: user.skillsAndStrengths ? JSON.parse(user.skillsAndStrengths) : null,
     };
 
+    logger.info(`User context prepared for user ${userId}`);
+
     const smartGoalProcessor = new SmartGoalProcessor(prisma);
 
     if (!answers) {
       // Step 1: Initial analysis to determine if clarification is needed
-      logger.info(`Smart analyzing goal for user ${userId}: "${goalDescription}"`);
-      const analysis = await smartGoalProcessor.analyzeGoal(goalDescription, userContext);
+      logger.info(`Starting smart goal analysis for user ${userId}: "${goalDescription}"`);
+      
+      try {
+        const analysis = await smartGoalProcessor.analyzeGoal(goalDescription, userContext);
+        logger.info(`Smart goal analysis completed successfully for user ${userId}`);
 
-      return res.json({
-        success: true,
-        needsClirification: analysis.needsClirification,
-        analysis,
-        questions: analysis.questions || null,
-      });
+        return res.json({
+          success: true,
+          needsClirification: analysis.needsClirification,
+          analysis,
+          questions: analysis.questions || null,
+        });
+      } catch (analysisError: any) {
+        logger.error('Smart goal analysis failed, providing basic fallback:', analysisError);
+        
+        // Provide a basic fallback response
+        return res.json({
+          success: true,
+          needsClirification: false,
+          analysis: {
+            needsClirification: false,
+            clarity: 'partial',
+            requiredAgents: ['general'],
+            estimatedComplexity: 50,
+            questions: null
+          },
+          fallback: true,
+          message: 'Using basic analysis due to AI service unavailability'
+        });
+      }
     } else {
       // Step 2: Process with answers to generate dashboard
       logger.info(`Processing goal with answers for user ${userId}`);
-      const processedGoal = await smartGoalProcessor.processGoalWithAnswers(goalDescription, answers, userContext);
+      
+      try {
+        const processedGoal = await smartGoalProcessor.processGoalWithAnswers(goalDescription, answers, userContext);
+        logger.info(`Goal processing completed successfully for user ${userId}`);
 
-      return res.json({
-        success: true,
-        processedGoal,
-        message: 'Smart goal dashboard generated successfully',
-      });
+        return res.json({
+          success: true,
+          processedGoal,
+          message: 'Smart goal dashboard generated successfully',
+        });
+      } catch (processingError: any) {
+        logger.error('Goal processing failed, providing basic fallback:', processingError);
+        
+        // Create basic fallback processed goal
+        const fallbackProcessedGoal = {
+          originalGoal: goalDescription,
+          clarifiedGoal: goalDescription,
+          goalDashboard: {
+            goalSummary: {
+              title: goalDescription,
+              description: 'Basic goal setup with standard planning approach',
+              category: 'personal',
+              timeline: '3-6 months'
+            },
+            tasks: [
+              {
+                id: 1,
+                task: 'Break down your goal into specific, measurable steps',
+                completed: false,
+                category: 'planning',
+                priority: 'high'
+              },
+              {
+                id: 2,
+                task: 'Research requirements and resources needed',
+                completed: false,
+                category: 'research',
+                priority: 'high'
+              },
+              {
+                id: 3,
+                task: 'Create a timeline with milestones',
+                completed: false,
+                category: 'planning',
+                priority: 'medium'
+              },
+              {
+                id: 4,
+                task: 'Start taking consistent action',
+                completed: false,
+                category: 'execution',
+                priority: 'medium'
+              }
+            ],
+            financialCalculator: {
+              totalBudget: 1000,
+              breakdown: {
+                main: { estimated: 700, saved: 0, remaining: 700 },
+                contingency: { estimated: 200, saved: 0, remaining: 200 },
+                miscellaneous: { estimated: 100, saved: 0, remaining: 100 }
+              },
+              savingsNeeded: 'Save approximately $167/month for 6 months'
+            },
+            contextualInfo: {
+              userLocation: user.location,
+              fallbackMode: true
+            }
+          },
+          assignedAgents: ['general'],
+          analysis: {
+            needsClirification: false,
+            clarity: 'partial',
+            requiredAgents: ['general'],
+            estimatedComplexity: 50
+          }
+        };
+
+        return res.json({
+          success: true,
+          processedGoal: fallbackProcessedGoal,
+          fallback: true,
+          message: 'Basic goal dashboard generated (AI services unavailable)',
+        });
+      }
     }
 
-  } catch (error) {
-    logger.error('Error in smart goal analysis:', error);
-    res.status(500).json({ error: 'Failed to analyze goal' });
+  } catch (error: any) {
+    logger.error('Critical error in smart goal analysis:', {
+      message: error.message,
+      stack: error.stack,
+      userId: (req.user as any)?.id
+    });
+    
+    // Always return a JSON response, never let it fail completely
+    res.status(500).json({ 
+      success: false,
+      error: 'Goal analysis temporarily unavailable',
+      message: 'Please try again in a moment. You can also create goals directly from the dashboard.',
+      fallback: true
+    });
   }
 });
 

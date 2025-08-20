@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calculator,
   DollarSign,
   TrendingUp,
-  TrendingDown,
   Calendar,
-  Clock,
   PiggyBank,
   Target,
   Plus,
   Minus,
+  Zap,
+  ArrowUp,
+  ArrowDown,
   Edit3,
   Check,
   X,
@@ -18,11 +19,11 @@ import {
 
 interface FinancialCalculatorProps {
   goalId: string;
-  estimatedCost: number;
-  currentSaved: number;
+  estimatedCost?: number;
+  currentSaved?: number;
   targetDate?: string;
-  onUpdateSavings: (amount: number) => void;
-  onUpdateDeadline: (date: string) => void;
+  onUpdateSavings?: (amount: number) => void;
+  onUpdateDeadline?: (date: string) => void;
   showDailyView?: boolean;
   showWeeklyView?: boolean;
   showMonthlyView?: boolean;
@@ -33,338 +34,365 @@ type TimeView = 'daily' | 'weekly' | 'monthly';
 
 const FinancialCalculator: React.FC<FinancialCalculatorProps> = ({
   goalId,
-  estimatedCost,
-  currentSaved = 0,
+  estimatedCost = 5000,
+  currentSaved = 1200,
   targetDate,
   onUpdateSavings,
   onUpdateDeadline,
-  showDailyView = true,
-  showWeeklyView = true,
-  showMonthlyView = true,
   allowManualUpdate = true,
 }) => {
   const [activeView, setActiveView] = useState<TimeView>('monthly');
-  const [savingsInput, setSavingsInput] = useState(currentSaved);
-  const [isEditingDeadline, setIsEditingDeadline] = useState(false);
-  const [tempDeadline, setTempDeadline] = useState('');
+  const [currentAmount, setCurrentAmount] = useState(currentSaved);
+  const [targetAmount, setTargetAmount] = useState(estimatedCost);
+  const [isEditingAmount, setIsEditingAmount] = useState(false);
+  const [tempAmount, setTempAmount] = useState(currentAmount);
   const [quickAmounts] = useState([50, 100, 250, 500, 1000]);
+  const [showCelebration, setShowCelebration] = useState(false);
 
-  // Set default deadline to 1 month from now if not provided
-  const defaultDeadline = targetDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-  const [currentDeadline, setCurrentDeadline] = useState(defaultDeadline);
+  const defaultTargetDate = targetDate || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const remaining = Math.max(0, targetAmount - currentAmount);
+  const progress = targetAmount > 0 ? (currentAmount / targetAmount) * 100 : 0;
+  
+  // Calculate days until deadline
+  const today = new Date();
+  const deadline = new Date(defaultTargetDate);
+  const daysUntilDeadline = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  
+  // Calculate required savings
+  const dailyRequired = daysUntilDeadline > 0 ? remaining / daysUntilDeadline : 0;
+  const weeklyRequired = dailyRequired * 7;
+  const monthlyRequired = dailyRequired * 30;
 
   useEffect(() => {
-    setSavingsInput(currentSaved);
+    setCurrentAmount(currentSaved);
   }, [currentSaved]);
 
-  useEffect(() => {
-    if (targetDate) {
-      setCurrentDeadline(targetDate);
-    }
-  }, [targetDate]);
-
-  const calculateTimeRemaining = () => {
-    const deadline = new Date(currentDeadline);
-    const now = new Date();
-    const diffTime = Math.abs(deadline.getTime() - now.getTime());
-    const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-    
-    return {
-      days: diffDays,
-      weeks: Math.ceil(diffDays / 7),
-      months: Math.ceil(diffDays / 30),
-    };
-  };
-
-  const calculateSavingsNeeded = () => {
-    const remaining = Math.max(0, estimatedCost - currentSaved);
-    const timeRemaining = calculateTimeRemaining();
-    
-    return {
-      total: remaining,
-      daily: Math.ceil(remaining / timeRemaining.days),
-      weekly: Math.ceil(remaining / timeRemaining.weeks),
-      monthly: Math.ceil(remaining / timeRemaining.months),
-    };
-  };
-
-  const getProgressPercentage = () => {
-    if (estimatedCost === 0) return 0;
-    return Math.min(100, (currentSaved / estimatedCost) * 100);
-  };
-
-  const handleSavingsUpdate = () => {
-    if (savingsInput !== currentSaved && allowManualUpdate) {
-      onUpdateSavings(savingsInput);
-    }
-  };
-
   const handleQuickAdd = (amount: number) => {
-    const newAmount = currentSaved + amount;
-    setSavingsInput(newAmount);
-    if (allowManualUpdate) {
-      onUpdateSavings(newAmount);
+    const newAmount = currentAmount + amount;
+    setCurrentAmount(newAmount);
+    onUpdateSavings?.(newAmount);
+    
+    if (newAmount >= targetAmount && !showCelebration) {
+      setShowCelebration(true);
+      setTimeout(() => setShowCelebration(false), 3000);
     }
   };
 
   const handleQuickSubtract = (amount: number) => {
-    const newAmount = Math.max(0, currentSaved - amount);
-    setSavingsInput(newAmount);
-    if (allowManualUpdate) {
-      onUpdateSavings(newAmount);
+    const newAmount = Math.max(0, currentAmount - amount);
+    setCurrentAmount(newAmount);
+    onUpdateSavings?.(newAmount);
+  };
+
+  const handleAmountEdit = () => {
+    setCurrentAmount(tempAmount);
+    onUpdateSavings?.(tempAmount);
+    setIsEditingAmount(false);
+  };
+
+  const getTimeViewData = () => {
+    switch (activeView) {
+      case 'daily':
+        return {
+          label: 'Daily',
+          amount: dailyRequired,
+          period: 'per day',
+          icon: Calendar,
+          color: 'from-blue-500 to-blue-600',
+        };
+      case 'weekly':
+        return {
+          label: 'Weekly',
+          amount: weeklyRequired,
+          period: 'per week',
+          icon: Calendar,
+          color: 'from-green-500 to-green-600',
+        };
+      case 'monthly':
+        return {
+          label: 'Monthly',
+          amount: monthlyRequired,
+          period: 'per month',
+          icon: Calendar,
+          color: 'from-purple-500 to-purple-600',
+        };
+      default:
+        return {
+          label: 'Monthly',
+          amount: monthlyRequired,
+          period: 'per month',
+          icon: Calendar,
+          color: 'from-purple-500 to-purple-600',
+        };
     }
   };
 
-  const handleDeadlineEdit = () => {
-    setTempDeadline(currentDeadline.split('T')[0]);
-    setIsEditingDeadline(true);
-  };
-
-  const handleDeadlineSave = () => {
-    if (tempDeadline) {
-      const newDeadline = new Date(tempDeadline).toISOString();
-      setCurrentDeadline(newDeadline);
-      onUpdateDeadline(newDeadline);
-    }
-    setIsEditingDeadline(false);
-  };
-
-  const handleDeadlineCancel = () => {
-    setTempDeadline('');
-    setIsEditingDeadline(false);
-  };
-
-  const savingsNeeded = calculateSavingsNeeded();
-  const progressPercentage = getProgressPercentage();
-  const isGoalReached = currentSaved >= estimatedCost;
-  const timeRemaining = calculateTimeRemaining();
+  const timeViewData = getTimeViewData();
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6"
+      className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 relative overflow-hidden"
     >
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-          <Calculator className="w-5 h-5 text-blue-600" />
-          Financial Calculator
-        </h3>
-        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-          <Target className="w-4 h-4" />
-          <span>${estimatedCost.toLocaleString()} goal</span>
-        </div>
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-blue-500 to-purple-600 rounded-full -translate-y-32 translate-x-32"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-green-500 to-blue-500 rounded-full translate-y-24 -translate-x-24"></div>
       </div>
 
-      {/* Progress Overview */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Progress to Goal
-          </span>
-          <span className="text-lg font-bold text-green-600">
-            {progressPercentage.toFixed(1)}%
-          </span>
-        </div>
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 mb-2">
+      {/* Celebration Animation */}
+      <AnimatePresence>
+        {showCelebration && (
           <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${progressPercentage}%` }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            className={`h-4 rounded-full ${
-              isGoalReached 
-                ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
-                : 'bg-gradient-to-r from-blue-500 to-green-500'
-            }`}
-          />
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="absolute inset-0 flex items-center justify-center bg-green-500/10 backdrop-blur-sm rounded-2xl z-10"
+          >
+            <div className="text-center">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="w-16 h-16 mx-auto mb-4 bg-green-500 rounded-full flex items-center justify-center"
+              >
+                <Target className="w-8 h-8 text-white" />
+              </motion.div>
+              <h3 className="text-2xl font-bold text-green-700 dark:text-green-300 mb-2">
+                🎉 Goal Achieved! 🎉
+              </h3>
+              <p className="text-green-600 dark:text-green-400">
+                You've reached your savings target!
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8 relative z-10">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+            <Calculator className="w-7 h-7 text-white" />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Financial Calculator</h3>
+            <p className="text-gray-600 dark:text-gray-400">Smart savings planning & tracking</p>
+          </div>
         </div>
-        <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-          <span>${currentSaved.toLocaleString()} saved</span>
-          <span>${savingsNeeded.total.toLocaleString()} remaining</span>
+        <div className="flex items-center gap-2">
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+            progress >= 100 
+              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+              : progress >= 75
+              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+              : progress >= 50
+              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+              : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+          }`}>
+            {progress.toFixed(0)}% Complete
+          </span>
         </div>
       </div>
 
-      {/* Deadline Section */}
-      <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            Target Deadline
-          </span>
-          <button
-            onClick={handleDeadlineEdit}
-            className="p-1 text-gray-500 hover:text-blue-600 rounded"
-            title="Edit deadline"
-          >
-            <Edit3 className="w-4 h-4" />
-          </button>
+      {/* Main Progress Circle */}
+      <div className="flex items-center justify-center mb-8 relative z-10">
+        <div className="relative w-48 h-48">
+          <svg className="w-48 h-48 transform -rotate-90" viewBox="0 0 200 200">
+            {/* Background circle */}
+            <circle
+              cx="100"
+              cy="100"
+              r="90"
+              stroke="currentColor"
+              strokeWidth="8"
+              fill="none"
+              className="text-gray-200 dark:text-gray-700"
+            />
+            {/* Progress circle */}
+            <motion.circle
+              cx="100"
+              cy="100"
+              r="90"
+              stroke="url(#gradient)"
+              strokeWidth="8"
+              fill="none"
+              strokeLinecap="round"
+              strokeDasharray={`${2 * Math.PI * 90}`}
+              initial={{ strokeDashoffset: 2 * Math.PI * 90 }}
+              animate={{ strokeDashoffset: 2 * Math.PI * 90 * (1 - progress / 100) }}
+              transition={{ duration: 1, ease: "easeOut" }}
+            />
+            <defs>
+              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#3B82F6" />
+                <stop offset="100%" stopColor="#8B5CF6" />
+              </linearGradient>
+            </defs>
+          </svg>
+          
+          {/* Center content */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+            <PiggyBank className="w-8 h-8 text-blue-600 mb-2" />
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+              ${currentAmount.toLocaleString()}
+            </div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              of ${targetAmount.toLocaleString()}
+            </div>
+            <div className="text-xs text-gray-400 mt-1">
+              ${remaining.toLocaleString()} remaining
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="mb-8 relative z-10">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="font-semibold text-gray-900 dark:text-white">Current Savings</h4>
+          <div className="flex items-center gap-2">
+            {isEditingAmount ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={tempAmount}
+                  onChange={(e) => setTempAmount(Number(e.target.value))}
+                  className="w-24 px-2 py-1 text-sm border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+                />
+                <button onClick={handleAmountEdit} className="p-1 text-green-600 hover:text-green-700">
+                  <Check className="w-4 h-4" />
+                </button>
+                <button onClick={() => setIsEditingAmount(false)} className="p-1 text-gray-500 hover:text-gray-600">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  setTempAmount(currentAmount);
+                  setIsEditingAmount(true);
+                }}
+                className="p-1 text-gray-400 hover:text-gray-600"
+              >
+                <Edit3 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
         
-        {isEditingDeadline ? (
-          <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={tempDeadline}
-              onChange={(e) => setTempDeadline(e.target.value)}
-              className="flex-1 px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
-            />
-            <button
-              onClick={handleDeadlineSave}
-              className="p-1 text-green-600 hover:text-green-700"
-            >
-              <Check className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handleDeadlineCancel}
-              className="p-1 text-red-600 hover:text-red-700"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        ) : (
-          <div>
-            <div className="text-lg font-semibold text-gray-900 dark:text-white">
-              {new Date(currentDeadline).toLocaleDateString()}
+        <div className="grid grid-cols-5 gap-3">
+          {quickAmounts.map((amount) => (
+            <div key={amount} className="flex flex-col gap-2">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleQuickAdd(amount)}
+                className="flex items-center justify-center gap-1 p-3 bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:hover:bg-green-800/40 text-green-700 dark:text-green-300 rounded-xl transition-colors"
+              >
+                <ArrowUp className="w-4 h-4" />
+                <span className="font-medium">${amount}</span>
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleQuickSubtract(amount)}
+                className="flex items-center justify-center gap-1 p-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-800/40 text-red-700 dark:text-red-300 rounded-xl transition-colors"
+              >
+                <ArrowDown className="w-3 h-3" />
+                <span className="text-sm">${amount}</span>
+              </motion.button>
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              {timeRemaining.days} days ({timeRemaining.weeks} weeks)
-            </div>
-          </div>
-        )}
+          ))}
+        </div>
       </div>
 
-      {/* Savings Calculator Tabs */}
-      <div className="mb-6">
-        <div className="flex rounded-lg bg-gray-100 dark:bg-gray-700 p-1 mb-4">
-          {[
-            { key: 'daily', label: 'Daily', show: showDailyView },
-            { key: 'weekly', label: 'Weekly', show: showWeeklyView },
-            { key: 'monthly', label: 'Monthly', show: showMonthlyView }
-          ].filter(tab => tab.show).map((tab) => (
+      {/* Time View Selector */}
+      <div className="mb-6 relative z-10">
+        <div className="flex bg-gray-100 dark:bg-gray-700 rounded-xl p-1">
+          {(['daily', 'weekly', 'monthly'] as TimeView[]).map((view) => (
             <button
-              key={tab.key}
-              onClick={() => setActiveView(tab.key as TimeView)}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                activeView === tab.key
-                  ? 'bg-white dark:bg-gray-600 text-blue-600 shadow-sm'
+              key={view}
+              onClick={() => setActiveView(view)}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
+                activeView === view
+                  ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-md'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
-              {tab.label}
+              {view.charAt(0).toUpperCase() + view.slice(1)}
             </button>
           ))}
         </div>
+      </div>
 
-        {/* Savings Amount Display */}
-        <div className="text-center p-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg mb-4">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Clock className="w-5 h-5 text-blue-600" />
-            <span className="text-sm text-blue-600 font-medium">
-              Save {activeView === 'daily' ? 'per day' : activeView === 'weekly' ? 'per week' : 'per month'}
+      {/* Required Savings Display */}
+      <motion.div
+        key={activeView}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`bg-gradient-to-r ${timeViewData.color} rounded-2xl p-6 text-white relative z-10 overflow-hidden`}
+      >
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <Zap className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="text-lg font-bold">Save {timeViewData.label}</h4>
+              <p className="text-white/80 text-sm">To reach your goal on time</p>
+            </div>
+          </div>
+          
+          <div className="flex items-baseline gap-2">
+            <span className="text-4xl font-bold">
+              ${timeViewData.amount.toLocaleString('en-US', { 
+                minimumFractionDigits: 0, 
+                maximumFractionDigits: 0 
+              })}
             </span>
+            <span className="text-white/80 text-lg">{timeViewData.period}</span>
           </div>
-          <div className="text-3xl font-bold text-blue-600 mb-1">
-            ${savingsNeeded[activeView].toLocaleString()}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            to reach your goal on time
-          </div>
-        </div>
-      </div>
-
-      {/* Current Savings Update */}
-      {allowManualUpdate && (
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Current Savings
-          </label>
-          <div className="flex items-center gap-3">
-            <div className="relative flex-1">
-              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="number"
-                value={savingsInput}
-                onChange={(e) => setSavingsInput(parseFloat(e.target.value) || 0)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                placeholder="Enter amount saved..."
-                min="0"
-                max={estimatedCost * 1.5}
-              />
+          
+          <div className="mt-4 flex items-center gap-4 text-white/80 text-sm">
+            <div className="flex items-center gap-1">
+              <Calendar className="w-4 h-4" />
+              <span>{daysUntilDeadline} days left</span>
             </div>
-            <button
-              onClick={handleSavingsUpdate}
-              disabled={savingsInput === currentSaved}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-            >
-              <PiggyBank className="w-4 h-4" />
-              Update
-            </button>
+            <div className="flex items-center gap-1">
+              <Target className="w-4 h-4" />
+              <span>${remaining.toLocaleString()} to go</span>
+            </div>
           </div>
         </div>
-      )}
+      </motion.div>
 
-      {/* Quick Actions */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-          Quick Add/Remove
-        </label>
-        <div className="grid grid-cols-3 gap-2">
-          {quickAmounts.map((amount) => (
-            <div key={amount} className="flex gap-1">
-              <button
-                onClick={() => handleQuickAdd(amount)}
-                className="flex-1 flex items-center justify-center gap-1 py-2 px-2 text-xs bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded hover:bg-green-200 dark:hover:bg-green-900/40 transition-colors"
-              >
-                <Plus className="w-3 h-3" />
-                ${amount}
-              </button>
-              <button
-                onClick={() => handleQuickSubtract(amount)}
-                className="flex-1 flex items-center justify-center gap-1 py-2 px-2 text-xs bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded hover:bg-red-200 dark:hover:bg-red-900/40 transition-colors"
-              >
-                <Minus className="w-3 h-3" />
-                ${amount}
-              </button>
-            </div>
-          ))}
+      {/* Stats Footer */}
+      <div className="grid grid-cols-3 gap-4 mt-6 relative z-10">
+        <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+          <TrendingUp className="w-5 h-5 text-blue-600 mx-auto mb-2" />
+          <div className="text-lg font-bold text-gray-900 dark:text-white">
+            {progress >= 100 ? 'Complete!' : `${(progress).toFixed(0)}%`}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Progress</div>
         </div>
-      </div>
-
-      {/* Goal Status */}
-      <div className={`p-4 rounded-lg flex items-center gap-3 ${
-        isGoalReached 
-          ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' 
-          : 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800'
-      }`}>
-        {isGoalReached ? (
-          <>
-            <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-              <Check className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="text-green-800 dark:text-green-300 font-semibold">
-                🎉 Goal Achieved!
-              </div>
-              <div className="text-green-600 dark:text-green-400 text-sm">
-                You've saved enough to reach your goal
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="text-gray-900 dark:text-white font-semibold">
-                Keep Saving!
-              </div>
-              <div className="text-gray-600 dark:text-gray-400 text-sm">
-                ${savingsNeeded.total.toLocaleString()} more to reach your goal
-              </div>
-            </div>
-          </>
-        )}
+        
+        <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+          <Calendar className="w-5 h-5 text-green-600 mx-auto mb-2" />
+          <div className="text-lg font-bold text-gray-900 dark:text-white">
+            {Math.max(0, daysUntilDeadline)}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Days Left</div>
+        </div>
+        
+        <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+          <DollarSign className="w-5 h-5 text-purple-600 mx-auto mb-2" />
+          <div className="text-lg font-bold text-gray-900 dark:text-white">
+            ${(currentAmount / Math.max(1, 90 - daysUntilDeadline)).toFixed(0)}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Daily Avg</div>
+        </div>
       </div>
     </motion.div>
   );
