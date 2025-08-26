@@ -14,6 +14,7 @@ import SettingsPage from './pages/SettingsPage';
 import AgentDashboardPage from './pages/AgentDashboardPage';
 import Layout from './components/Layout';
 import LoadingSpinner from './components/LoadingSpinner';
+import EnhancedGoalTest from './components/EnhancedGoalTest';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -208,6 +209,9 @@ function App() {
 
             {/* Dev Route for Onboarding Preview */}
             <Route path="/dev-onboarding" element={<OnboardingPage />} />
+
+            {/* Enhanced AI Goal System Test */}
+            <Route path="/enhanced-test" element={<EnhancedGoalTest />} />
 
             {/* Redirect old goals route to dashboard */}
             <Route path="/goals" element={<Navigate to="/dashboard" replace />} />

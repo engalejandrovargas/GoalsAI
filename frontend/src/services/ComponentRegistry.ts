@@ -91,6 +91,16 @@ const LearningDashboard = React.lazy(() => import('../components/dashboard/Learn
 const HealthDashboard = React.lazy(() => import('../components/dashboard/HealthDashboard'));
 const BusinessDashboard = React.lazy(() => import('../components/dashboard/BusinessDashboard'));
 
+// NEW COMPONENTS - Recently Added
+const InvestmentTracker = React.lazy(() => import('../components/dashboard/InvestmentTracker'));
+const ResourceLibrary = React.lazy(() => import('../components/dashboard/ResourceLibrary'));
+const DocumentChecklist = React.lazy(() => import('../components/dashboard/DocumentChecklist'));
+const CareerDashboard = React.lazy(() => import('../components/dashboard/CareerDashboard'));
+const WeatherWidget = React.lazy(() => import('../components/dashboard/WeatherWidget'));
+const SkillAssessment = React.lazy(() => import('../components/dashboard/SkillAssessment'));
+const WorkoutTracker = React.lazy(() => import('../components/dashboard/WorkoutTracker'));
+const ReadingTracker = React.lazy(() => import('../components/dashboard/ReadingTracker'));
+
 export class ComponentRegistry {
   private static instance: ComponentRegistry;
   private components: Map<ComponentType, ComponentConfig> = new Map();
@@ -307,6 +317,110 @@ export class ComponentRegistry {
       },
       requirements: {
         goalTypes: ['business', 'career'],
+      }
+    });
+
+    // NEW COMPONENTS - Register the recently added components
+    this.registerComponent('investment_tracker', {
+      component: InvestmentTracker,
+      defaultProps: {
+        showPortfolioBreakdown: true,
+        showPerformanceChart: true,
+        showRebalancing: true,
+        allowTransactions: true,
+      },
+      requirements: {
+        goalTypes: ['investment', 'financial'],
+        minEstimatedCost: 1000,
+      }
+    });
+
+    this.registerComponent('resource_library', {
+      component: ResourceLibrary,
+      defaultProps: {
+        allowAddResources: true,
+        showCommunityRatings: true,
+        showProgress: true,
+      },
+      requirements: {
+        goalTypes: ['education', 'language', 'skill_development', 'career'],
+      }
+    });
+
+    this.registerComponent('document_checklist', {
+      component: DocumentChecklist,
+      defaultProps: {
+        allowEdit: true,
+        showProgress: true,
+        showUpload: true,
+      },
+      requirements: {
+        goalTypes: ['travel', 'business', 'immigration', 'education', 'legal'],
+      }
+    });
+
+    this.registerComponent('career_dashboard', {
+      component: CareerDashboard,
+      defaultProps: {
+        showApplications: true,
+        showNetworking: true,
+        showSkills: true,
+        showProgress: true,
+      },
+      requirements: {
+        goalTypes: ['career'],
+      }
+    });
+
+    this.registerComponent('weather_widget', {
+      component: WeatherWidget,
+      defaultProps: {
+        showForecast: true,
+        showHourly: true,
+        showAlerts: true,
+        compact: false,
+      },
+      requirements: {
+        goalTypes: ['travel', 'fitness', 'outdoor'],
+        agents: ['weather'],
+      }
+    });
+
+    this.registerComponent('skill_assessment', {
+      component: SkillAssessment,
+      defaultProps: {
+        showProgress: true,
+        showRecommendations: true,
+        allowEdit: true,
+      },
+      requirements: {
+        goalTypes: ['career', 'education', 'skill_development'],
+      }
+    });
+
+    this.registerComponent('workout_tracker', {
+      component: WorkoutTracker,
+      defaultProps: {
+        showTimer: true,
+        showHistory: true,
+        showProgress: true,
+        allowEdit: true,
+      },
+      requirements: {
+        goalTypes: ['fitness', 'weight_loss', 'wellness'],
+      }
+    });
+
+    this.registerComponent('reading_tracker', {
+      component: ReadingTracker,
+      defaultProps: {
+        showProgress: true,
+        showStatistics: true,
+        showRecommendations: true,
+        allowEdit: true,
+      },
+      requirements: {
+        goalTypes: ['education', 'personal_development', 'reading'],
       }
     });
   }

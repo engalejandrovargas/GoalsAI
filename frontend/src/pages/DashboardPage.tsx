@@ -45,6 +45,7 @@ import { SmartGoalCard } from '../components/SmartGoalCard';
 import { apiService } from '../services/api';
 import { useConfirmation } from '../hooks/useConfirmation';
 import toast from 'react-hot-toast';
+import NotificationBell from '../components/NotificationBell';
 
 interface Goal {
   id: string;
@@ -473,7 +474,17 @@ const DashboardPage: React.FC = () => {
               Track your progress and turn dreams into achievable plans
             </p>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-4">
+            {/* Beautiful Notification Bell */}
+            <NotificationBell 
+              goals={goals} 
+              onGoalClick={(goal) => {
+                setSelectedGoal(goal);
+                setProgressModalTab('progress');
+                setShowProgressModal(true);
+              }} 
+            />
+            
             <button
               onClick={() => setView(view === 'dashboard' ? 'all-goals' : 'dashboard')}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -491,121 +502,18 @@ const DashboardPage: React.FC = () => {
               <Target className="w-4 h-4 mr-2" />
               Create Goal
             </button>
+            <button
+              onClick={() => window.open('/enhanced-test', '_blank')}
+              className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-medium py-2 px-4 rounded-lg flex items-center transition-colors shadow-lg hover:shadow-xl transform hover:scale-105"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              AI System Test
+            </button>
           </div>
         </div>
 
       </motion.div>
 
-      {/* Dashboard Insights - Only show in dashboard view */}
-      {view === 'dashboard' && goals.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"
-        >
-
-
-          {/* Priority Goals */}
-          <div className={`${colors.cardBackground} rounded-xl shadow-sm border ${colors.cardBorder} p-6`}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className={`text-lg font-semibold ${colors.textPrimary} flex items-center`}>
-                <Zap className="w-5 h-5 text-orange-600 mr-2" />
-                Priority Tasks
-              </h3>
-            </div>
-            <div className="space-y-3">
-              {goals
-                .filter(g => g.priority === 'high' && g.status !== 'completed')
-                .slice(0, 3)
-                .map((goal) => (
-                  <div key={goal.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900 truncate">{goal.title}</p>
-                      <p className="text-xs text-red-600 flex items-center mt-1">
-                        <AlertCircle className="w-3 h-3 mr-1" />
-                        High Priority • {getStatusInfo(goal.status).label}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => handleShowProgress(goal)}
-                      className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
-                    >
-                      View
-                    </button>
-                  </div>
-                ))}
-              {goals.filter(g => g.priority === 'high' && g.status !== 'completed').length === 0 && (
-                <div className="text-center py-4 text-gray-500">
-                  <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-green-500" />
-                  <p className="text-sm">No high priority tasks pending!</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Upcoming Deadlines */}
-          <div className={`${colors.cardBackground} rounded-xl shadow-sm border ${colors.cardBorder} p-6`}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className={`text-lg font-semibold ${colors.textPrimary} flex items-center`}>
-                <Timer className="w-5 h-5 text-purple-600 mr-2" />
-                Upcoming Deadlines
-              </h3>
-            </div>
-            <div className="space-y-3">
-              {goals
-                .filter(g => g.targetDate && g.status !== 'completed')
-                .sort((a, b) => new Date(a.targetDate!).getTime() - new Date(b.targetDate!).getTime())
-                .slice(0, 3)
-                .map((goal) => {
-                  const daysLeft = Math.ceil((new Date(goal.targetDate!).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                  const isOverdue = daysLeft < 0;
-                  const isUrgent = daysLeft <= 7 && daysLeft >= 0;
-                  
-                  return (
-                    <div key={goal.id} className={`flex items-center justify-between p-3 rounded-lg border ${
-                      isOverdue ? 'bg-red-50 border-red-100' : 
-                      isUrgent ? 'bg-yellow-50 border-yellow-100' : 
-                      'bg-blue-50 border-blue-100'
-                    }`}>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900 truncate">{goal.title}</p>
-                        <p className={`text-xs flex items-center mt-1 ${
-                          isOverdue ? 'text-red-600' : 
-                          isUrgent ? 'text-yellow-600' : 
-                          'text-blue-600'
-                        }`}>
-                          <Calendar className="w-3 h-3 mr-1" />
-                          {isOverdue ? 
-                            `Overdue by ${Math.abs(daysLeft)} days` :
-                            daysLeft === 0 ? 'Due today' :
-                            `${daysLeft} days left`
-                          }
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => handleShowProgress(goal)}
-                        className={`text-xs px-2 py-1 rounded-md hover:opacity-80 transition-colors ${
-                          isOverdue ? 'bg-red-100 text-red-700' : 
-                          isUrgent ? 'bg-yellow-100 text-yellow-700' : 
-                          'bg-blue-100 text-blue-700'
-                        }`}
-                      >
-                        View
-                      </button>
-                    </div>
-                  );
-                })}
-              {goals.filter(g => g.targetDate && g.status !== 'completed').length === 0 && (
-                <div className="text-center py-4 text-gray-500">
-                  <Calendar className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm">No upcoming deadlines</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </motion.div>
-      )}
 
       {/* Goals Section */}
       <motion.div

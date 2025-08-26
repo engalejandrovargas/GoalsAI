@@ -184,23 +184,44 @@ const TaskManager: React.FC<TaskManagerProps> = ({
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-300';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300';
-      case 'low': return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-300';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300';
+      case 'high': return 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30 border-none';
+      case 'medium': return 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30 border-none';
+      case 'low': return 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-500/30 border-none';
+      default: return 'bg-gradient-to-r from-gray-500 to-slate-600 text-white shadow-lg shadow-gray-500/30 border-none';
+    }
+  };
+
+  const getPriorityIcon = (priority: string) => {
+    switch (priority) {
+      case 'high': return '🔥';
+      case 'medium': return '⚡';
+      case 'low': return '🌱';
+      default: return '📌';
     }
   };
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
-      planning: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300',
-      booking: 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300',
-      preparation: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300',
-      documentation: 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300',
-      financial: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300',
-      general: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+      planning: 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-lg shadow-blue-500/30',
+      booking: 'bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-lg shadow-purple-500/30',
+      preparation: 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/30',
+      documentation: 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/30',
+      financial: 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30',
+      general: 'bg-gradient-to-r from-gray-500 to-slate-600 text-white shadow-lg shadow-gray-500/30',
     };
     return colors[category] || colors.general;
+  };
+
+  const getCategoryIcon = (category: string) => {
+    const icons: Record<string, string> = {
+      planning: '📅',
+      booking: '🏨',
+      preparation: '🎡',
+      documentation: '📄',
+      financial: '💰',
+      general: '📂',
+    };
+    return icons[category] || icons.general;
   };
 
   const completedTasks = tasks.filter(task => task.completed).length;
@@ -522,35 +543,44 @@ const TaskManager: React.FC<TaskManagerProps> = ({
                   
                   <div className="flex flex-wrap items-center gap-2 mt-2">
                     {showPriority && (
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
-                        <Flag className="w-3 h-3 inline mr-1" />
+                      <div className={`px-3 py-2 rounded-2xl text-xs font-bold uppercase tracking-wider ${getPriorityColor(task.priority)} flex items-center gap-2 transform hover:scale-105 transition-all duration-200`}>
+                        <span className="text-sm">{getPriorityIcon(task.priority)}</span>
+                        <Flag className="w-3 h-3" />
                         {task.priority}
-                      </span>
+                      </div>
                     )}
                     
                     {showCategories && (
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(task.category)}`}>
-                        <Tag className="w-3 h-3 inline mr-1" />
+                      <div className={`px-3 py-2 rounded-xl text-xs font-medium ${getCategoryColor(task.category)} flex items-center gap-2 transform hover:scale-105 transition-all duration-200`}>
+                        <span>{getCategoryIcon(task.category)}</span>
+                        <Tag className="w-3 h-3" />
                         {task.category}
-                      </span>
+                      </div>
                     )}
                     
                     {showDeadlines && task.deadline && (
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${
+                      <div className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transform hover:scale-105 transition-all duration-200 ${
                         isTaskOverdue(task) 
-                          ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300' 
-                          : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300'
+                          ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-600/40 animate-pulse' 
+                          : new Date(task.deadline) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30'
+                          : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
                       }`}>
-                        <Calendar className="w-3 h-3" />
-                        {new Date(task.deadline).toLocaleDateString()}
-                      </span>
+                        <Calendar className="w-4 h-4" />
+                        <span>{new Date(task.deadline).toLocaleDateString()}</span>
+                        {isTaskOverdue(task) && <span>🚨</span>}
+                        {!isTaskOverdue(task) && new Date(task.deadline) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) && (
+                          <span>⏰</span>
+                        )}
+                      </div>
                     )}
                     
                     {task.estimatedTime && (
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300 flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {task.estimatedTime}
-                      </span>
+                      <div className="px-3 py-2 rounded-xl text-xs font-medium bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg shadow-purple-500/30 flex items-center gap-2 transform hover:scale-105 transition-all duration-200">
+                        <Clock className="w-4 h-4" />
+                        <span>{task.estimatedTime}</span>
+                        <span>⏱️</span>
+                      </div>
                     )}
                   </div>
                   

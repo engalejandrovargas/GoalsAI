@@ -1,8 +1,11 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { ComponentRegistry } from '../../services/ComponentRegistry';
-import { Loader2, Settings, Maximize2, Minimize2, RefreshCw, Target, X } from 'lucide-react';
+import { enhancedGoalService } from '../../services/EnhancedGoalService';
+import type { GoalWithDashboard } from '../../services/EnhancedGoalService';
+import { Loader2, Settings, Maximize2, Minimize2, RefreshCw, Target, X, Sparkles } from 'lucide-react';
 import ErrorBoundary from '../ErrorBoundary';
+import toast from 'react-hot-toast';
 
 // Local type definitions to avoid import issues
 type ComponentType = 

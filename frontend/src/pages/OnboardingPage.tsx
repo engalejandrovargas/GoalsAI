@@ -58,18 +58,18 @@ const OnboardingPage: React.FC = () => {
   ];
 
   const quickGoalSuggestions = [
-    { emoji: '🌍', text: 'Learn Spanish', category: 'Language' },
-    { emoji: '🏃‍♀️', text: 'Run a 5K', category: 'Fitness' },
-    { emoji: '💰', text: 'Save $5,000', category: 'Financial' },
-    { emoji: '📚', text: 'Read 12 books this year', category: 'Learning' },
-    { emoji: '🍳', text: 'Learn to cook Italian food', category: 'Skill' },
-    { emoji: '✈️', text: 'Travel to Japan', category: 'Travel' },
-    { emoji: '💻', text: 'Learn Python programming', category: 'Tech' },
-    { emoji: '🎸', text: 'Learn to play guitar', category: 'Creative' },
-    { emoji: '🏠', text: 'Buy my first home', category: 'Major Purchase' },
-    { emoji: '🚗', text: 'Buy a car', category: 'Transportation' },
-    { emoji: '🎨', text: 'Start a side business', category: 'Business' },
-    { emoji: '🧘‍♀️', text: 'Meditate daily for 6 months', category: 'Wellness' },
+    { emoji: '🌍', text: 'Learn Spanish fluently in 6 months', category: 'Language' },
+    { emoji: '🏃‍♀️', text: 'Run a 5K race in 3 months', category: 'Fitness' },
+    { emoji: '💰', text: 'Save $5,000 in 12 months', category: 'Financial' },
+    { emoji: '📚', text: 'Read 12 books in one year', category: 'Learning' },
+    { emoji: '🍳', text: 'Master Italian cooking in 4 months', category: 'Skill' },
+    { emoji: '✈️', text: 'Take a Japan trip in 8 months', category: 'Travel' },
+    { emoji: '💻', text: 'Learn Python programming in 5 months', category: 'Tech' },
+    { emoji: '🎸', text: 'Play guitar songs in 6 months', category: 'Creative' },
+    { emoji: '🏠', text: 'Buy my first home in 2 years', category: 'Major Purchase' },
+    { emoji: '🚗', text: 'Buy a reliable car in 10 months', category: 'Transportation' },
+    { emoji: '🎨', text: 'Launch a side business in 9 months', category: 'Business' },
+    { emoji: '🧘‍♀️', text: 'Build daily meditation habit in 3 months', category: 'Wellness' },
   ];
 
 
@@ -489,21 +489,21 @@ const OnboardingPage: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Choose Your First Goal ✨
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                   {quickGoalSuggestions.map((goal, index) => (
                     <button
                       key={index}
                       onClick={() => setData(prev => ({ ...prev, firstGoal: goal.text }))}
-                      className={`p-3 rounded-lg border transition-all text-left hover:shadow-md ${
+                      className={`p-4 rounded-lg border transition-all text-left hover:shadow-md ${
                         data.firstGoal === goal.text
                           ? 'bg-blue-500 text-white border-blue-500 shadow-lg'
                           : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300'
                       }`}
                     >
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xl">{goal.emoji}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{goal.text}</p>
+                      <div className="flex items-center space-x-3">
+                        <span className="text-xl flex-shrink-0">{goal.emoji}</span>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{goal.text}</p>
                           <p className={`text-xs ${
                             data.firstGoal === goal.text ? 'text-blue-100' : 'text-gray-500'
                           }`}>{goal.category}</p>

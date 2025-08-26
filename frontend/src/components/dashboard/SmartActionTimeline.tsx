@@ -127,9 +127,18 @@ const SmartActionTimeline: React.FC<SmartActionTimelineProps> = ({
 
   const categories = ['Planning', 'Financial', 'Documentation', 'Booking', 'Preparation'];
   const priorityColors = {
-    high: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-    medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-    low: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+    high: 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30 border-red-300',
+    medium: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30 border-amber-300',
+    low: 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-500/30 border-emerald-300',
+  };
+
+  const getPriorityIcon = (priority: string) => {
+    switch (priority) {
+      case 'high': return '🔥';
+      case 'medium': return '⚡';
+      case 'low': return '🌱';
+      default: return '📌';
+    }
   };
 
   const filteredTasks = tasks.filter(task => {
@@ -251,10 +260,11 @@ const SmartActionTimeline: React.FC<SmartActionTimelineProps> = ({
                     )}
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColors[task.priority]}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`px-4 py-2 rounded-2xl text-xs font-bold uppercase tracking-wider ${priorityColors[task.priority]} flex items-center gap-2 transform hover:scale-105 transition-all duration-200`}>
+                      <span className="text-sm">{getPriorityIcon(task.priority)}</span>
                       {task.priority}
-                    </span>
+                    </div>
                     {allowEdit && (
                       <button className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                         <MoreHorizontal className="w-4 h-4" />
@@ -264,28 +274,42 @@ const SmartActionTimeline: React.FC<SmartActionTimelineProps> = ({
                 </div>
                 
                 <div className="flex items-center justify-between ml-9">
-                  <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      <span>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No date'}</span>
-                    </div>
-                    
-                    {task.estimatedHours && (
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{task.estimatedHours}h</span>
+                  <div className="flex items-center gap-4 text-sm">
+                    {task.dueDate && (
+                      <div className={`flex items-center gap-2 px-3 py-2 rounded-xl font-medium ${
+                        isOverdue 
+                          ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30' 
+                          : new Date(task.dueDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30'
+                          : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
+                      } transform hover:scale-105 transition-all duration-200`}>
+                        <Calendar className="w-4 h-4" />
+                        <span>{new Date(task.dueDate).toLocaleDateString()}</span>
+                        {isOverdue && <span className="text-xs">⚠️ OVERDUE</span>}
+                        {!isOverdue && new Date(task.dueDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) && (
+                          <span className="text-xs">⏰ DUE SOON</span>
+                        )}
                       </div>
                     )}
                     
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      task.category === 'Planning' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
-                      task.category === 'Financial' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
-                      task.category === 'Documentation' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' :
-                      task.category === 'Booking' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' :
-                      'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
-                    }`}>
+                    {task.estimatedHours && (
+                      <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl font-medium shadow-lg shadow-purple-500/30 transform hover:scale-105 transition-all duration-200">
+                        <Clock className="w-4 h-4" />
+                        <span>{task.estimatedHours}h</span>
+                        <span className="text-xs">⏱️</span>
+                      </div>
+                    )}
+                    
+                    <div className={`px-3 py-2 rounded-xl text-xs font-medium transform hover:scale-105 transition-all duration-200 ${
+                      task.category === 'Planning' ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-lg shadow-blue-500/30' :
+                      task.category === 'Financial' ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/30' :
+                      task.category === 'Documentation' ? 'bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-lg shadow-purple-500/30' :
+                      task.category === 'Booking' ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/30' :
+                      'bg-gradient-to-r from-gray-500 to-slate-600 text-white shadow-lg shadow-gray-500/30'
+                    } flex items-center gap-1`}>
+                      <span>📂</span>
                       {task.category}
-                    </span>
+                    </div>
                   </div>
                   
                   {isBlocked && (
@@ -296,9 +320,9 @@ const SmartActionTimeline: React.FC<SmartActionTimelineProps> = ({
                   )}
                   
                   {isOverdue && (
-                    <div className="flex items-center gap-1 text-red-600 dark:text-red-400">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl font-bold text-xs shadow-lg shadow-red-600/40 animate-pulse">
                       <Clock className="w-4 h-4" />
-                      <span className="text-xs">Overdue</span>
+                      <span>🚨 OVERDUE</span>
                     </div>
                   )}
                 </div>

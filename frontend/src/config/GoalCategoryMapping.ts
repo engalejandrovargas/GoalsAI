@@ -21,9 +21,9 @@ export const GOAL_CATEGORY_MAPPING: Record<string, GoalCategoryConfig> = {
     description: 'Save money for specific purposes or general financial security',
     defaultDeadlineDays: 180, // 6 months
     defaultEstimatedCost: 5000,
-    requiredComponents: ['simple_savings_tracker', 'completion_meter', 'agent_info'],
-    contextualComponents: ['progress_chart', 'milestone_timeline', 'habit_tracker'],
-    optionalComponents: ['budget_breakdown', 'expense_tracker', 'motivation_center'],
+    requiredComponents: ['simple_savings_tracker', 'financial_calculator', 'completion_meter', 'agent_info'],
+    contextualComponents: ['progress_chart', 'milestone_timeline', 'budget_breakdown', 'smart_action_timeline'],
+    optionalComponents: ['expense_tracker', 'habit_tracker', 'task_manager', 'calendar_widget', 'streak_counter'],
     suggestedAgents: ['financial'],
     examples: ['Save $5000 for emergency fund', 'Save for vacation', 'Save for down payment']
   },
@@ -34,9 +34,9 @@ export const GOAL_CATEGORY_MAPPING: Record<string, GoalCategoryConfig> = {
     description: 'Build wealth through investments and financial planning',
     defaultDeadlineDays: 1825, // 5 years
     defaultEstimatedCost: 50000,
-    requiredComponents: ['financial_calculator', 'investment_tracker', 'market_data', 'agent_info'],
-    contextualComponents: ['progress_chart', 'milestone_timeline', 'budget_breakdown'],
-    optionalComponents: ['currency_converter', 'goal_reflection', 'social_accountability'],
+    requiredComponents: ['investment_tracker', 'financial_calculator', 'progress_chart', 'agent_info'],
+    contextualComponents: ['milestone_timeline', 'budget_breakdown', 'progress_dashboard', 'smart_action_timeline'],
+    optionalComponents: ['currency_converter', 'task_manager', 'calendar_widget', 'resource_library', 'reading_tracker'],
     suggestedAgents: ['financial', 'research'],
     examples: ['Build $50k investment portfolio', 'Retire by 40', 'Generate passive income']
   },
@@ -48,8 +48,8 @@ export const GOAL_CATEGORY_MAPPING: Record<string, GoalCategoryConfig> = {
     defaultDeadlineDays: 365, // 1 year
     defaultEstimatedCost: 25000,
     requiredComponents: ['debt_payoff_tracker', 'financial_calculator', 'progress_chart', 'agent_info'],
-    contextualComponents: ['milestone_timeline', 'budget_breakdown', 'expense_tracker'],
-    optionalComponents: ['habit_tracker', 'motivation_center', 'goal_reflection'],
+    contextualComponents: ['milestone_timeline', 'budget_breakdown', 'expense_tracker', 'completion_meter'],
+    optionalComponents: ['habit_tracker', 'calendar_widget', 'task_manager', 'smart_action_timeline', 'mood_tracker'],
     suggestedAgents: ['financial'],
     examples: ['Pay off credit card debt', 'Eliminate student loans', 'Become debt-free']
   },
@@ -62,8 +62,8 @@ export const GOAL_CATEGORY_MAPPING: Record<string, GoalCategoryConfig> = {
     defaultDeadlineDays: 730, // 2 years
     defaultEstimatedCost: 500,
     requiredComponents: ['learning_dashboard', 'skill_assessment', 'habit_tracker', 'agent_info'],
-    contextualComponents: ['streak_counter', 'progress_chart', 'milestone_timeline'],
-    optionalComponents: ['resource_library', 'social_accountability', 'motivation_center'],
+    contextualComponents: ['streak_counter', 'progress_chart', 'milestone_timeline', 'reading_tracker'],
+    optionalComponents: ['resource_library', 'calendar_widget', 'task_manager', 'mood_tracker', 'progress_dashboard'],
     suggestedAgents: ['learning', 'research'],
     examples: ['Learn Spanish fluently', 'Pass TOEFL exam', 'Become conversational in French']
   },
@@ -75,8 +75,8 @@ export const GOAL_CATEGORY_MAPPING: Record<string, GoalCategoryConfig> = {
     defaultDeadlineDays: 365, // 1 year
     defaultEstimatedCost: 2000,
     requiredComponents: ['learning_dashboard', 'project_timeline', 'resource_library', 'agent_info'],
-    contextualComponents: ['skill_assessment', 'reading_tracker', 'progress_chart'],
-    optionalComponents: ['calendar_widget', 'document_checklist', 'budget_breakdown'],
+    contextualComponents: ['skill_assessment', 'reading_tracker', 'progress_chart', 'task_manager'],
+    optionalComponents: ['calendar_widget', 'document_checklist', 'budget_breakdown', 'completion_meter', 'milestone_timeline'],
     suggestedAgents: ['learning', 'research'],
     examples: ['Get AWS certification', 'Complete MBA', 'Learn data science']
   },
@@ -88,8 +88,8 @@ export const GOAL_CATEGORY_MAPPING: Record<string, GoalCategoryConfig> = {
     defaultDeadlineDays: 180, // 6 months
     defaultEstimatedCost: 500,
     requiredComponents: ['skill_assessment', 'habit_tracker', 'progress_chart', 'agent_info'],
-    contextualComponents: ['learning_dashboard', 'resource_library', 'project_timeline'],
-    optionalComponents: ['reading_tracker', 'social_accountability', 'motivation_center'],
+    contextualComponents: ['learning_dashboard', 'resource_library', 'project_timeline', 'streak_counter'],
+    optionalComponents: ['reading_tracker', 'task_manager', 'calendar_widget', 'completion_meter', 'progress_dashboard'],
     suggestedAgents: ['learning', 'research'],
     examples: ['Master React development', 'Improve public speaking', 'Learn photography']
   },
@@ -101,9 +101,9 @@ export const GOAL_CATEGORY_MAPPING: Record<string, GoalCategoryConfig> = {
     description: 'Lose weight and improve body composition',
     defaultDeadlineDays: 180, // 6 months
     defaultEstimatedCost: 1000,
-    requiredComponents: ['health_dashboard', 'weight_tracker', 'habit_tracker', 'agent_info'],
-    contextualComponents: ['workout_tracker', 'progress_chart', 'milestone_timeline'],
-    optionalComponents: ['mood_tracker', 'motivation_center', 'social_accountability'],
+    requiredComponents: ['health_dashboard', 'workout_tracker', 'habit_tracker', 'agent_info'],
+    contextualComponents: ['progress_chart', 'milestone_timeline', 'completion_meter', 'streak_counter'],
+    optionalComponents: ['mood_tracker', 'calendar_widget', 'task_manager', 'smart_action_timeline', 'budget_breakdown'],
     suggestedAgents: ['health', 'research'],
     examples: ['Lose 30 pounds', 'Reach target BMI', 'Fit into old clothes']
   },
@@ -115,8 +115,8 @@ export const GOAL_CATEGORY_MAPPING: Record<string, GoalCategoryConfig> = {
     defaultDeadlineDays: 90, // 3 months
     defaultEstimatedCost: 500,
     requiredComponents: ['health_dashboard', 'workout_tracker', 'habit_tracker', 'agent_info'],
-    contextualComponents: ['progress_chart', 'streak_counter', 'milestone_timeline'],
-    optionalComponents: ['weight_tracker', 'motivation_center', 'social_accountability'],
+    contextualComponents: ['progress_chart', 'streak_counter', 'milestone_timeline', 'completion_meter'],
+    optionalComponents: ['calendar_widget', 'task_manager', 'mood_tracker', 'progress_dashboard', 'resource_library'],
     suggestedAgents: ['health'],
     examples: ['Run a 5K', 'Build muscle mass', 'Exercise 5x per week']
   },
@@ -128,8 +128,8 @@ export const GOAL_CATEGORY_MAPPING: Record<string, GoalCategoryConfig> = {
     defaultDeadlineDays: 365, // 1 year
     defaultEstimatedCost: 1500,
     requiredComponents: ['health_dashboard', 'habit_tracker', 'mood_tracker', 'agent_info'],
-    contextualComponents: ['progress_chart', 'milestone_timeline', 'goal_reflection'],
-    optionalComponents: ['weight_tracker', 'workout_tracker', 'motivation_center'],
+    contextualComponents: ['progress_chart', 'milestone_timeline', 'streak_counter', 'completion_meter'],
+    optionalComponents: ['workout_tracker', 'calendar_widget', 'task_manager', 'reading_tracker', 'resource_library'],
     suggestedAgents: ['health', 'research'],
     examples: ['Improve sleep quality', 'Reduce stress', 'Build healthy routines']
   },
@@ -142,10 +142,24 @@ export const GOAL_CATEGORY_MAPPING: Record<string, GoalCategoryConfig> = {
     defaultDeadlineDays: 365, // 1 year
     defaultEstimatedCost: 5000,
     requiredComponents: ['financial_calculator', 'smart_action_timeline', 'progress_dashboard', 'agent_info'],
-    contextualComponents: ['budget_breakdown', 'currency_converter', 'calendar_widget', 'project_timeline'],
-    optionalComponents: ['travel_dashboard', 'expense_tracker', 'weather_widget', 'document_checklist'],
+    contextualComponents: ['budget_breakdown', 'currency_converter', 'calendar_widget', 'document_checklist'],
+    optionalComponents: ['weather_widget', 'expense_tracker', 'task_manager', 'milestone_timeline', 'resource_library'],
     suggestedAgents: ['travel', 'financial', 'weather'],
     examples: ['Trip to Japan', 'European backpacking', 'Family vacation to Disney']
+  },
+
+  // === IMMIGRATION ===
+  immigration: {
+    id: 'immigration',
+    name: 'Immigration & Legal',
+    description: 'Navigate immigration processes and legal requirements',
+    defaultDeadlineDays: 365, // 1 year
+    defaultEstimatedCost: 5000,
+    requiredComponents: ['document_checklist', 'project_timeline', 'financial_calculator', 'agent_info'],
+    contextualComponents: ['task_manager', 'calendar_widget', 'milestone_timeline', 'progress_chart'],
+    optionalComponents: ['budget_breakdown', 'expense_tracker', 'resource_library', 'completion_meter', 'progress_dashboard'],
+    suggestedAgents: ['research'],
+    examples: ['Get permanent residency', 'Apply for citizenship', 'Work visa application']
   },
 
   // === CAREER & BUSINESS ===
@@ -156,8 +170,8 @@ export const GOAL_CATEGORY_MAPPING: Record<string, GoalCategoryConfig> = {
     defaultDeadlineDays: 365, // 1 year
     defaultEstimatedCost: 2000,
     requiredComponents: ['career_dashboard', 'skill_assessment', 'project_timeline', 'agent_info'],
-    contextualComponents: ['learning_dashboard', 'resource_library', 'milestone_timeline'],
-    optionalComponents: ['document_checklist', 'social_accountability', 'goal_reflection'],
+    contextualComponents: ['learning_dashboard', 'resource_library', 'milestone_timeline', 'task_manager'],
+    optionalComponents: ['document_checklist', 'calendar_widget', 'reading_tracker', 'progress_chart', 'completion_meter'],
     suggestedAgents: ['research', 'learning'],
     examples: ['Get promoted', 'Change careers', 'Find dream job']
   },
@@ -169,8 +183,8 @@ export const GOAL_CATEGORY_MAPPING: Record<string, GoalCategoryConfig> = {
     defaultDeadlineDays: 730, // 2 years
     defaultEstimatedCost: 10000,
     requiredComponents: ['business_dashboard', 'financial_calculator', 'project_timeline', 'agent_info'],
-    contextualComponents: ['market_data', 'budget_breakdown', 'milestone_timeline'],
-    optionalComponents: ['resource_library', 'document_checklist', 'social_accountability'],
+    contextualComponents: ['budget_breakdown', 'milestone_timeline', 'task_manager', 'progress_chart'],
+    optionalComponents: ['resource_library', 'document_checklist', 'expense_tracker', 'calendar_widget', 'reading_tracker'],
     suggestedAgents: ['research', 'financial', 'business'],
     examples: ['Launch startup', 'Open restaurant', 'Build SaaS product']
   },
@@ -183,8 +197,8 @@ export const GOAL_CATEGORY_MAPPING: Record<string, GoalCategoryConfig> = {
     defaultDeadlineDays: 90, // 3 months
     defaultEstimatedCost: 100,
     requiredComponents: ['habit_tracker', 'streak_counter', 'completion_meter', 'agent_info'],
-    contextualComponents: ['progress_chart', 'mood_tracker', 'milestone_timeline'],
-    optionalComponents: ['motivation_center', 'goal_reflection', 'social_accountability'],
+    contextualComponents: ['progress_chart', 'mood_tracker', 'milestone_timeline', 'smart_action_timeline'],
+    optionalComponents: ['calendar_widget', 'task_manager', 'reading_tracker', 'progress_dashboard', 'resource_library'],
     suggestedAgents: ['research'],
     examples: ['Read daily', 'Meditate every morning', 'Quit smoking']
   },
@@ -196,8 +210,8 @@ export const GOAL_CATEGORY_MAPPING: Record<string, GoalCategoryConfig> = {
     defaultDeadlineDays: 180, // 6 months
     defaultEstimatedCost: 500,
     requiredComponents: ['project_timeline', 'task_manager', 'progress_chart', 'agent_info'],
-    contextualComponents: ['milestone_timeline', 'resource_library', 'habit_tracker'],
-    optionalComponents: ['calendar_widget', 'motivation_center', 'social_accountability'],
+    contextualComponents: ['milestone_timeline', 'resource_library', 'habit_tracker', 'completion_meter'],
+    optionalComponents: ['calendar_widget', 'reading_tracker', 'mood_tracker', 'progress_dashboard', 'skill_assessment'],
     suggestedAgents: ['research'],
     examples: ['Write a novel', 'Create art portfolio', 'Compose album']
   },
@@ -208,11 +222,25 @@ export const GOAL_CATEGORY_MAPPING: Record<string, GoalCategoryConfig> = {
     description: 'Improve relationships and social connections',
     defaultDeadlineDays: 180, // 6 months
     defaultEstimatedCost: 200,
-    requiredComponents: ['goal_reflection', 'habit_tracker', 'milestone_timeline', 'agent_info'],
-    contextualComponents: ['mood_tracker', 'social_accountability', 'progress_chart'],
-    optionalComponents: ['calendar_widget', 'motivation_center', 'resource_library'],
+    requiredComponents: ['mood_tracker', 'habit_tracker', 'milestone_timeline', 'agent_info'],
+    contextualComponents: ['progress_chart', 'calendar_widget', 'task_manager', 'completion_meter'],
+    optionalComponents: ['resource_library', 'reading_tracker', 'progress_dashboard', 'smart_action_timeline', 'streak_counter'],
     suggestedAgents: ['research'],
     examples: ['Improve marriage', 'Make new friends', 'Better work relationships']
+  },
+
+  // === READING GOALS ===
+  reading: {
+    id: 'reading',
+    name: 'Reading & Literature',
+    description: 'Read books, improve reading habits, and expand knowledge',
+    defaultDeadlineDays: 365, // 1 year
+    defaultEstimatedCost: 300,
+    requiredComponents: ['reading_tracker', 'habit_tracker', 'progress_chart', 'agent_info'],
+    contextualComponents: ['streak_counter', 'milestone_timeline', 'completion_meter', 'resource_library'],
+    optionalComponents: ['calendar_widget', 'task_manager', 'mood_tracker', 'progress_dashboard', 'skill_assessment'],
+    suggestedAgents: ['research'],
+    examples: ['Read 52 books this year', 'Read all Shakespeare plays', 'Complete personal library']
   },
 
   // === SIMPLE CATEGORIES ===
@@ -222,23 +250,9 @@ export const GOAL_CATEGORY_MAPPING: Record<string, GoalCategoryConfig> = {
     description: 'Generic goal that doesn\'t fit specific categories',
     defaultDeadlineDays: 90, // 3 months
     defaultEstimatedCost: 500,
-    requiredComponents: [
-      'financial_calculator', 
-      'smart_action_timeline', 
-      'progress_dashboard', 
-      'agent_info',
-      'budget_breakdown',
-      'expense_tracker',
-      'debt_payoff_tracker',
-      'currency_converter', 
-      'calendar_widget', 
-      'project_timeline',
-      'habit_tracker',
-      'streak_counter',
-      'mood_tracker'
-    ],
-    contextualComponents: [],
-    optionalComponents: ['travel_dashboard'],
+    requiredComponents: ['progress_chart', 'task_manager', 'completion_meter', 'agent_info'],
+    contextualComponents: ['milestone_timeline', 'calendar_widget', 'smart_action_timeline', 'progress_dashboard'],
+    optionalComponents: ['financial_calculator', 'budget_breakdown', 'habit_tracker', 'resource_library', 'project_timeline'],
     suggestedAgents: ['research'],
     examples: ['Complete personal project', 'Achieve life goal', 'Finish important task']
   }
