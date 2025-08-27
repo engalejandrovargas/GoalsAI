@@ -32,16 +32,16 @@ import {
   Activity,
   CheckCircle2,
   PlayCircle,
-  Brain
+  Brain,
+  ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
-import GoalCreationModal from '../components/GoalCreationModal';
 import GoalProgressModal from '../components/GoalProgressModal';
 import GoalCard from '../components/GoalCard';
-import { SmartGoalModal } from '../components/SmartGoalModal';
 import { SmartGoalCard } from '../components/SmartGoalCard';
+import { AiGoalCreator } from '../components/AiGoalCreator';
 import { apiService } from '../services/api';
 import { useConfirmation } from '../hooks/useConfirmation';
 import toast from 'react-hot-toast';
@@ -93,9 +93,9 @@ const DashboardPage: React.FC = () => {
   const { colors } = useTheme();
   const navigate = useNavigate();
   const { confirm, ConfirmationDialog } = useConfirmation();
-  const [isSmartGoalModalOpen, setIsSmartGoalModalOpen] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
+  const [showAiGoalCreator, setShowAiGoalCreator] = useState(false);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [filteredGoals, setFilteredGoals] = useState<Goal[]>([]);
   const [isLoadingGoals, setIsLoadingGoals] = useState(true);
@@ -496,18 +496,12 @@ const DashboardPage: React.FC = () => {
               {view === 'dashboard' ? 'View All Goals' : 'Dashboard View'}
             </button>
             <button
-              onClick={() => setIsSmartGoalModalOpen(true)}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-2 px-4 rounded-lg flex items-center transition-colors shadow-lg hover:shadow-xl transform hover:scale-105"
+              onClick={() => setShowAiGoalCreator(true)}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium py-3 px-6 rounded-xl flex items-center transition-all shadow-lg hover:shadow-xl transform hover:scale-105 hover:-translate-y-0.5"
             >
-              <Target className="w-4 h-4 mr-2" />
-              Create Goal
-            </button>
-            <button
-              onClick={() => window.open('/enhanced-test', '_blank')}
-              className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-medium py-2 px-4 rounded-lg flex items-center transition-colors shadow-lg hover:shadow-xl transform hover:scale-105"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              AI System Test
+              <Sparkles className="w-5 h-5 mr-2" />
+              Create Goal with AI
+              <ArrowRight className="w-4 h-4 ml-2 opacity-75" />
             </button>
           </div>
         </div>
@@ -712,11 +706,11 @@ const DashboardPage: React.FC = () => {
               {goals.length === 0 ? (
                 <div className="flex justify-center">
                   <button 
-                    onClick={() => setIsSmartGoalModalOpen(true)}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl flex items-center transition-all shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transform hover:scale-105"
+                    onClick={() => setShowAiGoalCreator(true)}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-xl flex items-center transition-all shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transform hover:scale-105"
                   >
-                    <Target className="w-5 h-5 mr-2" />
-                    Create Your First Goal
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    Create Your First Goal with AI
                   </button>
                 </div>
               ) : (
@@ -826,13 +820,6 @@ const DashboardPage: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* AI-Powered Goal Creation Modal */}
-      <SmartGoalModal
-        isOpen={isSmartGoalModalOpen}
-        onClose={() => setIsSmartGoalModalOpen(false)}
-        onGoalCreated={handleGoalCreated}
-      />
-
       {/* Goal Progress Modal */}
       {selectedGoal && (
         <GoalProgressModal
@@ -843,6 +830,12 @@ const DashboardPage: React.FC = () => {
           initialTab={progressModalTab}
         />
       )}
+
+      <AiGoalCreator
+        isOpen={showAiGoalCreator}
+        onClose={() => setShowAiGoalCreator(false)}
+        onGoalCreated={handleGoalCreated}
+      />
 
       <ConfirmationDialog />
     </div>

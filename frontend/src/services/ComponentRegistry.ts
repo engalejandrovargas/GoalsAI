@@ -40,7 +40,8 @@ type ComponentType =
   | 'simple_savings_tracker'
   | 'learning_dashboard'
   | 'health_dashboard'
-  | 'business_dashboard';
+  | 'business_dashboard'
+  | 'weight_tracker';
 
 interface ComponentConfig {
   component: React.ComponentType<any>;
@@ -100,6 +101,7 @@ const WeatherWidget = React.lazy(() => import('../components/dashboard/WeatherWi
 const SkillAssessment = React.lazy(() => import('../components/dashboard/SkillAssessment'));
 const WorkoutTracker = React.lazy(() => import('../components/dashboard/WorkoutTracker'));
 const ReadingTracker = React.lazy(() => import('../components/dashboard/ReadingTracker'));
+const WeightTracker = React.lazy(() => import('../components/dashboard/WeightTracker'));
 
 export class ComponentRegistry {
   private static instance: ComponentRegistry;
@@ -280,7 +282,7 @@ export class ComponentRegistry {
       component: TravelDashboard,
       requirements: {
         goalTypes: ['travel'],
-        agents: ['travel', 'weather'],
+        // Removed agent requirements to make travel_dashboard always available for travel goals
       }
     });
 
@@ -382,7 +384,7 @@ export class ComponentRegistry {
       },
       requirements: {
         goalTypes: ['travel', 'fitness', 'outdoor'],
-        agents: ['weather'],
+        // Removed agent requirements - weather widget should be available for applicable goal types
       }
     });
 
@@ -423,6 +425,19 @@ export class ComponentRegistry {
         goalTypes: ['education', 'personal_development', 'reading'],
       }
     });
+
+    this.registerComponent('weight_tracker', {
+      component: WeightTracker,
+      defaultProps: {
+        showTrend: true,
+        showProgress: true,
+        allowEdit: true,
+        unit: 'kg',
+      },
+      requirements: {
+        goalTypes: ['weight_loss', 'fitness', 'wellness', 'health'],
+      }
+    });
   }
 
   public registerComponent(type: ComponentType, config: ComponentConfig): void {
@@ -437,37 +452,35 @@ export class ComponentRegistry {
     goalType: string,
     assignedAgents: string[] = [],
     estimatedCost = 0,
-    hasDeadline = true
-  ): DashboardComponent[] {
-    const components: DashboardComponent[] = [];
-
+    hasDeadline = true,
+    includeOptional = false
+  ): {
+    defaultComponents: DashboardComponent[];
+    optionalComponents: DashboardComponent[];
+  } {
     // Get intelligent component selection from category mapping
-    let requiredComponentIds = getComponentsForCategory(goalType, false);
-    let allComponentIds = getComponentsForCategory(goalType, true);
+    let componentMapping = getComponentsForCategory(goalType, includeOptional);
     
-    // Fallback: if no components found for this goal type, use general category or show all
-    if (requiredComponentIds.length === 0 && allComponentIds.length === 0) {
+    // Fallback: if no components found for this goal type, use general category
+    if (componentMapping.defaultComponents.length === 0) {
       console.log(`No components found for goal type: ${goalType}, using general category`);
-      requiredComponentIds = getComponentsForCategory('general', false);
-      allComponentIds = getComponentsForCategory('general', true);
+      componentMapping = getComponentsForCategory('general', includeOptional);
       
-      // If even general doesn't work, show all registered components
-      if (requiredComponentIds.length === 0) {
+      // If even general doesn't work, show all registered components as fallback
+      if (componentMapping.defaultComponents.length === 0) {
         console.log('Using fallback: showing all registered components');
         const allRegisteredComponents = Array.from(this.components.keys());
-        requiredComponentIds = allRegisteredComponents.slice(0, 4); // First 4 as required
-        allComponentIds = allRegisteredComponents;
+        componentMapping.defaultComponents = allRegisteredComponents.slice(0, 4); // First 4 as default
+        componentMapping.optionalComponents = includeOptional ? allRegisteredComponents.slice(4) : [];
       }
     }
-    
-    // Get category defaults for this goal type
-    const defaults = getDefaultsForCategory(goalType);
 
-    // Add required components (core + category-specific required)
-    requiredComponentIds.forEach((componentId, index) => {
+    // Add default components (max 4, always shown)
+    const defaultComponents: DashboardComponent[] = [];
+    componentMapping.defaultComponents.forEach((componentId, index) => {
       const config = this.getComponent(componentId as ComponentType);
-      if (config) {
-        components.push({
+      if (config && this.meetsContextualRequirements(config, goalType, assignedAgents, estimatedCost, hasDeadline)) {
+        defaultComponents.push({
           id: `${componentId}_${Date.now()}_${index}`,
           type: componentId as ComponentType,
           title: this.getComponentTitle(componentId as ComponentType),
@@ -482,23 +495,27 @@ export class ComponentRegistry {
       }
     });
 
-    // Add contextual/optional components based on goal characteristics
-    const optionalComponentIds = allComponentIds.filter(id => !requiredComponentIds.includes(id));
-    
-    optionalComponentIds.forEach((componentId, index) => {
-      const config = this.getComponent(componentId as ComponentType);
-      if (config && this.meetsContextualRequirements(config, goalType, assignedAgents, estimatedCost, hasDeadline)) {
-        components.push({
-          id: `${componentId}_${Date.now()}_opt_${index}`,
-          type: componentId as ComponentType,
-          title: this.getComponentTitle(componentId as ComponentType),
-          required: false,
-          props: config.defaultProps,
-        });
-      }
-    });
+    // Add optional components (user can choose to add these)
+    const optionalComponents: DashboardComponent[] = [];
+    if (includeOptional) {
+      componentMapping.optionalComponents.forEach((componentId, index) => {
+        const config = this.getComponent(componentId as ComponentType);
+        if (config && this.meetsContextualRequirements(config, goalType, assignedAgents, estimatedCost, hasDeadline)) {
+          optionalComponents.push({
+            id: `${componentId}_${Date.now()}_opt_${index}`,
+            type: componentId as ComponentType,
+            title: this.getComponentTitle(componentId as ComponentType),
+            required: false,
+            props: config.defaultProps,
+          });
+        }
+      });
+    }
 
-    return components;
+    return {
+      defaultComponents,
+      optionalComponents
+    };
   }
 
   private addComponentIfExists(

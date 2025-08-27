@@ -138,12 +138,16 @@ const GoalDashboardRenderer: React.FC<GoalDashboardRendererProps> = ({
     
     try {
       // Generate components based on goal type and characteristics
-      const components = componentRegistry.getComponentsForGoal(
+      const componentsResult = componentRegistry.getComponentsForGoal(
         goal.category,
         assignedAgents,
         goal.estimatedCost || 0,
-        !!targetDate
+        !!targetDate,
+        true // Include optional components
       );
+      
+      // Combine default and optional components
+      const components = [...componentsResult.defaultComponents, ...componentsResult.optionalComponents];
 
       // Create the dashboard layout
       const layout: GoalDashboardLayout = {

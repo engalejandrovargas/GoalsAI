@@ -108,7 +108,10 @@ passport.deserializeUser(async (id: string, done) => {
     });
 
     if (!user) {
-      return done(new Error('User not found'), false);
+      // User was deleted or doesn't exist anymore (e.g., after database wipe)
+      // Return null to clear the session instead of throwing an error
+      logger.warn(`User with ID ${id} not found during deserialization - clearing session`);
+      return done(null, null);
     }
 
     done(null, user);

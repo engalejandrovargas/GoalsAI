@@ -276,51 +276,15 @@ export const COMPONENT_DICTIONARY: Record<string, ComponentInfo> = {
     category: 'financial',
     complexity: 'simple',
     requiresData: ['currencies']
-  },
-
-  market_data: {
-    id: 'market_data',
-    name: 'Market Data',
-    description: 'Stock prices, crypto, and market trends',
-    category: 'financial',
-    complexity: 'moderate',
-    requiresData: ['symbols', 'markets']
-  },
-
-  goal_reflection: {
-    id: 'goal_reflection',
-    name: 'Goal Reflection',
-    description: 'Journaling and reflection on progress',
-    category: 'planning',
-    complexity: 'simple',
-    requiresData: ['reflections']
-  },
-
-  motivation_center: {
-    id: 'motivation_center',
-    name: 'Motivation Center',
-    description: 'Inspirational quotes and progress celebrations',
-    category: 'progress',
-    complexity: 'simple',
-    requiresData: ['achievements', 'milestones']
-  },
-
-  social_accountability: {
-    id: 'social_accountability',
-    name: 'Social Accountability',
-    description: 'Share progress and get support from others',
-    category: 'progress',
-    complexity: 'moderate',
-    requiresData: ['socialConnections', 'sharePreferences']
   }
 };
 
 // Component categories for easier filtering
 export const COMPONENT_CATEGORIES = {
-  CORE: ['financial_calculator', 'task_manager', 'agent_info'],
-  FINANCIAL: ['simple_savings_tracker', 'budget_breakdown', 'expense_tracker', 'investment_tracker', 'debt_payoff_tracker', 'currency_converter', 'market_data'],
-  PROGRESS: ['progress_chart', 'completion_meter', 'milestone_timeline', 'motivation_center', 'social_accountability'],
-  PLANNING: ['calendar_widget', 'project_timeline', 'resource_library', 'document_checklist', 'weather_widget', 'goal_reflection'],
+  CORE: ['financial_calculator', 'task_manager', 'agent_info', 'smart_action_timeline', 'progress_dashboard'],
+  FINANCIAL: ['simple_savings_tracker', 'budget_breakdown', 'expense_tracker', 'investment_tracker', 'debt_payoff_tracker', 'currency_converter'],
+  PROGRESS: ['progress_chart', 'completion_meter', 'milestone_timeline'],
+  PLANNING: ['calendar_widget', 'project_timeline', 'resource_library', 'document_checklist', 'weather_widget'],
   TRACKING: ['habit_tracker', 'streak_counter', 'skill_assessment', 'weight_tracker', 'workout_tracker', 'reading_tracker', 'mood_tracker'],
-  SPECIALIZED: ['travel_dashboard', 'learning_dashboard', 'health_dashboard', 'business_dashboard', 'career_dashboard']
+  SPECIALIZED: ['learning_dashboard', 'health_dashboard', 'business_dashboard', 'career_dashboard']
 };
