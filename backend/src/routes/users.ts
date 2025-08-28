@@ -8,15 +8,19 @@ import logger from '../utils/logger';
 
 const router = express.Router();
 
-// Validation schema for onboarding
+// Validation schema for travel-focused onboarding
 const onboardingSchema = z.object({
   location: z.string().min(1, 'Location is required'),
-  ageRange: z.string().min(1, 'Age range is required'),
-  currentSituation: z.string().min(1, 'Current situation is required'),
-  availableTime: z.string().min(1, 'Available time is required'),
-  riskTolerance: z.string().min(1, 'Risk tolerance is required'),
-  preferredApproach: z.string().min(1, 'Preferred approach is required'),
+  nationality: z.string().min(1, 'Nationality is required'),
+  travelBudget: z.string().min(1, 'Travel budget is required'),
+  travelStyle: z.string().min(1, 'Travel style is required'),
   firstGoal: z.string().min(1, 'First goal is required'),
+  // Optional fields for backward compatibility (commented out for travel focus)
+  // ageRange: z.string().optional(),
+  // currentSituation: z.string().optional(),
+  // availableTime: z.string().optional(),
+  // riskTolerance: z.string().optional(),
+  // preferredApproach: z.string().optional(),
 });
 
 // POST /users/complete-onboarding - Complete user onboarding
@@ -31,14 +35,12 @@ router.post('/complete-onboarding', requireSessionAuth, async (req, res) => {
     // Validate input
     const validatedData = onboardingSchema.parse(req.body);
 
-    // Complete onboarding using UserService
+    // Complete onboarding using UserService with travel-focused data
     const updatedUser = await UserService.completeOnboarding(userId, {
       location: validatedData.location,
-      ageRange: validatedData.ageRange,
-      currentSituation: validatedData.currentSituation,
-      availableTime: validatedData.availableTime,
-      riskTolerance: validatedData.riskTolerance,
-      preferredApproach: validatedData.preferredApproach,
+      nationality: validatedData.nationality,
+      travelBudget: validatedData.travelBudget,
+      travelStyle: validatedData.travelStyle,
       firstGoal: validatedData.firstGoal,
       onboardingCompleted: true,
     });
@@ -47,23 +49,21 @@ router.post('/complete-onboarding', requireSessionAuth, async (req, res) => {
     let createdGoal = null;
     if (validatedData.firstGoal && validatedData.firstGoal.trim() !== '') {
       try {
-        // Map goals to appropriate categories
+        // Map travel goals to categories (travel-focused app)
         const goalCategoryMap: Record<string, string> = {
-          'Learn Spanish': 'learning',
-          'Run a 5K': 'health',
-          'Save $5,000': 'financial',
-          'Read 12 books this year': 'learning',
-          'Learn to cook Italian food': 'learning',
-          'Travel to Japan': 'travel',
-          'Learn Python programming': 'learning',
-          'Learn to play guitar': 'learning',
-          'Buy my first home': 'financial',
-          'Buy a car': 'financial',
-          'Start a side business': 'career',
-          'Meditate daily for 6 months': 'health',
+          'Explore Japan for 2 weeks': 'travel',
+          'Italian food and culture tour': 'travel',
+          'Backpack through Southeast Asia': 'travel',
+          'European adventure trip': 'travel',
+          'Tropical island getaway': 'travel',
+          'Cultural immersion in Morocco': 'travel',
+          // Legacy goals (commented for future expansion)
+          // 'Learn Spanish': 'learning',
+          // 'Run a 5K': 'health',
+          // 'Save $5,000': 'financial',
         };
 
-        const goalCategory = goalCategoryMap[validatedData.firstGoal] || 'personal';
+        const goalCategory = goalCategoryMap[validatedData.firstGoal] || 'travel';
 
         createdGoal = await GoalService.createGoal(userId, {
           title: validatedData.firstGoal.length > 50 
@@ -96,14 +96,12 @@ router.post('/complete-onboarding', requireSessionAuth, async (req, res) => {
         name: updatedUser.name,
         profilePicture: updatedUser.profilePicture,
         location: updatedUser.location,
-        ageRange: updatedUser.ageRange,
+        nationality: updatedUser.nationality,
+        travelBudget: updatedUser.travelBudget,
+        travelStyle: updatedUser.travelStyle,
+        firstGoal: updatedUser.firstGoal,
         annualIncome: updatedUser.annualIncome,
         currentSavings: updatedUser.currentSavings,
-        currentSituation: updatedUser.currentSituation,
-        availableTime: updatedUser.availableTime,
-        riskTolerance: updatedUser.riskTolerance,
-        preferredApproach: updatedUser.preferredApproach,
-        firstGoal: updatedUser.firstGoal,
         emailNotifications: updatedUser.emailNotifications,
         pushNotifications: updatedUser.pushNotifications,
         weeklyReports: updatedUser.weeklyReports,
@@ -114,7 +112,6 @@ router.post('/complete-onboarding', requireSessionAuth, async (req, res) => {
         defaultGoalCategory: updatedUser.defaultGoalCategory,
         privacyLevel: updatedUser.privacyLevel,
         // Extended profile fields
-        nationality: updatedUser.nationality,
         occupation: updatedUser.occupation,
         workSchedule: updatedUser.workSchedule,
         personalityType: updatedUser.personalityType,
@@ -172,10 +169,11 @@ router.get('/profile', requireSessionAuth, async (req, res) => {
         name: user.name,
         profilePicture: user.profilePicture,
         location: user.location,
-        ageRange: user.ageRange,
+        nationality: user.nationality,
+        travelBudget: user.travelBudget,
+        travelStyle: user.travelStyle,
         annualIncome: user.annualIncome,
         currentSavings: user.currentSavings,
-        riskTolerance: user.riskTolerance,
         emailNotifications: user.emailNotifications,
         pushNotifications: user.pushNotifications,
         weeklyReports: user.weeklyReports,
@@ -185,7 +183,6 @@ router.get('/profile', requireSessionAuth, async (req, res) => {
         currency: user.currency,
         defaultGoalCategory: user.defaultGoalCategory,
         privacyLevel: user.privacyLevel,
-        nationality: user.nationality,
         onboardingCompleted: user.onboardingCompleted,
         createdAt: user.createdAt,
       },
@@ -227,14 +224,12 @@ router.put('/profile', requireSessionAuth, async (req, res) => {
         name: updatedUser.name,
         profilePicture: updatedUser.profilePicture,
         location: updatedUser.location,
-        ageRange: updatedUser.ageRange,
+        nationality: updatedUser.nationality,
+        travelBudget: updatedUser.travelBudget,
+        travelStyle: updatedUser.travelStyle,
+        firstGoal: updatedUser.firstGoal,
         annualIncome: updatedUser.annualIncome,
         currentSavings: updatedUser.currentSavings,
-        currentSituation: updatedUser.currentSituation,
-        availableTime: updatedUser.availableTime,
-        riskTolerance: updatedUser.riskTolerance,
-        preferredApproach: updatedUser.preferredApproach,
-        firstGoal: updatedUser.firstGoal,
         emailNotifications: updatedUser.emailNotifications,
         pushNotifications: updatedUser.pushNotifications,
         weeklyReports: updatedUser.weeklyReports,
@@ -245,7 +240,6 @@ router.put('/profile', requireSessionAuth, async (req, res) => {
         defaultGoalCategory: updatedUser.defaultGoalCategory,
         privacyLevel: updatedUser.privacyLevel,
         // Extended profile fields
-        nationality: updatedUser.nationality,
         occupation: updatedUser.occupation,
         workSchedule: updatedUser.workSchedule,
         personalityType: updatedUser.personalityType,
@@ -302,14 +296,12 @@ router.patch('/profile', requireSessionAuth, async (req, res) => {
         name: updatedUser.name,
         profilePicture: updatedUser.profilePicture,
         location: updatedUser.location,
-        ageRange: updatedUser.ageRange,
+        nationality: updatedUser.nationality,
+        travelBudget: updatedUser.travelBudget,
+        travelStyle: updatedUser.travelStyle,
+        firstGoal: updatedUser.firstGoal,
         annualIncome: updatedUser.annualIncome,
         currentSavings: updatedUser.currentSavings,
-        currentSituation: updatedUser.currentSituation,
-        availableTime: updatedUser.availableTime,
-        riskTolerance: updatedUser.riskTolerance,
-        preferredApproach: updatedUser.preferredApproach,
-        firstGoal: updatedUser.firstGoal,
         emailNotifications: updatedUser.emailNotifications,
         pushNotifications: updatedUser.pushNotifications,
         weeklyReports: updatedUser.weeklyReports,
@@ -320,7 +312,6 @@ router.patch('/profile', requireSessionAuth, async (req, res) => {
         defaultGoalCategory: updatedUser.defaultGoalCategory,
         privacyLevel: updatedUser.privacyLevel,
         // Extended profile fields
-        nationality: updatedUser.nationality,
         occupation: updatedUser.occupation,
         workSchedule: updatedUser.workSchedule,
         personalityType: updatedUser.personalityType,

@@ -120,15 +120,17 @@ const DashboardPage: React.FC = () => {
     sortOrder: 'desc'
   });
 
+  // Travel-focused categories only
   const categories = [
-    { value: 'personal', label: 'Personal Development', color: 'bg-purple-100 text-purple-700', icon: '✨' },
-    { value: 'career', label: 'Career & Business', color: 'bg-blue-100 text-blue-700', icon: '💼' },
-    { value: 'health', label: 'Health & Fitness', color: 'bg-green-100 text-green-700', icon: '💪' },
-    { value: 'finance', label: 'Financial', color: 'bg-yellow-100 text-yellow-700', icon: '💰' },
-    { value: 'education', label: 'Education & Learning', color: 'bg-indigo-100 text-indigo-700', icon: '📚' },
-    { value: 'relationships', label: 'Relationships', color: 'bg-pink-100 text-pink-700', icon: '❤️' },
-    { value: 'creative', label: 'Creative & Hobbies', color: 'bg-orange-100 text-orange-700', icon: '🎨' },
     { value: 'travel', label: 'Travel & Adventure', color: 'bg-teal-100 text-teal-700', icon: '✈️' },
+    // Non-travel categories (commented for future expansion)
+    // { value: 'personal', label: 'Personal Development', color: 'bg-purple-100 text-purple-700', icon: '✨' },
+    // { value: 'career', label: 'Career & Business', color: 'bg-blue-100 text-blue-700', icon: '💼' },
+    // { value: 'health', label: 'Health & Fitness', color: 'bg-green-100 text-green-700', icon: '💪' },
+    // { value: 'finance', label: 'Financial', color: 'bg-yellow-100 text-yellow-700', icon: '💰' },
+    // { value: 'education', label: 'Education & Learning', color: 'bg-indigo-100 text-indigo-700', icon: '📚' },
+    // { value: 'relationships', label: 'Relationships', color: 'bg-pink-100 text-pink-700', icon: '❤️' },
+    // { value: 'creative', label: 'Creative & Hobbies', color: 'bg-orange-100 text-orange-700', icon: '🎨' },
   ];
 
   const statuses = [
@@ -468,10 +470,10 @@ const DashboardPage: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className={`text-3xl font-bold ${colors.textPrimary} mb-2`}>
-              Welcome back, {user?.name?.split(' ')[0]}! 👋
+              Welcome back, {user?.name?.split(' ')[0]}! ✈️
             </h1>
             <p className={colors.textSecondary}>
-              Track your progress and turn dreams into achievable plans
+              Plan your dream travels and turn wanderlust into achievable adventures
             </p>
           </div>
           <div className="flex items-center space-x-4">
@@ -493,14 +495,14 @@ const DashboardPage: React.FC = () => {
                   : `${colors.buttonSecondary} ${colors.buttonSecondaryText}`
               }`}
             >
-              {view === 'dashboard' ? 'View All Goals' : 'Dashboard View'}
+              {view === 'dashboard' ? 'View All Travel Plans' : 'Dashboard View'}
             </button>
             <button
               onClick={() => setShowAiGoalCreator(true)}
               className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium py-3 px-6 rounded-xl flex items-center transition-all shadow-lg hover:shadow-xl transform hover:scale-105 hover:-translate-y-0.5"
             >
               <Sparkles className="w-5 h-5 mr-2" />
-              Create Goal with AI
+              Plan Travel with AI
               <ArrowRight className="w-4 h-4 ml-2 opacity-75" />
             </button>
           </div>
@@ -521,7 +523,7 @@ const DashboardPage: React.FC = () => {
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div className="flex items-center space-x-4">
               <h3 className={`text-xl font-semibold ${colors.textPrimary}`}>
-                {view === 'dashboard' ? 'Recent Goals' : 'All Goals'}
+                {view === 'dashboard' ? 'Recent Travel Plans' : 'All Travel Plans'}
               </h3>
               {selectedGoals.size > 0 && (
                 <div className="flex items-center space-x-2">
@@ -556,7 +558,7 @@ const DashboardPage: React.FC = () => {
                 <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Search goals..."
+                  placeholder="Search travel plans..."
                   value={filters.search}
                   onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
@@ -695,11 +697,11 @@ const DashboardPage: React.FC = () => {
             <div className="text-center py-12">
               <Target className={`w-12 h-12 ${colors.textTertiary} mx-auto mb-4`} />
               <h4 className={`text-lg font-medium ${colors.textPrimary} mb-2`}>
-                {goals.length === 0 ? 'No goals yet' : 'No goals match your filters'}
+                {goals.length === 0 ? 'No travel plans yet' : 'No travel plans match your filters'}
               </h4>
               <p className={`${colors.textSecondary} mb-6`}>
                 {goals.length === 0 
-                  ? 'Start by creating your first goal and let AI help you make it achievable.'
+                  ? 'Start by creating your first travel plan and let AI help you make it achievable.'
                   : 'Try adjusting your search or filters to find what you\'re looking for.'
                 }
               </p>
@@ -710,7 +712,7 @@ const DashboardPage: React.FC = () => {
                     className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-xl flex items-center transition-all shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transform hover:scale-105"
                   >
                     <Sparkles className="w-5 h-5 mr-2" />
-                    Create Your First Goal with AI
+                    Plan Your First Trip with AI
                   </button>
                 </div>
               ) : (
@@ -813,7 +815,7 @@ const DashboardPage: React.FC = () => {
                 className="inline-flex items-center px-6 py-3 text-blue-600 hover:text-blue-700 font-medium text-sm border border-dashed border-gray-300 rounded-lg hover:border-blue-300 transition-colors"
               >
                 <Target className="w-4 h-4 mr-2" />
-                View All {filteredGoals.length} Goals
+                View All {filteredGoals.length} Travel Plans
               </button>
             </div>
           )}

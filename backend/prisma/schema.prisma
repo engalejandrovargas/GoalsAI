@@ -16,16 +16,20 @@ model User {
   
   // Onboarding data
   location              String?
+  nationality           String?
+  travelBudget          String?
+  travelStyle           String?
+  firstGoal             String?
+  onboardingCompleted   Boolean  @default(false)
+  
+  // Legacy onboarding fields (temporarily kept for compatibility)
   ageRange              String?
   currentSituation      String?
   availableTime         String?
   riskTolerance         String?
   preferredApproach     String?
-  firstGoal             String?
-  onboardingCompleted   Boolean  @default(false)
   
   // Optional profile data (for settings/profile page)
-  nationality           String?
   occupation            String?
   annualIncome          Int?
   currentSavings        Int?
@@ -53,7 +57,7 @@ model User {
   theme                 String   @default("light")
   language              String   @default("en")
   currency              String   @default("USD")
-  defaultGoalCategory   String   @default("personal")
+  defaultGoalCategory   String   @default("travel")
   privacyLevel          String   @default("private")
   
   goals                 Goal[]

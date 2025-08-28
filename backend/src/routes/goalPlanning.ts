@@ -49,11 +49,9 @@ router.post('/generate', requireSessionAuth, async (req, res) => {
       where: { id: userId },
       select: {
         location: true,
-        ageRange: true,
-        currentSituation: true,
-        availableTime: true,
-        riskTolerance: true,
-        preferredApproach: true,
+        nationality: true,
+        travelBudget: true,
+        travelStyle: true,
         firstGoal: true,
         annualIncome: true,
         currentSavings: true,
@@ -78,17 +76,22 @@ router.post('/generate', requireSessionAuth, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Prepare enhanced context for AI plan generation
+    // Prepare enhanced context for AI plan generation (travel-focused)
     const userContext = {
       location: user.location || 'Unknown',
-      ageRange: user.ageRange || '25-34',
+      travelBudget: user.travelBudget || 'Budget traveler ($50-100/day)',
       interests: [],
       goals: user.firstGoal || '',
-      currentSituation: user.currentSituation,
-      availableTime: user.availableTime,
-      riskTolerance: user.riskTolerance,
-      preferredApproach: user.preferredApproach,
+      nationality: user.nationality,
+      travelStyle: user.travelStyle,
       firstGoal: user.firstGoal,
+      
+      // Legacy fields with travel-appropriate defaults
+      ageRange: '25-34',
+      currentSituation: user.travelStyle || 'Planning travel adventure',
+      availableTime: 'Flexible for travel',
+      riskTolerance: 'Moderate',
+      preferredApproach: 'Flexible with room for creativity',
       
       // Extended context
       occupation: user.occupation,
@@ -348,11 +351,9 @@ router.post('/generate-action-plan', requireSessionAuth, async (req, res) => {
       where: { id: userId },
       select: {
         location: true,
-        ageRange: true,
-        currentSituation: true,
-        availableTime: true,
-        riskTolerance: true,
-        preferredApproach: true,
+        nationality: true,
+        travelBudget: true,
+        travelStyle: true,
         firstGoal: true,
         annualIncome: true,
         currentSavings: true,

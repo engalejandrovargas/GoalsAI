@@ -48,11 +48,9 @@ router.post('/smart-analyze', requireSessionAuth, async (req, res) => {
       where: { id: userId },
       select: {
         location: true,
-        ageRange: true,
-        currentSituation: true,
-        availableTime: true,
-        riskTolerance: true,
-        preferredApproach: true,
+        nationality: true,
+        travelBudget: true,
+        travelStyle: true,
         firstGoal: true,
         occupation: true,
         annualIncome: true,
@@ -245,11 +243,9 @@ router.post('/analyze', requireSessionAuth, async (req, res) => {
       where: { id: userId },
       select: {
         location: true,
-        ageRange: true,
-        currentSituation: true,
-        availableTime: true,
-        riskTolerance: true,
-        preferredApproach: true,
+        nationality: true,
+        travelBudget: true,
+        travelStyle: true,
         firstGoal: true,
         occupation: true,
         annualIncome: true,
@@ -277,14 +273,19 @@ router.post('/analyze', requireSessionAuth, async (req, res) => {
     // Prepare enhanced user context
     const userContext = {
       location: user.location || 'Unknown',
-      ageRange: user.ageRange || '25-34',
+      travelBudget: user.travelBudget || 'Budget traveler ($50-100/day)',
       interests: [],
       goals: user.firstGoal || '',
-      currentSituation: user.currentSituation,
-      availableTime: user.availableTime,
-      riskTolerance: user.riskTolerance,
-      preferredApproach: user.preferredApproach,
+      nationality: user.nationality,
+      travelStyle: user.travelStyle,
       firstGoal: user.firstGoal,
+      
+      // Legacy fields with travel-appropriate defaults
+      ageRange: '25-34', // Default travel age range
+      currentSituation: user.travelStyle || 'Planning travel adventure',
+      availableTime: 'Flexible for travel',
+      riskTolerance: 'Moderate',
+      preferredApproach: 'Flexible with room for creativity',
       
       // Extended context
       occupation: user.occupation,
@@ -456,11 +457,9 @@ router.post('/:id/analyze', requireSessionAuth, async (req, res) => {
       where: { id: userId },
       select: {
         location: true,
-        ageRange: true,
-        currentSituation: true,
-        availableTime: true,
-        riskTolerance: true,
-        preferredApproach: true,
+        nationality: true,
+        travelBudget: true,
+        travelStyle: true,
         firstGoal: true,
       },
     });
@@ -472,13 +471,11 @@ router.post('/:id/analyze', requireSessionAuth, async (req, res) => {
     // Prepare user context and goal description
     const userContext = {
       location: user.location || 'Unknown',
-      ageRange: user.ageRange || '25-34',
+      travelBudget: user.travelBudget || 'Budget traveler ($50-100/day)',
       interests: [],
       goals: user.firstGoal || '',
-      currentSituation: user.currentSituation,
-      availableTime: user.availableTime,
-      riskTolerance: user.riskTolerance,
-      preferredApproach: user.preferredApproach,
+      nationality: user.nationality,
+      travelStyle: user.travelStyle,
       firstGoal: user.firstGoal,
     };
 

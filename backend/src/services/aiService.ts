@@ -33,14 +33,19 @@ interface FeasibilityAnalysis {
 
 interface UserContext {
   location: string;
-  ageRange: string;
+  travelBudget: string;
   interests?: string[];
   goals?: string;
+  nationality?: string | null;
+  travelStyle?: string | null;
+  firstGoal?: string | null;
+  
+  // Legacy fields (temporarily kept for compatibility)
+  ageRange?: string;
   currentSituation?: string | null;
   availableTime?: string | null;
   riskTolerance?: string | null;
   preferredApproach?: string | null;
-  firstGoal?: string | null;
   
   // Extended context for enhanced AI behavior
   occupation?: string | null;

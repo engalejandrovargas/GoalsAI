@@ -13,14 +13,18 @@ export interface CreateUserData {
 export interface UpdateUserData {
   name?: string;
   location?: string;
-  ageRange?: string;
-  currentSituation?: string;
-  availableTime?: string;
-  riskTolerance?: string;
-  preferredApproach?: string;
+  nationality?: string;
+  travelBudget?: string;
+  travelStyle?: string;
   firstGoal?: string;
-  annualIncome?: number;
-  currentSavings?: number;
+  // Legacy fields (commented for future expansion)
+  // ageRange?: string;
+  // currentSituation?: string;
+  // availableTime?: string;
+  // riskTolerance?: string;
+  // preferredApproach?: string;
+  // annualIncome?: number;
+  // currentSavings?: number;
   emailNotifications?: boolean;
   pushNotifications?: boolean;
   weeklyReports?: boolean;
@@ -30,17 +34,17 @@ export interface UpdateUserData {
   currency?: string;
   defaultGoalCategory?: string;
   privacyLevel?: string;
-  // Extended profile fields
-  occupation?: string;
-  workSchedule?: string;
-  personalityType?: string;
-  learningStyle?: string;
-  decisionMakingStyle?: string;
-  communicationStyle?: string;
-  motivationalFactors?: string;
-  lifePriorities?: string;
-  previousExperiences?: string;
-  skillsAndStrengths?: string;
+  // Extended profile fields (commented for future expansion)
+  // occupation?: string;
+  // workSchedule?: string;
+  // personalityType?: string;
+  // learningStyle?: string;
+  // decisionMakingStyle?: string;
+  // communicationStyle?: string;
+  // motivationalFactors?: string;
+  // lifePriorities?: string;
+  // previousExperiences?: string;
+  // skillsAndStrengths?: string;
   // AI settings
   aiInstructions?: string;
   aiTone?: string;

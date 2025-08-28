@@ -98,7 +98,7 @@ export class FeasibilityService {
     Goal: ${goal.title}
     Description: ${goal.description}
     Timeline: ${monthsToTarget} months
-    User Age Range: ${user.ageRange}
+    User Age Range: ${(user.travelBudget || 'Budget traveler')}
     
     Consider typical timelines for similar goals. Rate feasibility 0-100.`;
 
@@ -121,8 +121,8 @@ export class FeasibilityService {
     const prompt = `Analyze skill requirements for this goal:
     Goal: ${goal.title}
     Description: ${goal.description}
-    User Situation: ${user.currentSituation || 'Not specified'}
-    User Age: ${user.ageRange}
+    User Situation: ${(user.travelStyle || 'Planning travel adventure') || 'Not specified'}
+    User Age: ${(user.travelBudget || 'Budget traveler')}
     
     Rate how feasible it is to acquire needed skills (0-100).`;
 
@@ -164,8 +164,8 @@ export class FeasibilityService {
     Goal: ${goal.title}
     Description: ${goal.description}
     User Location: ${user.location}
-    User Age: ${user.ageRange}
-    User Situation: ${user.currentSituation || 'Not specified'}
+    User Age: ${(user.travelBudget || 'Budget traveler')}
+    User Situation: ${(user.travelStyle || 'Planning travel adventure') || 'Not specified'}
     
     Consider life stage, location advantages/disadvantages. Rate feasibility 0-100.`;
 
@@ -193,7 +193,7 @@ export class FeasibilityService {
       });
     }
 
-    if (goal.title?.toLowerCase().includes('professional athlete') && user.ageRange && ['36-45', '46-55', '55+'].includes(user.ageRange)) {
+    if (goal.title?.toLowerCase().includes('professional athlete') && (user.travelBudget || 'Budget traveler') && ['36-45', '46-55', '55+'].includes((user.travelBudget || 'Budget traveler'))) {
       flags.push({
         title: 'Age Limitation',
         explanation: 'Professional sports careers typically begin much earlier in life. Consider coaching, training, or amateur competition alternatives.',
